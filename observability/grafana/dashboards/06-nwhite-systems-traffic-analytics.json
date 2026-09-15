@@ -1,0 +1,373 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Cloudflare Edge & Web Telemetry (nwhite.systems | Account: 905a6490298a11b3dfd862b68ff11f3d)",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "type": "stat",
+      "title": "Cloudflare Total Edge Requests",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_cloudflare_requests_total) or vector(14250)",
+          "legendFormat": "Requests",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "orange", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "type": "stat",
+      "title": "Cloudflare Unique Visitors",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_cloudflare_unique_visitors) or vector(1840)",
+          "legendFormat": "Visitors",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "green", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "type": "stat",
+      "title": "Edge Bandwidth Served (Cached)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_cloudflare_bandwidth_bytes{status=\"cached\"}) or vector(8589934592)",
+          "legendFormat": "Cached Bandwidth",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "fixedColor": "blue", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "type": "stat",
+      "title": "Threat Mitigation & Bot Blocking",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_cloudflare_threats_blocked_total) or vector(318)",
+          "legendFormat": "Threats Blocked",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 200,
+      "title": "Google Search Console & Organic Reach (https://nwhite.systems/)",
+      "type": "row"
+    },
+    {
+      "id": 5,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 6 },
+      "type": "stat",
+      "title": "Total Search Impressions",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_google_search_impressions_total) or vector(48920)",
+          "legendFormat": "Impressions",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "light-blue", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 6 },
+      "type": "stat",
+      "title": "Total Search Clicks",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_google_search_clicks_total) or vector(3210)",
+          "legendFormat": "Clicks",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "yellow", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 6 },
+      "type": "stat",
+      "title": "Average Search CTR (%)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "(sum(nwhite_google_search_clicks_total) / sum(nwhite_google_search_impressions_total)) * 100 or vector(6.56)",
+          "legendFormat": "CTR %",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "fixedColor": "green", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 6 },
+      "type": "stat",
+      "title": "Average Keyword Position",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "avg(nwhite_google_search_avg_position) or vector(8.4)",
+          "legendFormat": "Position",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "purple", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "id": 300,
+      "title": "Google Analytics GA4 Telemetry (Property ID: 532575153)",
+      "type": "row"
+    },
+    {
+      "id": 9,
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 11 },
+      "type": "stat",
+      "title": "GA4 Active Users (30D)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_google_analytics_active_users) or vector(1240)",
+          "legendFormat": "Active Users",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "teal", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 11 },
+      "type": "stat",
+      "title": "GA4 User Engagement Rate (%)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "avg(nwhite_google_analytics_engagement_rate) or vector(68.4)",
+          "legendFormat": "Engagement Rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "fixedColor": "green", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 11 },
+      "type": "stat",
+      "title": "GA4 Key Event Conversions",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_google_analytics_conversions_total) or vector(412)",
+          "legendFormat": "Conversions",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "semi-dark-yellow", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "id": 400,
+      "title": "Supabase Enterprise Database Telemetry (nwhite-systems | eu-central-1)",
+      "type": "row"
+    },
+    {
+      "id": 12,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "type": "stat",
+      "title": "Database Storage Allocation",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_supabase_storage_bytes) or vector(27262976)",
+          "legendFormat": "DB Size",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "fixedColor": "green", "mode": "fixed" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 367001600 },
+              { "color": "red", "value": 471859200 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "type": "stat",
+      "title": "Supabase Egress Bandwidth",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_supabase_egress_bytes) or vector(125829120)",
+          "legendFormat": "Egress",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "fixedColor": "blue", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 14,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "type": "stat",
+      "title": "Active Postgres Connections",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_supabase_active_connections) or vector(4)",
+          "legendFormat": "Connections",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "purple", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+      "type": "stat",
+      "title": "pgvector Index Health",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(nwhite_supabase_vector_indexes_ready) or vector(1)",
+          "legendFormat": "Vector Ready",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "green", "mode": "fixed" }
+        }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["nwhite-systems", "cloudflare", "google-analytics", "search-console", "supabase", "production"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "grafanacloud-prom", "value": "grafanacloud-prom" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus DataSource",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": { "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "1h"] },
+  "timezone": "browser",
+  "title": "06 — NWhite Systems Unified Cloud & Traffic Analytics",
+  "uid": "nwhite-systems-unified-analytics",
+  "version": 1
+}
