@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
+import { withObservability } from "@/lib/observability/http";
 
-export async function GET(request: Request) {
+async function handleGet(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") || undefined;
   const remoteOnly = searchParams.get("remote") === "true";
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ jobs, total: jobs.length });
 }
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const body = await request.json();
     const newJob = repository.addJob(body);
@@ -22,3 +23,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const GET = withObservability(handleGet, "/api/jobs");
+export const POST = withObservability(handlePost, "/api/jobs");

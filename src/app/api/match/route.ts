@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { MatchService } from "@/lib/services/match.service";
+import { withObservability } from "@/lib/observability/http";
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const { jobId } = await request.json();
     if (!jobId) {
@@ -27,3 +28,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withObservability(handlePost, "/api/match");

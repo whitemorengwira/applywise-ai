@@ -1,0 +1,48 @@
+name: Observability & Terraform Validation
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "terraform/**"
+      - "observability/**"
+      - "src/lib/observability/**"
+      - "src/app/api/metrics/**"
+      - "src/app/api/ready/**"
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "terraform/**"
+      - "observability/**"
+      - "src/lib/observability/**"
+      - "src/app/api/metrics/**"
+      - "src/app/api/ready/**"
+
+jobs:
+  terraform-quality-gate:
+    name: Terraform Format & Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Init (No Backend)
+        run: |
+          cd terraform
+          terraform init -backend=false
+
+      - name: Terraform Configuration Validate
+        run: |
+          cd terraform
+          terraform validate

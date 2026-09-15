@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
+import { withObservability } from "@/lib/observability/http";
+import { applicationsCreatedTotal } from "@/lib/observability/metrics";
 
-export async function GET() {
+async function handleGet() {
   const applications = repository.getApplications();
   return NextResponse.json({ applications, total: applications.length });
 }
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const { jobId } = await request.json();
     if (!jobId) {
@@ -14,6 +16,7 @@ export async function POST(request: Request) {
     }
 
     const app = repository.createApplication(jobId);
+    applicationsCreatedTotal.inc({ stage: 'draft' });
     return NextResponse.json({ success: true, application: app }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
@@ -23,7 +26,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+async function handlePatch(request: Request) {
   try {
     const { id, status, notes } = await request.json();
     if (!id || !status) {
@@ -43,3 +46,7 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
+export const GET = withObservability(handleGet, "/api/applications");
+export const POST = withObservability(handlePost, "/api/applications");
+export const PATCH = withObservability(handlePatch, "/api/applications");

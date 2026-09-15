@@ -1,0 +1,72 @@
+groups:
+  - name: applywise_application_alerts
+    rules:
+      - alert: ApplyWiseAppDown
+        expr: up{job="applywise-app"} == 0
+        for: 1m
+        labels:
+          severity: CRITICAL
+        annotations:
+          summary: "ApplyWise AI application instance is down"
+          description: "The application target has been unreachable for more than 1 minute."
+          action: "Check Kubernetes pod status with `kubectl get pods -n applywise-ai` and inspect container logs."
+
+      - alert: HighHttpErrorRate
+        expr: (sum(rate(applywise_http_requests_total{status=~"5.."}[5m])) / sum(rate(applywise_http_requests_total[5m]))) * 100 > 5
+        for: 3m
+        labels:
+          severity: CRITICAL
+        annotations:
+          summary: "Elevated 5xx HTTP error rate (> 5%)"
+          description: "Over 5% of all inbound requests are returning HTTP 5xx server errors over the last 5 minutes."
+          action: "Inspect structured application JSON logs filtering by level='ERROR' and check correlation IDs."
+
+      - alert: ElevatedHttpLatency
+        expr: histogram_quantile(0.95, sum(rate(applywise_http_request_duration_seconds_bucket[5m])) by (le)) > 2.5
+        for: 5m
+        labels:
+          severity: WARNING
+        annotations:
+          summary: "High HTTP p95 latency (> 2.5s)"
+          description: "The 95th percentile request latency exceeds 2.5 seconds over a 5-minute window."
+          action: "Inspect database query times and AI model gateway response times."
+
+      - alert: ExcessiveAIModelFailures
+        expr: sum(rate(applywise_ai_errors_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: CRITICAL
+        annotations:
+          summary: "High AI Gateway model error rate"
+          description: "OpenRouter or inference gateway calls are failing at a rate exceeding 0.1 errors/sec."
+          action: "Verify OpenRouter API key validity, rate limit quotas, and model status."
+
+      - alert: ExcessiveModelFallbacks
+        expr: sum(rate(applywise_ai_fallbacks_total[10m])) > 0.05
+        for: 10m
+        labels:
+          severity: WARNING
+        annotations:
+          summary: "High AI model fallback frequency"
+          description: "Primary AI models are frequently failing over to simulated or backup engines."
+          action: "Inspect OpenRouter rate limits and upstream provider latencies."
+
+      - alert: LangGraphWorkflowFailures
+        expr: sum(rate(applywise_agent_runs_total{status="failed"}[10m])) > 0
+        for: 5m
+        labels:
+          severity: WARNING
+        annotations:
+          summary: "LangGraph agent workflow failures detected"
+          description: "One or more agentic workflows (job analysis, CV tailoring, RAG copilot) failed."
+          action: "Inspect the failed workflow logs using the correlation ID."
+
+      - alert: DatabaseErrorElevated
+        expr: sum(rate(applywise_db_queries_total{status="error"}[5m])) > 0.05
+        for: 3m
+        labels:
+          severity: CRITICAL
+        annotations:
+          summary: "Supabase database errors detected"
+          description: "Database transactions or pgvector queries are failing."
+          action: "Check Supabase PostgreSQL instance health, pool capacity, and connection secrets."

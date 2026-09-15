@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { RAGService } from "@/lib/services/rag.service";
+import { withObservability } from "@/lib/observability/http";
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const { question } = await request.json();
     if (!question || question.trim() === "") {
@@ -17,3 +18,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withObservability(handlePost, "/api/rag");

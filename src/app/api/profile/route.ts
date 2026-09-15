@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
+import { withObservability } from "@/lib/observability/http";
 
-export async function GET() {
+async function handleGet() {
   const profile = repository.getProfile();
   const experiences = repository.getExperiences();
   const skills = repository.getSkills();
@@ -15,7 +16,7 @@ export async function GET() {
   });
 }
 
-export async function PUT(request: Request) {
+async function handlePut(request: Request) {
   try {
     const body = await request.json();
     const updated = repository.updateProfile(body);
@@ -27,3 +28,6 @@ export async function PUT(request: Request) {
     );
   }
 }
+
+export const GET = withObservability(handleGet, "/api/profile");
+export const PUT = withObservability(handlePut, "/api/profile");

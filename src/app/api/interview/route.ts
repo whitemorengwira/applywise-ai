@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { InterviewService } from "@/lib/services/interview.service";
+import { withObservability } from "@/lib/observability/http";
+import { interviewSessionsTotal } from "@/lib/observability/metrics";
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const { action, jobId, question, answer } = await request.json();
 
@@ -10,6 +12,7 @@ export async function POST(request: Request) {
       const job = repository.getJobById(jobId) || repository.getJobs()[0];
       const profile = repository.getProfile();
       const questions = await InterviewService.generateQuestions(job, profile);
+      interviewSessionsTotal.inc({ status: 'success' });
       return NextResponse.json({ success: true, questions });
     }
 
@@ -29,3 +32,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withObservability(handlePost, "/api/interview");

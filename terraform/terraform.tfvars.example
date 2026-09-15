@@ -1,0 +1,11 @@
+# =============================================================================
+# ApplyWise AI — Terraform Variables Example Template
+# NEVER commit real credentials or actual secrets to version control!
+# Copy this file to terraform.tfvars for local execution.
+# =============================================================================
+
+environment         = "development"
+app_name            = "applywise-ai"
+grafana_url         = "https://your-organization.grafana.net"
+grafana_auth        = "glsa_your_service_account_token_or_api_key"
+alert_contact_email = "alerts@your-domain.com"

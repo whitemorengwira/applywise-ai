@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
+import { withObservability } from "@/lib/observability/http";
 
-export async function GET() {
+async function handleGet() {
   const logs = repository.getAuditLogs();
   const totalTokens = logs.reduce((acc, l) => acc + l.promptTokens + l.completionTokens, 0);
   const avgLatency = logs.length > 0 ? Math.round(logs.reduce((acc, l) => acc + l.latencyMs, 0) / logs.length) : 0;
@@ -16,3 +17,5 @@ export async function GET() {
     },
   });
 }
+
+export const GET = withObservability(handleGet, "/api/audit");

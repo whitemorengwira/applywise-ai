@@ -1,6 +1,8 @@
 import { JobListing, MatchAnalysis, UserProfile, WorkExperience, SkillItem } from "@/types";
 import { AIGateway } from "../ai/gateway";
 import { repository } from "../db/repository";
+import { jobsAnalyzedTotal, agentRunsTotal, agentDurationSeconds } from "../observability/metrics";
+import { logger } from "../observability/logger";
 
 export class MatchService {
   /**
@@ -13,6 +15,7 @@ export class MatchService {
     skills: SkillItem[],
     experiences: WorkExperience[]
   ): Promise<MatchAnalysis> {
+    const startTime = Date.now();
     const candidateSkillNames = skills.map((s) => s.name.toLowerCase());
     const requiredSkills = job.skills.map((s) => s.toLowerCase());
 
@@ -123,10 +126,23 @@ Return a strict JSON object with:
         createdAt: new Date().toISOString(),
       };
 
+      const durationSec = (Date.now() - startTime) / 1000;
+      jobsAnalyzedTotal.inc({ source: 'manual' });
+      agentRunsTotal.inc({ agent_name: 'job_analysis', status: 'success' });
+      agentDurationSeconds.observe({ agent_name: 'job_analysis' }, durationSec);
+
+      logger.info('job_match_evaluated', `Job match evaluated for ${job.title}`, {
+        durationMs: Date.now() - startTime,
+        metadata: { score: overallScore, tier },
+      });
+
       repository.saveMatchAnalysis(analysis);
       return analysis;
     } catch (err) {
-      console.error("[MatchService] Error evaluating match:", err);
+      agentRunsTotal.inc({ agent_name: 'job_analysis', status: 'fallback' });
+      logger.warn('job_match_fallback', `Job match evaluation fallback for ${job.title}`, {
+        metadata: { error: err instanceof Error ? err.message : String(err) },
+      });
       // Deterministic fallback
       const fallbackAnalysis: MatchAnalysis = {
         id: `match-fb-${Date.now()}`,

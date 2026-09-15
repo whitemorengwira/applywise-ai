@@ -1,6 +1,13 @@
 import { JobListing, UserProfile, WorkExperience, TailoredDocument } from "@/types";
 import { AIGateway } from "../ai/gateway";
 import { repository } from "../db/repository";
+import {
+  cvTailorGenerationsTotal,
+  coverLetterGenerationsTotal,
+  agentRunsTotal,
+  agentDurationSeconds,
+} from "../observability/metrics";
+import { logger } from "../observability/logger";
 
 export interface TailorCVResult {
   tailoredSummary: string;
@@ -31,6 +38,7 @@ export class TailorService {
     profile: UserProfile,
     experiences: WorkExperience[]
   ): Promise<TailorCVResult> {
+    const startTime = Date.now();
     const verifiedAchievements = experiences.flatMap((e) =>
       e.achievements.map((ach) => ({ company: e.company, achievement: ach }))
     );
@@ -144,6 +152,17 @@ ${tailoredAchievements.map((item) => `### Highlighted Impact\n- ${item.tailored}
       modelUsed: aiResult.modelUsed,
     });
 
+    const durationSec = (Date.now() - startTime) / 1000;
+    const isSuccess = aiResult.log.success;
+    cvTailorGenerationsTotal.inc({ status: isSuccess ? 'success' : 'fallback' });
+    agentRunsTotal.inc({ agent_name: 'tailoring', status: isSuccess ? 'success' : 'failed' });
+    agentDurationSeconds.observe({ agent_name: 'tailoring' }, durationSec);
+
+    logger.info('cv_tailored_successfully', `CV tailored for ${job.title} at ${job.company}`, {
+      durationMs: Date.now() - startTime,
+      metadata: { applicationId, scoreAfter: 97 },
+    });
+
     return {
       tailoredSummary,
       tailoredAchievements,
@@ -161,6 +180,7 @@ ${tailoredAchievements.map((item) => `### Highlighted Impact\n- ${item.tailored}
     profile: UserProfile,
     experiences: WorkExperience[]
   ): Promise<TailorCoverLetterResult> {
+    const startTime = Date.now();
     const prompt = `
 Write a high-impact, professional executive cover letter for:
 Candidate: ${profile.fullName} (${profile.headline})
@@ -214,6 +234,17 @@ Principal Technology Architect & AI Systems Engineer`;
       content: coverLetterText,
       diffSummary: `Custom executive cover letter highlighting EarCodeX, AI Gateways, and platform leadership.`,
       modelUsed: aiResult.modelUsed,
+    });
+
+    const durationSec = (Date.now() - startTime) / 1000;
+    const isSuccess = aiResult.log.success;
+    coverLetterGenerationsTotal.inc({ status: isSuccess ? 'success' : 'fallback' });
+    agentRunsTotal.inc({ agent_name: 'tailoring', status: isSuccess ? 'success' : 'failed' });
+    agentDurationSeconds.observe({ agent_name: 'tailoring' }, durationSec);
+
+    logger.info('cover_letter_generated_successfully', `Cover letter generated for ${job.title} at ${job.company}`, {
+      durationMs: Date.now() - startTime,
+      metadata: { applicationId },
     });
 
     return {

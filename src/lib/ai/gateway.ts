@@ -1,5 +1,13 @@
 import { env } from "../env";
 import { AITaskType, AIOperationLog } from "@/types";
+import {
+  aiRequestsTotal,
+  aiLatencySeconds,
+  aiTokenUsageTotal,
+  aiErrorsTotal,
+  aiFallbacksTotal,
+} from "@/lib/observability/metrics";
+import { logger } from "@/lib/observability/logger";
 
 export interface AICallOptions {
   taskType: AITaskType;
@@ -27,6 +35,15 @@ const MODEL_ROUTING_MAP: Record<AITaskType, string> = {
 };
 
 export class AIGateway {
+  static normalizeModelName(model: string): string {
+    const lower = model.toLowerCase();
+    if (lower.includes('gemini')) return 'gemini-flash';
+    if (lower.includes('qwen')) return 'qwen-72b';
+    if (lower.includes('llama')) return 'llama-70b';
+    if (lower.includes('deepseek')) return 'deepseek-r1';
+    return 'default-model';
+  }
+
   static selectModel(taskType: AITaskType, override?: string): string {
     if (override) return override;
     return MODEL_ROUTING_MAP[taskType] || env.OPENROUTER_DEFAULT_MODEL;
@@ -36,10 +53,24 @@ export class AIGateway {
     const startTime = Date.now();
     const model = this.selectModel(options.taskType, options.modelOverride);
 
+    const boundedModel = this.normalizeModelName(model);
+
     // If no API key is configured, return realistic simulated response for local testing/demo
     if (!env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY.includes("your-openrouter")) {
       const mockResult = this.generateMockResponse(options.taskType);
       const latencyMs = Date.now() - startTime;
+      
+      // Telemetry: Record simulation metrics & structured log
+      aiRequestsTotal.inc({ model_id: `${boundedModel}-sim`, task_type: options.taskType, status: 'simulated' });
+      aiLatencySeconds.observe({ model_id: `${boundedModel}-sim`, task_type: options.taskType }, latencyMs / 1000);
+      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: 'prompt' }, 120);
+      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: 'completion' }, 280);
+
+      logger.info('ai_gateway_simulated', `AI request executed in simulation mode for ${options.taskType}`, {
+        durationMs: latencyMs,
+        metadata: { model: boundedModel, taskType: options.taskType },
+      });
+
       const log: AIOperationLog = {
         id: `mock-${Date.now()}`,
         taskType: options.taskType,
@@ -86,13 +117,26 @@ export class AIGateway {
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content ?? "";
       const latencyMs = Date.now() - startTime;
+      const promptTokens = data.usage?.prompt_tokens ?? 0;
+      const completionTokens = data.usage?.completion_tokens ?? 0;
+
+      // Telemetry: Record successful AI invocation metrics
+      aiRequestsTotal.inc({ model_id: boundedModel, task_type: options.taskType, status: 'success' });
+      aiLatencySeconds.observe({ model_id: boundedModel, task_type: options.taskType }, latencyMs / 1000);
+      if (promptTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: 'prompt' }, promptTokens);
+      if (completionTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: 'completion' }, completionTokens);
+
+      logger.info('ai_gateway_success', `AI call successful for ${options.taskType}`, {
+        durationMs: latencyMs,
+        metadata: { model: boundedModel, taskType: options.taskType, promptTokens, completionTokens },
+      });
 
       const log: AIOperationLog = {
         id: data.id || `log-${Date.now()}`,
         taskType: options.taskType,
         model,
-        promptTokens: data.usage?.prompt_tokens ?? 0,
-        completionTokens: data.usage?.completion_tokens ?? 0,
+        promptTokens,
+        completionTokens,
         latencyMs,
         success: true,
         createdAt: new Date().toISOString(),
@@ -107,6 +151,15 @@ export class AIGateway {
       const latencyMs = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : "Unknown AI gateway error";
 
+      // Telemetry: Record AI error & fallback metrics
+      aiErrorsTotal.inc({ model_id: boundedModel, error_code: 'invocation_failed' });
+      aiFallbacksTotal.inc({ primary_model: boundedModel, fallback_model: 'simulated_fallback', reason: 'api_error' });
+
+      logger.error('ai_gateway_fallback', `AI call failed, falling back to simulation: ${errorMsg}`, {
+        durationMs: latencyMs,
+        metadata: { model: boundedModel, taskType: options.taskType, error: errorMsg },
+      });
+
       const log: AIOperationLog = {
         id: `err-${Date.now()}`,
         taskType: options.taskType,
@@ -119,8 +172,6 @@ export class AIGateway {
         createdAt: new Date().toISOString(),
       };
 
-      // Graceful fallback to mock response with error indication
-      console.warn(`[AIGateway] Error calling ${model}, falling back to simulated output:`, errorMsg);
       return {
         content: this.generateMockResponse(options.taskType),
         modelUsed: `${model} (Fallback)`,

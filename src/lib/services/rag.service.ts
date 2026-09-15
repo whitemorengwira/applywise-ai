@@ -1,5 +1,13 @@
 import { AIGateway } from "../ai/gateway";
 import { repository } from "../db/repository";
+import {
+  ragQueriesTotal,
+  ragRetrievalDurationSeconds,
+  ragChunksRetrieved,
+  agentRunsTotal,
+  agentDurationSeconds,
+} from "../observability/metrics";
+import { logger } from "../observability/logger";
 
 export interface RAGChunk {
   id: string;
@@ -74,6 +82,7 @@ export class RAGService {
    * Keyword & semantic hybrid retrieval over verified candidate knowledge chunks.
    */
   static retrieveRelevantChunks(query: string, topK: number = 3): RAGChunk[] {
+    const retrievalStart = Date.now();
     const queryTokens = query.toLowerCase().split(/\W+/).filter((t) => t.length > 2);
 
     const scored = KNOWLEDGE_CHUNKS.map((chunk) => {
@@ -89,7 +98,14 @@ export class RAGService {
     });
 
     scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, topK).map((s) => s.chunk);
+    const results = scored.slice(0, topK).map((s) => s.chunk);
+    const retrievalDuration = (Date.now() - retrievalStart) / 1000;
+
+    // Telemetry: Record RAG retrieval duration and chunk count
+    ragRetrievalDurationSeconds.observe(retrievalDuration);
+    ragChunksRetrieved.observe(results.length);
+
+    return results;
   }
 
   /**
@@ -124,6 +140,19 @@ RULES:
     });
 
     repository.recordAILog(aiResult.log);
+
+    const totalDurationSec = (Date.now() - startTime) / 1000;
+    const isSuccess = aiResult.log.success;
+
+    // Telemetry: Record RAG and Agent execution metrics
+    ragQueriesTotal.inc({ status: relevantChunks.length > 0 ? 'success' : 'empty_retrieval' });
+    agentRunsTotal.inc({ agent_name: 'agentic_rag', status: isSuccess ? 'success' : 'failed' });
+    agentDurationSeconds.observe({ agent_name: 'agentic_rag' }, totalDurationSec);
+
+    logger.info('rag_copilot_completed', `RAG Copilot query processed with ${relevantChunks.length} chunks`, {
+      durationMs: Date.now() - startTime,
+      metadata: { chunksCount: relevantChunks.length, model: aiResult.modelUsed },
+    });
 
     return {
       answer: aiResult.content,

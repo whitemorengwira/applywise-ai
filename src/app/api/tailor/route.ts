@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { TailorService } from "@/lib/services/tailor.service";
+import { withObservability } from "@/lib/observability/http";
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const { jobId, applicationId, type = "cv" } = await request.json();
 
@@ -33,3 +34,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withObservability(handlePost, "/api/tailor");
