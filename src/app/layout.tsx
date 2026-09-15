@@ -13,9 +13,42 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ApplyWise AI — Autonomous Job Application Operating System",
+  title: {
+    default: "ApplyWise AI — Autonomous Job Application Operating System",
+    template: "%s | ApplyWise AI",
+  },
   description:
-    "AI-powered job discovery, smart CV tailoring, multi-vector RAG matching, and application workflow orchestration.",
+    "Enterprise AI-powered career platform for technology leaders. Grounded ATS tailoring, pgvector career copilot, multi-model AI routing, and application CRM.",
+  keywords: [
+    "AI Job Application",
+    "ATS Resume Optimizer",
+    "CV Tailoring",
+    "Career Copilot",
+    "RAG Vector Search",
+    "LangGraph Agents",
+    "Tech Architecture",
+    "Whitemore Ngwira",
+  ],
+  authors: [{ name: "Whitemore Ngwira (N. White)" }],
+  openGraph: {
+    title: "ApplyWise AI — Autonomous Job Application Operating System",
+    description:
+      "Enterprise AI-powered career platform: Grounded CV tailoring, pgvector career copilot, and autonomous pipeline CRM.",
+    url: "https://applywise-ai.vercel.app",
+    siteName: "ApplyWise AI",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ApplyWise AI — Autonomous Job Application Operating System",
+    description:
+      "Enterprise AI-powered career platform for technology leaders and senior architects.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
