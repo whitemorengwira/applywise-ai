@@ -1,0 +1,28 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: applywise-ai-hpa
+  namespace: applywise-ai
+  labels:
+    app.kubernetes.io/name: applywise-ai
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: applywise-ai
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

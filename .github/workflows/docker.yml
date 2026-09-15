@@ -1,0 +1,43 @@
+name: Container Build & Verification
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "docker-compose.yml"
+      - "src/**"
+      - "package*.json"
+      - "next.config.ts"
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "docker-compose.yml"
+      - "src/**"
+      - "package*.json"
+      - "next.config.ts"
+
+jobs:
+  docker-build:
+    name: Build Multi-Stage Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: applywise-ai:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

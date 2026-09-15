@@ -1,0 +1,37 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "applywise-ai.fullname" . }}-netpol
+  labels:
+    {{- include "applywise-ai.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "applywise-ai.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.targetPort }}
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443
+    - ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: {{ .Values.service.targetPort }}
+{{- end }}

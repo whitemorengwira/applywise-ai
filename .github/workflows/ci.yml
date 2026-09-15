@@ -1,0 +1,44 @@
+name: Continuous Integration & Quality Gate
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Lint, Type-Check, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Code Quality — ESLint
+        run: npm run lint
+
+      - name: Static Analysis — TypeScript
+        run: npm run type-check
+
+      - name: Automated Unit & Integration Tests
+        run: npm test
+
+      - name: Production Bundle Verification
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production

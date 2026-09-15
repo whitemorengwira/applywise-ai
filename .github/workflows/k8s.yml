@@ -1,0 +1,59 @@
+name: Kubernetes & Helm Validation
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "k8s/**"
+      - "helm/**"
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "k8s/**"
+      - "helm/**"
+
+jobs:
+  k8s-validate:
+    name: Lint & Template Helm & K8s Manifests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint Helm Chart
+        run: |
+          helm lint helm/applywise-ai
+
+      - name: Render Helm Template (Default)
+        run: |
+          helm template test helm/applywise-ai
+
+      - name: Render Helm Template (Development Values)
+        run: |
+          helm template test-dev helm/applywise-ai --values helm/applywise-ai/values-development.yaml
+
+      - name: Render Helm Template (Production Values)
+        run: |
+          helm template test-prod helm/applywise-ai --values helm/applywise-ai/values-production.yaml
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.29.0
+
+      - name: Dry-run Validate Static K8s Manifests
+        run: |
+          kubectl apply --dry-run=client -f k8s/namespace.yaml
+          kubectl apply --dry-run=client -f k8s/serviceaccount.yaml
+          kubectl apply --dry-run=client -f k8s/configmap.yaml
+          kubectl apply --dry-run=client -f k8s/secrets.example.yaml
+          kubectl apply --dry-run=client -f k8s/deployment.yaml
+          kubectl apply --dry-run=client -f k8s/service.yaml
+          kubectl apply --dry-run=client -f k8s/hpa.yaml
+          kubectl apply --dry-run=client -f k8s/network-policy.yaml

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: applywise-ai
+description: Production Helm chart for ApplyWise AI — Flagship Full-Stack Agentic Job Applications Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ai
+  - job-applications
+  - nextjs
+  - langgraph
+  - rag
+maintainers:
+  - name: Whitemore Ngwira
+    email: contact@applywise.ai

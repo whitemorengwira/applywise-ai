@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: applywise-ai-netpol
+  namespace: applywise-ai
+  labels:
+    app.kubernetes.io/name: applywise-ai
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: applywise-ai
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow HTTPS to external APIs (OpenRouter, Supabase, Adzuna)
+    - ports:
+        - protocol: TCP
+          port: 443
+    # Allow HTTP for internal cluster communication
+    - ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 3000

@@ -1,0 +1,22 @@
+node_modules
+.output
+.next
+.git
+.gitignore
+.env*.local
+.env
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vscode
+.agents
+tests
+coverage
+*.md
+!README.md
+cv and cover letter
+Dockerfile
+docker-compose*.yml
+k8s
+helm

@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: applywise-ai
+  namespace: applywise-ai
+  labels:
+    app.kubernetes.io/name: applywise-ai
+    app.kubernetes.io/component: web-app
+    app.kubernetes.io/part-of: applywise-ai
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: applywise-ai
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: applywise-ai
+        app.kubernetes.io/component: web-app
+    spec:
+      serviceAccountName: applywise-ai-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: web
+          image: applywise-ai:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: applywise-ai-config
+            - secretRef:
+                name: applywise-ai-secrets
+                optional: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2

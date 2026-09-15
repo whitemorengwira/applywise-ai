@@ -1,0 +1,116 @@
+# Default values for applywise-ai.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: applywise-ai
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: applywise.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+probes:
+  startup:
+    enabled: true
+    path: /api/health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 12
+  liveness:
+    enabled: true
+    path: /api/health
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    path: /api/health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 2
+
+env:
+  NODE_ENV: "production"
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_APP_NAME: "ApplyWise AI"
+
+# Secrets should be populated via Kubernetes Secret or external secret operator
+# In local development, values-development.yaml or placeholder secret is used
+secrets:
+  create: true
+  openrouterApiKey: ""
+  supabaseUrl: ""
+  supabaseAnonKey: ""
+  supabaseServiceRoleKey: ""
+  adzunaAppId: ""
+  adzunaAppKey: ""
+
+networkPolicy:
+  enabled: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: applywise-ai
+  labels:
+    app.kubernetes.io/name: applywise-ai
+    app.kubernetes.io/part-of: applywise-ai
+    app.kubernetes.io/managed-by: manual
