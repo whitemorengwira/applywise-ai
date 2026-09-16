@@ -3,6 +3,8 @@ import { JobListing, UserProfile } from "@/types";
 import { SEED_PROFILE } from "@/lib/db/seed-data";
 import { CVIntegrityService, MASTER_CV_SHA256 } from "@/lib/services/cv-integrity.service";
 import { EligibilityService, DetailedEligibilityResult } from "@/lib/services/eligibility.service";
+import { FreshnessService, FreshnessEvaluation } from "@/lib/services/freshness.service";
+import { ZohoEmailService, PreparedEmailApplication } from "@/lib/services/zoho-email.service";
 import { RAGService, RAGChunk } from "@/lib/services/rag.service";
 import { AIGateway } from "@/lib/ai/gateway";
 import { logger } from "@/lib/observability/logger";
@@ -14,7 +16,9 @@ export const ApplicationStateAnnotation = Annotation.Root({
   jobId: Annotation<string>(),
   job: Annotation<Partial<JobListing>>(),
   candidateProfile: Annotation<UserProfile>(),
+  dryRun: Annotation<boolean>(),
   isFresh: Annotation<boolean>(),
+  freshnessDetails: Annotation<FreshnessEvaluation | null>(),
   isDuplicate: Annotation<boolean>(),
   eligibility: Annotation<DetailedEligibilityResult>(),
   retrievedEvidence: Annotation<RAGChunk[]>(),
@@ -26,11 +30,13 @@ export const ApplicationStateAnnotation = Annotation.Root({
   cvHashVerified: Annotation<boolean>(),
   applicationPrepared: Annotation<boolean>(),
   submitted: Annotation<boolean>(),
+  preparedEmail: Annotation<PreparedEmailApplication | null>(),
   submissionProof: Annotation<{
     route: string;
     proofId: string;
     timestamp: string;
     cvHash: string;
+    dryRun?: boolean;
   } | null>(),
   auditTrail: Annotation<string[]>({
     reducer: (curr, update) => curr.concat(update),
@@ -59,18 +65,23 @@ export async function loadCandidateContextNode(_state: ApplicationWorkflowState)
 /**
  * Node 2: LOAD_JOB & CHECK_FRESHNESS & DEDUPLICATION
  */
-export async function loadJobAndCheckFreshnessNode(_state: ApplicationWorkflowState): Promise<Partial<ApplicationWorkflowState>> {
+export async function loadJobAndCheckFreshnessNode(state: ApplicationWorkflowState): Promise<Partial<ApplicationWorkflowState>> {
   const step = "CHECK_FRESHNESS_AND_DEDUPLICATION";
+  const job = state.job || {};
 
-  // Verify freshness (within 30 days) and canonical URL deduplication
-  const isFresh = true; // Seed & active feeds verified fresh
+  // Evaluate real posting age using FreshnessService
+  const freshness = FreshnessService.evaluateFreshness(job.postedAt || new Date().toISOString());
+  const isFresh = freshness.allowsAutonomousApplication;
   const isDuplicate = false; // Verified distinct listing
 
   return {
     isFresh,
+    freshnessDetails: freshness,
     isDuplicate,
     currentStep: step,
-    auditTrail: [`[${new Date().toISOString()}] Job freshness verified: fresh=${isFresh}, duplicate=${isDuplicate}`],
+    auditTrail: [
+      `[${new Date().toISOString()}] Job freshness evaluated: tier=${freshness.tier}, age=${freshness.ageDays}d, fresh=${isFresh}, duplicate=${isDuplicate}`,
+    ],
   };
 }
 
@@ -215,17 +226,57 @@ export async function prepareAndSubmitNode(state: ApplicationWorkflowState): Pro
     };
   }
 
-  const proofId = `PROOF-AW-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  // Handle Zoho email application route if applicable
+  let preparedEmail: PreparedEmailApplication | null = null;
+  if (route === "EMAIL") {
+    try {
+      preparedEmail = ZohoEmailService.prepareEmailApplication({
+        toEmail: "recruitment@enterprise-corp.com",
+        recipientName: "Engineering Leadership Recruitment",
+        jobTitle: state.job?.title || "Technical Architect",
+        companyName: state.job?.company || "Enterprise Corp",
+        coverLetterText: state.generatedCoverLetter || "",
+      });
+    } catch {
+      preparedEmail = null;
+    }
+  }
+
   const timestamp = new Date().toISOString();
+
+  // Safety Gate: If running in DRY_RUN mode, capture dry-run proof without external submission
+  if (state.dryRun) {
+    const dryRunProofId = `DRYRUN-AW-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    return {
+      applicationPrepared: true,
+      submitted: false,
+      preparedEmail,
+      submissionProof: {
+        route,
+        proofId: dryRunProofId,
+        timestamp,
+        cvHash: MASTER_CV_SHA256,
+        dryRun: true,
+      },
+      currentStep: step,
+      auditTrail: [
+        `[${timestamp}] [DRY_RUN] Application package verified for ${route}. Proof ID: ${dryRunProofId}. CV Hash: ${MASTER_CV_SHA256.slice(0, 16)}... (Submission safely halted by dry-run policy)`,
+      ],
+    };
+  }
+
+  const proofId = `PROOF-AW-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 
   return {
     applicationPrepared: true,
     submitted: true,
+    preparedEmail,
     submissionProof: {
       route,
       proofId,
       timestamp,
       cvHash: MASTER_CV_SHA256,
+      dryRun: false,
     },
     currentStep: step,
     auditTrail: [
@@ -246,6 +297,7 @@ export async function reconcileAndCheckpointNode(state: ApplicationWorkflowState
       decision: state.decision,
       submitted: state.submitted,
       proofId: state.submissionProof?.proofId,
+      dryRun: state.dryRun,
     },
   });
 
@@ -299,3 +351,18 @@ export function buildApplicationWorkflowGraph() {
 }
 
 export const applicationGraph = buildApplicationWorkflowGraph();
+
+/**
+ * Convenience helper to execute the autonomous application workflow for a target job listing.
+ */
+export async function executeApplicationWorkflow(
+  job: Partial<JobListing>,
+  options?: { dryRun?: boolean }
+): Promise<ApplicationWorkflowState> {
+  return await applicationGraph.invoke({
+    jobId: job.id || `job-${Date.now()}`,
+    job,
+    dryRun: options?.dryRun ?? false,
+    auditTrail: [],
+  });
+}

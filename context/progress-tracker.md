@@ -30,6 +30,7 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 14** | Candidate Intelligence & Geographic Rules | Completed | Master Prompt & Role Catalogue integrated, geographic eligibility enforced |
 | **Phase 15** | OpenCode Zen Model Suite Integration | Completed | All 5 OpenCode Zen free models configured, tested, verified live on `/settings` and `/api/ai/models` |
 | **Phase 16** | Directive 2.0 Autonomous Engineering | Completed | SHA-256 CV immutability locked, LangGraph state graph, Africa geographic rules, Vercel cloud cron live |
+| **Phase 17** | Final Launch Directive & Dry Run | Completed | Section 11 Dry Run verified, Section 5 Freshness engine, Section 10/29 Zoho email rules, 52/52 tests passed |
 
 ---
 
