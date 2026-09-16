@@ -18,6 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ModelSwitcher } from "./model-switcher";
 
 interface NavItem {
   title: string;
@@ -144,23 +145,10 @@ export function Sidebar() {
         ))}
       </div>
 
-      {/* Model Status Card */}
-      {!collapsed && (
-        <div className="p-3 m-3 rounded-lg border border-border/80 bg-secondary/40 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground-muted flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              OpenCode Zen Engine
-            </span>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-              FREE TIER
-            </span>
-          </div>
-          <p className="text-[11px] text-foreground-subtle leading-tight">
-            Nemotron 3 Ultra + pgvector Hybrid RAG
-          </p>
-        </div>
-      )}
+      {/* Interactive OpenCode Zen Model Switcher */}
+      <div className="border-t border-border/80 bg-[#050811]/60">
+        <ModelSwitcher collapsed={collapsed} />
+      </div>
     </aside>
   );
 }

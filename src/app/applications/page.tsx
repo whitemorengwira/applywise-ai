@@ -66,12 +66,12 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Kanban Board Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin min-w-0">
         {COLUMNS.map((col) => {
           const colApps = applications.filter((a) => a.status === col.id);
 
           return (
-            <div key={col.id} className="flex flex-col space-y-3 min-w-[240px]">
+            <div key={col.id} className="flex flex-col space-y-3 min-w-[260px] max-w-[280px] flex-shrink-0">
               <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-secondary/40 border border-border/60">
                 <span className="text-xs font-semibold text-foreground tracking-wide">
                   {col.label}

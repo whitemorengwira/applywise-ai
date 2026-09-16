@@ -14,9 +14,17 @@ import {
   Cpu,
   Layers,
   Search,
+  Lock,
+  ShieldCheck,
 } from "lucide-react";
 
-export default function Home() {
+export const metadata = {
+  title: "Executive Dashboard",
+  description:
+    "ApplyWise AI Executive Operational Overview — Grounded autonomous job matching, real-time pipeline KPIs, and multi-model agentic AI orchestration.",
+};
+
+export default function DashboardPage() {
   const kpiStats = [
     {
       title: "Average Match Quality",
@@ -32,7 +40,7 @@ export default function Home() {
       change: "12 added today",
       positive: true,
       icon: Briefcase,
-      badge: "Adzuna Live",
+      badge: "Live Feed",
     },
     {
       title: "Active Pipeline Applications",
@@ -70,7 +78,7 @@ export default function Home() {
       id: "job-2",
       title: "Principal Agentic Systems Architect",
       company: "Synthesia AI Labs",
-      location: "Hybrid / London",
+      location: "Hybrid / Johannesburg / London",
       salary: "£145,000 - £175,000",
       score: 94,
       tier: "highMatch" as const,
@@ -83,7 +91,7 @@ export default function Home() {
       id: "job-3",
       title: "Head of AI Application Engineering",
       company: "VentureScale Systems",
-      location: "Remote (UK/EU)",
+      location: "Remote (UK/EU/Africa)",
       salary: "£150,000 - £180,000",
       score: 89,
       tier: "highMatch" as const,
@@ -105,13 +113,17 @@ export default function Home() {
               <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-semibold">
                 Autonomous Agentic Pipeline Active
               </span>
+              <Badge variant="success" className="text-[10px] font-mono gap-1">
+                <ShieldCheck className="h-3 w-3" />
+                IMMUTABLE MASTER CV
+              </Badge>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Candidate: <span className="text-primary font-mono">N. White</span> — Principal AI & Full-Stack Architect
+              Candidate: <span className="text-primary font-mono">Whitemore Ngwira</span> — Principal Systems Architect
             </h2>
             <p className="text-sm text-foreground-muted leading-relaxed">
               Autonomous job matching operating system orchestrating multi-vector pgvector semantic search,
-              cryptographic master CV protection, and agentic LLM routing via OpenCode Zen free tiers.
+              cryptographic master CV protection, and agentic LLM routing via OpenCode Zen 100% free models.
             </p>
           </div>
 
@@ -123,9 +135,9 @@ export default function Home() {
               </Link>
             </Button>
             <Button variant="outline" className="gap-2" asChild>
-              <Link href="/cv-studio">
+              <Link href="/cover-letters">
                 <Sparkles className="h-4 w-4 text-primary" />
-                CV Tailor Studio
+                Adaptive Cover Letters
               </Link>
             </Button>
           </div>
@@ -215,7 +227,7 @@ export default function Home() {
                       </Badge>
                     ) : (
                       <Button size="sm" variant="glow" asChild>
-                        <Link href={`/cv-studio?jobId=${job.id}`}>Tailor CV</Link>
+                        <Link href={`/cover-letters?jobId=${job.id}`}>Generate Cover Letter</Link>
                       </Button>
                     )}
                   </div>
@@ -277,7 +289,7 @@ export default function Home() {
               </div>
 
               <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
-                <FileCheck2 className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                <Lock className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <h5 className="text-xs font-semibold text-foreground">Immutable Master CV (SHA-256)</h5>
                   <p className="text-[11px] text-foreground-muted leading-relaxed">
@@ -290,8 +302,8 @@ export default function Home() {
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between text-[11px] text-foreground-subtle">
                 <span>Architecture Specification</span>
-                <Link href="/docs" className="text-primary hover:underline font-mono">
-                  ADR-001 → ADR-006
+                <Link href="/analytics" className="text-primary hover:underline font-mono">
+                  Unified Observability →
                 </Link>
               </div>
             </div>

@@ -100,7 +100,8 @@ export class SemanticReRanker {
     "litellm", "cloudflare", "earcodex", "terraform", "postgresql",
     "pgvector", "langgraph", "tailscale", "aws", "rds", "dynamodb",
     "s3", "glacier", "300+", "37 modular", "21 productions", "sub-second",
-    "multi-az", "kms", "socinga", "cineterns", "oasis", "14+", "next.js", "typescript"
+    "multi-az", "kms", "socinga", "cineterns", "oasis", "14+", "next.js", "typescript",
+    "nico", "nico life", "supabets", "smart mining", "samf", "whitemore", "ngwira"
   ];
 
   public static reRank(query: string, candidateChunks: RAGChunk[]): ReRankedChunk[] {
@@ -186,13 +187,34 @@ export class SemanticReRanker {
       }
       const techAffinity = totalTechInQuery > 0 ? techMatches / totalTechInQuery : tokenCoverage;
 
+      // Zero token match penalty
+      if (matchedTokens === 0) {
+        categoryRelevance = 0;
+      }
+
+      // Candidate entity boost for verified portfolio topics
+      let candidateEntityBoost = 0;
+      const verifiedEntities = [
+        "earcodex", "nico", "supabets", "socinga", "samf", "litellm",
+        "gateway", "terraform", "pgvector", "langgraph", "whitemore", "ngwira",
+        "oasis", "cineterns", "aws", "next.js", "typescript"
+      ];
+      for (const ent of verifiedEntities) {
+        if (query.toLowerCase().includes(ent) && fullLower.includes(ent)) {
+          candidateEntityBoost += 0.30;
+        }
+      }
+      candidateEntityBoost = Math.min(0.45, candidateEntityBoost);
+
       // Weighted multi-factor score
-      const precisionScore =
+      const baseScore =
         0.30 * ngramAffinity +
         0.20 * tokenCoverage +
         0.20 * techAffinity +
         0.15 * categoryRelevance +
         0.15 * empiricalDensity;
+
+      const precisionScore = Math.min(1.0, baseScore + candidateEntityBoost);
 
       // Grounding Confidence mapping: verified evidence baseline 98.5% + affinity bonus up to 99.9%
       const groundingConfidence = Math.min(
@@ -305,7 +327,27 @@ export class RAGService {
    */
   static async queryCopilot(userQuestion: string): Promise<RAGAnswerResult> {
     const startTime = Date.now();
-    const relevantChunks = this.retrieveRelevantChunks(userQuestion, 3);
+    const allChunks = this.getAllKnowledgeChunks();
+    const reRanked = SemanticReRanker.reRank(userQuestion, allChunks);
+    const topResult = reRanked[0];
+
+    // Strict Grounding Guardrail: If top score is below 0.75, decline ungrounded answer
+    if (!topResult || topResult.precisionScore < 0.75) {
+      const matchPct = topResult ? (topResult.precisionScore * 100).toFixed(1) : "0.0";
+      ragQueriesTotal.inc({ status: "ungrounded_limitation" });
+      logger.warn("rag_copilot_ungrounded", "Query below strict grounding threshold", {
+        metadata: { query: userQuestion, topScore: topResult?.precisionScore || 0 },
+      });
+
+      return {
+        answer: `I do not have verified candidate records or production architectural evidence in Whitemore Ngwira's Master CV or N.White Systems case studies regarding this specific inquiry (grounding match: ${matchPct}%, strictly below the 75.0% strict grounding threshold).\n\nAs an AI Career Copilot operating under strict zero-hallucination governance, I only state verified facts from certified production blueprints and portfolio case studies, including:\n• EarCodeX InsurTech Platform (AWS cloud-native claims administration, document intelligence & immutable audit trails)\n• Enterprise AI Gateways (LiteLLM model routing, Cloudflare AI Gateway across 300+ cities with edge caching)\n• NICO Life InsurTech Platform (Mobile performance & regulatory compliance for trust-sensitive customer journeys)\n• Supabets High-Traffic Gaming Platform (Regulated, sub-second latency architecture & transactional integrity)\n• Socinga Smart Mining Platform (Industrial IoT telemetry & shaft-to-mill sensor data flows)\n• SAMF Digital Archival & Media Pipelines (Cryptographic SHA-256 preservation & automated QC across 21 productions)\n• Infrastructure as Code & Zero-Trust (37 modular AWS Terraform blueprints, KMS envelope encryption & Tailscale VPN)`,
+        citedChunks: [],
+        modelUsed: "ApplyWise Grounding Guard (Zero-Hallucination)",
+        latencyMs: Date.now() - startTime,
+      };
+    }
+
+    const relevantChunks = reRanked.slice(0, 3).map((r) => r.chunk);
 
     const prompt = `
 You are the ApplyWise AI Career Copilot for candidate Whitemore Ngwira (N. White), Principal Technology Architect & AI Systems Engineer.
@@ -322,6 +364,7 @@ RULES:
 2. If the answer involves technical details (e.g. LiteLLM, Cloudflare AI Gateway, EarCodeX, Terraform, Supabase, pgvector), state exactly how the candidate delivered them in production.
 3. Explicitly reference the sources used (e.g., "[Source 1]").
 4. Maintain a senior executive, articulate tone.
+5. If the evidence does not contain a specific detail asked by the user, explicitly state that it is not documented in the verified portfolio rather than hallucinating.
 `;
 
     const aiResult = await AIGateway.complete({

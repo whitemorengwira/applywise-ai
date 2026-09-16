@@ -634,7 +634,7 @@ Whitemore Ngwira (N. White)`;
         });
 
       case "agentic_rag":
-        return "Based on verified profile evidence [Source 1], Whitemore Ngwira has 14+ years of systems architecture experience with proven production implementations of LiteLLM model routing, Cloudflare AI Gateway across 300+ edge locations, and AWS cloud-native document intelligence [Source 2].";
+        return "Based on verified portfolio evidence [Source 1], Whitemore Ngwira (N. White) is a Principal Systems Architect with 14+ years of production experience. Verified implementations include the EarCodeX InsurTech platform on AWS [Source 2], enterprise AI Gateways with LiteLLM and Cloudflare across 300+ edge locations, NICO Life regulated customer platforms, Supabets high-throughput gaming infrastructure (<1s latency), Socinga Smart Mining industrial IoT telemetry, and SAMF archival preservation with SHA-256 cryptographic integrity.";
 
       default:
         return "AI analysis completed successfully. System is operating in demonstration and showcase mode.";

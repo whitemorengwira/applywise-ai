@@ -285,12 +285,12 @@ export default function CVEvidenceIntegrityStudioPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-foreground-subtle">Target Role:</label>
+            <div className="flex items-center gap-3 w-full lg:w-auto flex-wrap">
+              <label className="text-xs text-foreground-subtle shrink-0">Target Role:</label>
               <select
                 value={selectedJobId}
                 onChange={(e) => setSelectedJobId(e.target.value)}
-                className="h-10 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+                className="h-10 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground focus:border-primary focus:outline-none max-w-full truncate flex-1"
               >
                 {SEED_JOBS.map((j) => (
                   <option key={j.id} value={j.id} className="bg-[#0a0f1d] text-foreground">

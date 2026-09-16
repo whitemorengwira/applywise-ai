@@ -10,7 +10,8 @@ async function handlePost(request: Request) {
     }
 
     const result = await RAGService.queryCopilot(question);
-    return NextResponse.json({ success: true, result });
+    const isGrounded = result.citedChunks.length > 0;
+    return NextResponse.json({ success: true, result, isGrounded });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: (error as Error).message },

@@ -25,4 +25,14 @@ describe("RAGService", () => {
     expect(result.citedChunks.length).toBeGreaterThan(0);
     expect(result.modelUsed).toBeTruthy();
   });
+
+  it("strictly declines to hallucinate on out-of-domain or ungrounded queries (< 0.75 score)", async () => {
+    const result = await RAGService.queryCopilot("Can you give me a recipe for baking sourdough bread and grilling salmon?");
+
+    expect(result).toBeDefined();
+    expect(result.answer).toContain("I do not have verified candidate records");
+    expect(result.answer).toContain("strict grounding threshold");
+    expect(result.citedChunks.length).toBe(0);
+    expect(result.modelUsed).toContain("Grounding Guard");
+  });
 });

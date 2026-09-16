@@ -129,7 +129,14 @@ export default function RAGSearchPage() {
             >
               <div className="flex items-center justify-between text-xs opacity-75 font-mono">
                 <span>{msg.role === "user" ? "Recruiter / Interviewer" : "ApplyWise Copilot"}</span>
-                {msg.latencyMs && <span>{msg.latencyMs}ms response</span>}
+                <div className="flex items-center gap-2">
+                  {msg.role === "assistant" && idx > 0 && (!msg.citations || msg.citations.length === 0) && (
+                    <Badge variant="destructive" className="text-[9px] font-mono py-0">
+                      ZERO-HALLUCINATION GUARD
+                    </Badge>
+                  )}
+                  {msg.latencyMs && <span>{msg.latencyMs}ms response</span>}
+                </div>
               </div>
 
               <div className="text-xs md:text-sm leading-relaxed whitespace-pre-line">

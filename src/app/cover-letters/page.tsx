@@ -86,11 +86,11 @@ Principal Technology Architect & AI Systems Engineer`
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <select
               value={selectedJobId}
               onChange={(e) => setSelectedJobId(e.target.value)}
-              className="h-10 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
+              className="h-10 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground focus:border-primary focus:outline-none max-w-full truncate flex-1 sm:flex-none"
             >
               {SEED_JOBS.map((j) => (
                 <option key={j.id} value={j.id} className="bg-[#0a0f1d] text-foreground">
