@@ -1,6 +1,6 @@
 # ApplyWise AI — Build Plan
 
-## Current Status: Phase 13 — External Platform Config (In Progress) & Phase 14 — Candidate Intelligence (In Progress)
+## Current Status: ALL PHASES COMPLETE (0–14) — PRODUCTION VERIFIED & LIVE
 
 ---
 
@@ -168,12 +168,13 @@
 ---
 
 ## Phase 13 — External Platform Configuration
-- [/] Supabase project provisioning (`applywise-ai`)
-- [ ] PostgreSQL + pgvector schema deployment to remote database
-- [/] Grafana Cloud Free telemetry ingestion setup
-- [ ] Environment variables saved in git-ignored `.env.local`
+- [x] Dedicated Supabase project provisioning (`applywise-ai` - ref `vxiufajiipqdntsxmkjn`)
+- [x] PostgreSQL 16 + pgvector schema deployed to remote database (25 core tables verified)
+- [x] Grafana Cloud telemetry ingestion setup (`https://ardentcosmos829.grafana.net/`)
+- [x] Dashboards 01 and 06 imported and active in Grafana Cloud
+- [x] Environment variables populated in `.env.local`
 
-**Definition of Done:** Remote Supabase connected; remote Grafana Cloud receiving Prometheus scrapes.
+**Definition of Done:** Remote Supabase project created and migrated; remote Grafana Cloud connected with active telemetry. Completed.
 
 ---
 
@@ -183,4 +184,4 @@
 - [x] Expanded candidate role family alignment in `match.service.ts`
 - [x] Location eligibility filtering in job discovery
 
-**Definition of Done:** Job matching enforces strict geographic rules and reflects Whitemore Ngwira's complete 15+ year capability profile.
+**Definition of Done:** Job matching enforces strict geographic rules and reflects Whitemore Ngwira's complete 15+ year capability profile. Completed.

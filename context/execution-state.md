@@ -1,11 +1,13 @@
 # ApplyWise AI — Machine-Readable Execution Checkpoint
 
 ## Metadata
-- **Last Updated**: 2026-09-16T14:05:00+02:00
-- **Current Phase**: Phase 13 — External Platform Config & Phase 14 — Candidate Intelligence
+- **Last Updated**: 2026-09-16T14:55:00+02:00
+- **Current Phase**: ALL PHASES COMPLETE (Phases 0–14)
 - **System**: ApplyWise AI (Whitemore Ngwira Showcase)
 - **Production URL**: `https://nwhitejobapplicationsapp2027.vercel.app`
 - **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
+- **Supabase Project**: `https://vxiufajiipqdntsxmkjn.supabase.co` (`applywise-ai`)
+- **Grafana Cloud**: `https://ardentcosmos829.grafana.net` (`ardentcosmos829`)
 - **Status**: COMPLETE, VERIFIED & PRODUCTION-ACTIVE
 
 ---
@@ -27,7 +29,7 @@
 | **Phase 10** | Infrastructure-as-Code (Terraform) | `[x] COMPLETE` | Terraform modules, dev/prod, `terraform fmt`, `terraform validate` passed |
 | **Phase 11** | Recruiter Live Demonstration & Final Documentation | `[x] COMPLETE` | `docs/observability-demo.md`, `docs/technology-stack.md`, updated `README.md` |
 | **Phase 12** | Production Deployment (Vercel) | `[x] COMPLETE` | Aliased to `https://nwhitejobapplicationsapp2027.vercel.app` (HTTP 200) |
-| **Phase 13** | External Platform Config (Supabase + Grafana Cloud) | `[/] IN PROGRESS` | Browser credential configuration pending |
+| **Phase 13** | External Platform Config (Supabase + Grafana Cloud) | `[x] COMPLETE` | Dedicated project created, 25 tables migrated, Grafana dashboards imported |
 | **Phase 14** | Candidate Intelligence & Geographic Rule Engine | `[x] COMPLETE` | Master prompt & role catalogue tracked; location rules enforced |
 
 ---
@@ -38,24 +40,17 @@
 - **`terraform validate`**: `[x] PASSED (Success! The configuration is valid.)`
 - **`npm run type-check`**: `[x] PASSED (0 errors, strict mode)`
 - **`npm run lint`**: `[x] PASSED (0 errors, 0 warnings)`
-- **`npm test`**: `[x] PASSED (4 test files, 10/10 tests passed)`
+- **`npm test`**: `[x] PASSED (4 test files, 13/13 tests passed)`
 - **`npm run build`**: `[x] PASSED (All 22 routes compiled cleanly)`
 
 ---
 
-## 3. Observability & Dashboard Inventory
+## 3. External Platform Inventory
 
-- **Metrics Registry**: `src/lib/observability/metrics.ts` (~950 active series, <10% of Grafana Cloud Free quota)
-- **Structured JSON Logger**: `src/lib/observability/logger.ts` (Machine-readable, PII redacted, correlation ID)
-- **HTTP Wrapper**: `src/lib/observability/http.ts` (`withObservability` wrapper on all endpoints)
-- **Prometheus Scraping Endpoint**: `/api/metrics`
-- **Readiness Probe**: `/api/ready`
-- **Dashboards as Code** (`observability/grafana/dashboards/`):
-  1. `01-application-overview.json` (Four Golden Signals, Traffic by route, Latency quantiles)
-  2. `02-ai-operations.json` (AI invocations, p95 inference latency, fallbacks, token usage, RAG metrics)
-  3. `03-kubernetes-workloads.json` (Node.js Heap memory, CPU rate, event loop lag, GC duration)
-  4. `04-database-storage.json` (Query throughput, p95 query latency, pgvector search stats)
-  5. `05-business-intelligence.json` (Jobs analyzed, CRM application pipeline, CV generation velocity)
-  6. `06-nwhite-systems-traffic-analytics.json` (Unified cloud & traffic analytics, geo distribution)
-- **Prometheus Scrape & Alerts**: `observability/prometheus/prometheus.yml`, `observability/prometheus/alerts.yml`
-- **Terraform IaC**: `terraform/` (Root composition, `modules/grafana`, `environments/dev`, `environments/prod`)
+- **Supabase Project**: `applywise-ai` (`vxiufajiipqdntsxmkjn`) in `eu-west-1`
+- **Database**: PostgreSQL 16 with `pgvector` and HNSW indexing, 25 tables active with RLS
+- **Grafana Workspace**: `https://ardentcosmos829.grafana.net/`
+- **Prometheus Ingestion**: `https://prometheus-prod-65-prod-eu-west-2.grafana.net/api/prom/push`
+- **Imported Dashboards**:
+  - `ApplyWise AI — Application Overview`
+  - `06 — NWhite Systems Unified Cloud & Traffic Analytics`
