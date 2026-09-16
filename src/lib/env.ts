@@ -8,8 +8,8 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_BASE_URL: z.string().url().default("https://openrouter.ai/api/v1"),
-  OPENROUTER_DEFAULT_MODEL: z.string().default("google/gemini-2.0-flash-thinking-exp:free"),
-  OPENROUTER_FAST_MODEL: z.string().default("google/gemini-2.0-flash-exp:free"),
+  OPENROUTER_DEFAULT_MODEL: z.string().default("opencode/nemotron-3-ultra:free"),
+  OPENROUTER_FAST_MODEL: z.string().default("opencode/nemotron-3.5-lightning:free"),
   ADZUNA_APP_ID: z.string().optional(),
   ADZUNA_APP_KEY: z.string().optional(),
 });

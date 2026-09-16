@@ -36,7 +36,9 @@
     ".build/types/**/*.ts",
     ".build/dev/types/**/*.ts",
     ".output/types/**/*.ts",
-    ".output/dev/types/**/*.ts"
+    ".output/dev/types/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

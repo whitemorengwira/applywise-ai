@@ -118,10 +118,10 @@ export class AIGateway {
 
     const boundedModel = this.normalizeModelName(model);
 
-    // If no API key is configured, return realistic simulated response for local testing/demo
-    if (!env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY.includes("your-openrouter")) {
+    // If no API key is configured or demo placeholder is used, return realistic simulated response
+    if (!env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY.includes("your-openrouter") || env.OPENROUTER_API_KEY.includes("demo")) {
       const mockResult = this.generateMockResponse(options.taskType);
-      const latencyMs = Date.now() - startTime;
+      const latencyMs = Math.max(1, Date.now() - startTime);
       
       // Telemetry: Record simulation metrics & structured log
       aiRequestsTotal.inc({ model_id: `${boundedModel}-sim`, task_type: options.taskType, status: 'simulated' });
@@ -243,6 +243,55 @@ export class AIGateway {
     }
   }
 
+  static getCatalog(): ModelCatalogEntry[] {
+    return OPENCODE_ZEN_MODELS;
+  }
+
+  static async testModel(modelId: string): Promise<{
+    modelId: string;
+    modelName: string;
+    status: "operational" | "simulated";
+    latencyMs: number;
+    sampleOutput: string;
+    promptTokens: number;
+    completionTokens: number;
+  }> {
+    const catalogEntry = OPENCODE_ZEN_MODELS.find((m) => m.id === modelId) || {
+      id: modelId,
+      name: modelId,
+      provider: "OpenCode Zen" as const,
+      tier: "Free" as const,
+      capabilities: ["reasoning" as const],
+      contextWindow: "32k",
+      description: "Generic model entry",
+    };
+
+    let taskType: AITaskType = "match_scoring";
+    if (catalogEntry.capabilities.includes("finance")) {
+      taskType = "company_research";
+    } else if (catalogEntry.capabilities.includes("creative")) {
+      taskType = "cover_letter_generation";
+    } else if (catalogEntry.capabilities.includes("fast") && !catalogEntry.capabilities.includes("reasoning")) {
+      taskType = "job_extraction";
+    }
+
+    const res = await this.complete({
+      taskType,
+      prompt: `Health check benchmark and inference verification for model: ${catalogEntry.name}`,
+      modelOverride: modelId,
+    });
+
+    return {
+      modelId,
+      modelName: catalogEntry.name,
+      status: res.modelUsed.includes("Simulated") ? "simulated" : "operational",
+      latencyMs: res.log.latencyMs,
+      sampleOutput: res.content.length > 140 ? res.content.slice(0, 140) + "..." : res.content,
+      promptTokens: res.log.promptTokens,
+      completionTokens: res.log.completionTokens,
+    };
+  }
+
   private static generateMockResponse(taskType: AITaskType): string {
     switch (taskType) {
       case "match_scoring":
@@ -295,6 +344,49 @@ export class AIGateway {
           ],
           emphasizedSkills: ["Next.js", "TypeScript", "LangGraph", "Supabase", "pgvector", "System Design"],
         });
+
+      case "job_extraction":
+        return JSON.stringify({
+          title: "Senior Full-Stack & Agentic AI Systems Architect",
+          company: "Enterprise Cloud AI",
+          skills: ["TypeScript", "Next.js", "AI Gateways", "Supabase", "pgvector", "LangGraph"],
+          locationType: "remote",
+          salaryMin: 130000,
+          salaryMax: 170000,
+          currency: "GBP",
+          seniority: "Principal / Lead",
+        });
+
+      case "cover_letter_generation":
+        return `Dear Hiring Team,
+
+I am writing to express my enthusiastic interest in joining your engineering team. With over 14 years of production engineering experience architecting scalable distributed systems, governed AI gateways, and cloud platforms, I have followed your trajectory with great admiration.
+
+In my recent projects, I delivered enterprise platforms including EarCodeX on AWS with automated document intelligence and immutable audit trails, and engineered resilient AI Gateways with LiteLLM and Cloudflare across 300+ edge locations. My design methodology emphasizes strict grounding, sub-second inference, and human-in-the-loop oversight.
+
+I welcome the opportunity to discuss how my architectural vision and execution discipline can accelerate your engineering roadmaps.
+
+Sincerely,
+Candidate`;
+
+      case "company_research":
+        return JSON.stringify({
+          companyName: "Enterprise Cloud AI",
+          valuation: "Series B / $120M",
+          fundingRound: "Series B ($35M closed)",
+          financialHealth: "Strong runway (36+ months), ARR growth >140% YoY",
+          compensationBenchmark: {
+            p50: 135000,
+            p75: 155000,
+            p90: 175000,
+            equityRange: "0.15% - 0.35%",
+          },
+          headcountTrend: "+42% over last 12 months",
+          strategicFocus: "Enterprise AI orchestration, edge inference, SOC2 compliance",
+        });
+
+      case "agentic_rag":
+        return "Based on verified profile evidence [Source 1], the candidate has 14+ years of systems architecture experience with proven production implementations of LiteLLM model routing, Cloudflare AI Gateway across 300+ edge locations, and AWS cloud-native document intelligence [Source 2].";
 
       default:
         return "AI analysis completed successfully. System is operating in demonstration and showcase mode.";
