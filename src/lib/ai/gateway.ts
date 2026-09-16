@@ -27,13 +27,17 @@ export interface AICallResult {
 export interface ModelCatalogEntry {
   id: string;
   name: string;
-  provider: "OpenCode Zen" | "Google DeepMind" | "Meta" | "DeepSeek" | "Mistral";
-  tier: "Free" | "Paid";
-  capabilities: ("reasoning" | "fast" | "multimodal" | "creative" | "finance")[];
+  provider: "OpenCode Zen";
+  tier: "Free";
+  capabilities: ("reasoning" | "fast" | "multimodal" | "creative" | "finance" | "structured")[];
   contextWindow: string;
   description: string;
 }
 
+/**
+ * Authoritative OpenCode Zen 100% Free-Tier Model Suite.
+ * Verified dynamically under FREE_ONLY_MODE=true.
+ */
 export const OPENCODE_ZEN_MODELS: ModelCatalogEntry[] = [
   {
     id: "opencode/nemotron-3-ultra:free",
@@ -67,7 +71,7 @@ export const OPENCODE_ZEN_MODELS: ModelCatalogEntry[] = [
     name: "MiMo V2.5 Free",
     provider: "OpenCode Zen",
     tier: "Free",
-    capabilities: ["multimodal", "fast"],
+    capabilities: ["multimodal", "fast", "structured"],
     contextWindow: "32k",
     description: "Multi-modal structuring engine for CV document layout analysis and portfolio asset parsing.",
   },
@@ -82,7 +86,14 @@ export const OPENCODE_ZEN_MODELS: ModelCatalogEntry[] = [
   },
 ];
 
-// Model routing map adhering to ADR-005 with OpenCode Zen defaults
+/**
+ * Dynamic capability routing adhering to the Authoritative Directive:
+ * - Reasoning -> Nemotron 3 Ultra Free
+ * - Fast extraction -> Nemotron 3.5 Lightning Free
+ * - Company research & finance -> Ling 3.0 Flash Fin Free
+ * - Creative cover letter -> Muse Spark 1.3 Free
+ * - Multimodal & document structure -> MiMo V2.5 Free
+ */
 const MODEL_ROUTING_MAP: Record<AITaskType, string> = {
   job_extraction: "opencode/nemotron-3.5-lightning:free",
   match_scoring: "opencode/nemotron-3-ultra:free",
@@ -95,47 +106,56 @@ const MODEL_ROUTING_MAP: Record<AITaskType, string> = {
 export class AIGateway {
   static normalizeModelName(model: string): string {
     const lower = model.toLowerCase();
-    if (lower.includes('nemotron-3.5') || lower.includes('lightning')) return 'nemotron-3.5-lightning';
-    if (lower.includes('nemotron') || lower.includes('ultra')) return 'nemotron-3-ultra';
-    if (lower.includes('ling')) return 'ling-3.0-flash-fin';
-    if (lower.includes('mimo')) return 'mimo-v2.5';
-    if (lower.includes('muse')) return 'muse-spark-1.3';
-    if (lower.includes('gemini')) return 'gemini-flash';
-    if (lower.includes('qwen')) return 'qwen-72b';
-    if (lower.includes('llama')) return 'llama-70b';
-    if (lower.includes('deepseek')) return 'deepseek-r1';
-    return 'default-model';
+    if (lower.includes("nemotron-3.5") || lower.includes("lightning")) return "nemotron-3.5-lightning";
+    if (lower.includes("nemotron") || lower.includes("ultra")) return "nemotron-3-ultra";
+    if (lower.includes("ling")) return "ling-3.0-flash-fin";
+    if (lower.includes("mimo")) return "mimo-v2.5";
+    if (lower.includes("muse")) return "muse-spark-1.3";
+    return "nemotron-3-ultra";
   }
 
   static selectModel(taskType: AITaskType, override?: string): string {
     if (override) return override;
-    return MODEL_ROUTING_MAP[taskType] || env.OPENROUTER_DEFAULT_MODEL;
+    return MODEL_ROUTING_MAP[taskType] || env.OPENCODE_DEFAULT_REASONING_MODEL;
   }
 
   static async complete(options: AICallOptions): Promise<AICallResult> {
     const startTime = Date.now();
     const model = this.selectModel(options.taskType, options.modelOverride);
-
     const boundedModel = this.normalizeModelName(model);
 
-    // If no API key is configured or demo placeholder is used, return realistic simulated response
-    if (!env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY.includes("your-openrouter") || env.OPENROUTER_API_KEY.includes("demo")) {
+    // 100% Free-Tier Governance Enforcement
+    if (env.FREE_ONLY_MODE) {
+      const isFree = OPENCODE_ZEN_MODELS.some((m) => m.id === model && m.tier === "Free");
+      if (!isFree && !model.includes(":free")) {
+        throw new Error(
+          `[FREE_TIER_VIOLATION] Paid inference strictly blocked under FREE_ONLY_MODE=true for model: ${model}. Only verified OpenCode Zen free models permitted.`
+        );
+      }
+    }
+
+    // If no live external API key is configured or offline simulation is needed
+    if (
+      !env.OPENCODE_ZEN_API_KEY ||
+      env.OPENCODE_ZEN_API_KEY.includes("free_tier_active") ||
+      env.OPENCODE_ZEN_API_KEY.includes("demo")
+    ) {
       const mockResult = this.generateMockResponse(options.taskType);
       const latencyMs = Math.max(1, Date.now() - startTime);
-      
-      // Telemetry: Record simulation metrics & structured log
-      aiRequestsTotal.inc({ model_id: `${boundedModel}-sim`, task_type: options.taskType, status: 'simulated' });
-      aiLatencySeconds.observe({ model_id: `${boundedModel}-sim`, task_type: options.taskType }, latencyMs / 1000);
-      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: 'prompt' }, 120);
-      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: 'completion' }, 280);
 
-      logger.info('ai_gateway_simulated', `AI request executed in simulation mode for ${options.taskType}`, {
+      // Prometheus Telemetry: Record simulation metrics & structured log
+      aiRequestsTotal.inc({ model_id: `${boundedModel}-sim`, task_type: options.taskType, status: "simulated" });
+      aiLatencySeconds.observe({ model_id: `${boundedModel}-sim`, task_type: options.taskType }, latencyMs / 1000);
+      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: "prompt" }, 120);
+      aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: "completion" }, 280);
+
+      logger.info("ai_gateway_simulated", `AI request executed in simulation mode for ${options.taskType}`, {
         durationMs: latencyMs,
         metadata: { model: boundedModel, taskType: options.taskType },
       });
 
       const log: AIOperationLog = {
-        id: `mock-${Date.now()}`,
+        id: `opencode-mock-${Date.now()}`,
         taskType: options.taskType,
         model: `${model} (Simulated)`,
         promptTokens: 120,
@@ -152,20 +172,26 @@ export class AIGateway {
     }
 
     try {
-      const response = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
+      // Route through Cloudflare AI Gateway when enabled, or direct OpenCode Zen endpoint
+      const targetEndpoint =
+        env.CLOUDFLARE_AI_GATEWAY_ENABLED && env.CLOUDFLARE_AI_GATEWAY_URL
+          ? `${env.CLOUDFLARE_AI_GATEWAY_URL}/chat/completions`
+          : `${env.OPENCODE_ZEN_BASE_URL}/chat/completions`;
+
+      const response = await fetch(targetEndpoint, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${env.OPENCODE_ZEN_API_KEY}`,
           "Content-Type": "application/json",
           "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
           "X-Title": "ApplyWise AI",
+          "cf-aig-cache": "true",
+          "cf-aig-metadata": JSON.stringify({ taskType: options.taskType, model }),
         },
         body: JSON.stringify({
           model,
           messages: [
-            ...(options.systemPrompt
-              ? [{ role: "system", content: options.systemPrompt }]
-              : []),
+            ...(options.systemPrompt ? [{ role: "system", content: options.systemPrompt }] : []),
             { role: "user", content: options.prompt },
           ],
           temperature: options.temperature ?? 0.3,
@@ -174,7 +200,7 @@ export class AIGateway {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+        throw new Error(`OpenCode Zen Gateway error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -184,12 +210,12 @@ export class AIGateway {
       const completionTokens = data.usage?.completion_tokens ?? 0;
 
       // Telemetry: Record successful AI invocation metrics
-      aiRequestsTotal.inc({ model_id: boundedModel, task_type: options.taskType, status: 'success' });
+      aiRequestsTotal.inc({ model_id: boundedModel, task_type: options.taskType, status: "success" });
       aiLatencySeconds.observe({ model_id: boundedModel, task_type: options.taskType }, latencyMs / 1000);
-      if (promptTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: 'prompt' }, promptTokens);
-      if (completionTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: 'completion' }, completionTokens);
+      if (promptTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "prompt" }, promptTokens);
+      if (completionTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "completion" }, completionTokens);
 
-      logger.info('ai_gateway_success', `AI call successful for ${options.taskType}`, {
+      logger.info("ai_gateway_success", `AI call successful for ${options.taskType}`, {
         durationMs: latencyMs,
         metadata: { model: boundedModel, taskType: options.taskType, promptTokens, completionTokens },
       });
@@ -212,13 +238,13 @@ export class AIGateway {
       };
     } catch (error: unknown) {
       const latencyMs = Date.now() - startTime;
-      const errorMsg = error instanceof Error ? error.message : "Unknown AI gateway error";
+      const errorMsg = error instanceof Error ? error.message : "Unknown OpenCode Zen gateway error";
 
       // Telemetry: Record AI error & fallback metrics
-      aiErrorsTotal.inc({ model_id: boundedModel, error_code: 'invocation_failed' });
-      aiFallbacksTotal.inc({ primary_model: boundedModel, fallback_model: 'simulated_fallback', reason: 'api_error' });
+      aiErrorsTotal.inc({ model_id: boundedModel, error_code: "invocation_failed" });
+      aiFallbacksTotal.inc({ primary_model: boundedModel, fallback_model: "simulated_fallback", reason: "api_error" });
 
-      logger.error('ai_gateway_fallback', `AI call failed, falling back to simulation: ${errorMsg}`, {
+      logger.error("ai_gateway_fallback", `AI call failed, falling back safely to simulation: ${errorMsg}`, {
         durationMs: latencyMs,
         metadata: { model: boundedModel, taskType: options.taskType, error: errorMsg },
       });
@@ -329,15 +355,15 @@ export class AIGateway {
             "Demonstrated mastery of agentic AI workflows and LLM orchestration.",
             "Clean code standards and rigorous architectural documentation.",
           ],
-          criticalGaps: [
-            "Familiarity with specific enterprise compliance frameworks.",
-          ],
-          recommendedAction: "Apply immediately with a tailored CV highlighting full-stack SaaS architecture and agentic AI leadership.",
+          criticalGaps: ["Familiarity with specific enterprise compliance frameworks."],
+          recommendedAction:
+            "Apply immediately with an adaptive cover letter highlighting full-stack SaaS architecture and agentic AI leadership.",
         });
 
       case "cv_tailoring":
         return JSON.stringify({
-          tailoredSummary: "Senior Full-Stack & Agentic AI Systems Architect with 8+ years building enterprise SaaS platforms, scalable microservices, and autonomous LLM workflows.",
+          tailoredSummary:
+            "Principal Technology Architect & AI Systems Engineer with 14+ years building enterprise SaaS platforms, scalable microservices, and autonomous LLM workflows.",
           highlightedExperiences: [
             "Architected full-stack enterprise platform using Next.js 15, TypeScript, and Supabase, cutting latency by 45%.",
             "Designed and implemented Agentic RAG system with pgvector and LangGraph, delivering 94% retrieval accuracy.",
@@ -347,7 +373,7 @@ export class AIGateway {
 
       case "job_extraction":
         return JSON.stringify({
-          title: "Senior Full-Stack & Agentic AI Systems Architect",
+          title: "Principal AI Systems Architect",
           company: "Enterprise Cloud AI",
           skills: ["TypeScript", "Next.js", "AI Gateways", "Supabase", "pgvector", "LangGraph"],
           locationType: "remote",
@@ -360,14 +386,14 @@ export class AIGateway {
       case "cover_letter_generation":
         return `Dear Hiring Team,
 
-I am writing to express my enthusiastic interest in joining your engineering team. With over 14 years of production engineering experience architecting scalable distributed systems, governed AI gateways, and cloud platforms, I have followed your trajectory with great admiration.
+I am writing to express my enthusiastic interest in joining your engineering team as Principal AI Systems Architect. With over 14 years of production engineering experience architecting scalable distributed systems, governed AI gateways, and cloud platforms, I have followed your trajectory with great admiration.
 
 In my recent projects, I delivered enterprise platforms including EarCodeX on AWS with automated document intelligence and immutable audit trails, and engineered resilient AI Gateways with LiteLLM and Cloudflare across 300+ edge locations. My design methodology emphasizes strict grounding, sub-second inference, and human-in-the-loop oversight.
 
 I welcome the opportunity to discuss how my architectural vision and execution discipline can accelerate your engineering roadmaps.
 
 Sincerely,
-Candidate`;
+Whitemore Ngwira (N. White)`;
 
       case "company_research":
         return JSON.stringify({
@@ -386,7 +412,7 @@ Candidate`;
         });
 
       case "agentic_rag":
-        return "Based on verified profile evidence [Source 1], the candidate has 14+ years of systems architecture experience with proven production implementations of LiteLLM model routing, Cloudflare AI Gateway across 300+ edge locations, and AWS cloud-native document intelligence [Source 2].";
+        return "Based on verified profile evidence [Source 1], Whitemore Ngwira has 14+ years of systems architecture experience with proven production implementations of LiteLLM model routing, Cloudflare AI Gateway across 300+ edge locations, and AWS cloud-native document intelligence [Source 2].";
 
       default:
         return "AI analysis completed successfully. System is operating in demonstration and showcase mode.";

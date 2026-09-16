@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
           </span>
           <div className="text-2xl font-bold font-mono text-emerald-400">$0.00 USD</div>
           <p className="text-[11px] text-foreground-subtle">
-            100% Free-Tier (OpenRouter Gemini Flash Thinking)
+            100% Free-Tier (OpenCode Zen Suite • FREE_ONLY_MODE=true)
           </p>
         </Card>
 

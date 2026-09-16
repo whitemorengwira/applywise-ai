@@ -11,8 +11,8 @@ export async function GET() {
   const profile = repository.getProfile();
   const dbReady = !!profile && !!profile.id;
 
-  // Check AI Gateway configuration
-  const aiReady = !!env.OPENROUTER_DEFAULT_MODEL;
+  // Check OpenCode Zen AI Gateway configuration
+  const aiReady = !!env.OPENCODE_DEFAULT_REASONING_MODEL;
 
   const status = dbReady && aiReady ? "healthy" : "degraded";
   const statusCode = status === "healthy" ? 200 : 503;
@@ -27,12 +27,15 @@ export async function GET() {
         database: dbReady ? "healthy" : "unavailable",
         aiGateway: aiReady ? "ready" : "unconfigured",
         ragIndex: "indexed",
+        freeOnlyMode: env.FREE_ONLY_MODE ? "enforced" : "disabled",
+        cloudflareAIGateway: env.CLOUDFLARE_AI_GATEWAY_ENABLED ? "active" : "disabled",
       },
       models: {
-        reasoningModel: env.OPENROUTER_DEFAULT_MODEL,
-        fastModel: env.OPENROUTER_FAST_MODEL,
+        reasoningModel: env.OPENCODE_DEFAULT_REASONING_MODEL,
+        fastModel: env.OPENCODE_FAST_MODEL,
+        provider: "OpenCode Zen (100% Free Tier)",
       },
-      appVersion: "0.1.0",
+      appVersion: "2.0.0",
     },
     { status: statusCode }
   );

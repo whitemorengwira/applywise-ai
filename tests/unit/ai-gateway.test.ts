@@ -63,4 +63,14 @@ describe("AIGateway & OpenCode Zen Suite", () => {
     expect(result.log.success).toBe(true);
     expect(result.log.latencyMs).toBeGreaterThanOrEqual(0);
   });
+
+  it("strictly blocks paid models when FREE_ONLY_MODE is enabled", async () => {
+    await expect(
+      AIGateway.complete({
+        taskType: "match_scoring",
+        prompt: "Test paid inference",
+        modelOverride: "openai/gpt-4o-paid",
+      })
+    ).rejects.toThrow(/FREE_TIER_VIOLATION/);
+  });
 });

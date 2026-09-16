@@ -63,6 +63,20 @@ export const jobsAnalyzedTotal = new Counter({
   registers: [registry],
 });
 
+export const jobsDiscoveredTotal = new Counter({
+  name: 'applywise_jobs_discovered_total',
+  help: 'Total count of fresh jobs discovered across supported feeds',
+  labelNames: ['source', 'category'] as const,
+  registers: [registry],
+});
+
+export const applicationsSubmittedTotal = new Counter({
+  name: 'applywise_applications_submitted_total',
+  help: 'Total applications autonomously submitted with verified proof',
+  labelNames: ['source', 'method'] as const,
+  registers: [registry],
+});
+
 export const applicationsCreatedTotal = new Counter({
   name: 'applywise_applications_created_total',
   help: 'Total job applications logged in the CRM pipeline',

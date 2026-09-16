@@ -8,6 +8,7 @@ import {
   agentDurationSeconds,
 } from "../observability/metrics";
 import { logger } from "../observability/logger";
+import { WebsiteIngestService } from "./website-ingest.service";
 
 export interface RAGChunk {
   id: string;
@@ -79,13 +80,22 @@ export const KNOWLEDGE_CHUNKS: RAGChunk[] = [
 
 export class RAGService {
   /**
+   * Retrieves all candidate knowledge chunks from Master CV and N.White Systems production evidence.
+   */
+  static getAllKnowledgeChunks(): RAGChunk[] {
+    const websiteChunks = WebsiteIngestService.getIngestedChunks();
+    return [...KNOWLEDGE_CHUNKS, ...websiteChunks];
+  }
+
+  /**
    * Keyword & semantic hybrid retrieval over verified candidate knowledge chunks.
    */
   static retrieveRelevantChunks(query: string, topK: number = 3): RAGChunk[] {
     const retrievalStart = Date.now();
     const queryTokens = query.toLowerCase().split(/\W+/).filter((t) => t.length > 2);
+    const allChunks = this.getAllKnowledgeChunks();
 
-    const scored = KNOWLEDGE_CHUNKS.map((chunk) => {
+    const scored = allChunks.map((chunk) => {
       let score = 0;
       const fullText = (chunk.title + " " + chunk.text + " " + chunk.category).toLowerCase();
 

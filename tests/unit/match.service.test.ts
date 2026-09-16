@@ -34,7 +34,7 @@ describe("MatchService", () => {
     expect(techCategory?.matchedSkills).toContain("Next.js 15");
   });
 
-  it("enforces South Africa 100% remote-only rule", () => {
+  it("verifies South Africa roles permit Remote, Hybrid, and On-site under authoritative directive", () => {
     const remoteSAJob = {
       ...SEED_JOBS[0],
       location: "Johannesburg, South Africa",
@@ -45,15 +45,23 @@ describe("MatchService", () => {
       location: "Johannesburg, South Africa",
       remoteType: "On-site" as const,
     };
+    const hybridSAJob = {
+      ...SEED_JOBS[0],
+      location: "Cape Town, South Africa",
+      remoteType: "Hybrid" as const,
+    };
 
     const remoteCheck = MatchService.checkLocationEligibility(remoteSAJob);
     expect(remoteCheck.eligible).toBe(true);
     expect(remoteCheck.status).toBe("fully_eligible");
 
     const onSiteCheck = MatchService.checkLocationEligibility(onSiteSAJob);
-    expect(onSiteCheck.eligible).toBe(false);
-    expect(onSiteCheck.status).toBe("ineligible");
-    expect(onSiteCheck.reason).toContain("100% remote only");
+    expect(onSiteCheck.eligible).toBe(true);
+    expect(onSiteCheck.status).toBe("fully_eligible");
+
+    const hybridCheck = MatchService.checkLocationEligibility(hybridSAJob);
+    expect(hybridCheck.eligible).toBe(true);
+    expect(hybridCheck.status).toBe("fully_eligible");
   });
 
   it("permits on-site and hybrid roles in Zimbabwe and Malawi", () => {

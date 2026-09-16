@@ -119,7 +119,7 @@ export const SEED_JOBS: JobListing[] = [
     salaryMax: 160000,
     currency: "GBP",
     description:
-      "We are seeking a Lead Full-Stack & AI Systems Architect to own our enterprise AI platform. You will direct the engineering of modern web applications using Next.js 15, TypeScript, Supabase, and pgvector RAG, integrating OpenRouter and AWS AI models with rigorous human-in-the-loop controls.",
+      "We are seeking a Lead Full-Stack & AI Systems Architect to own our enterprise AI platform. You will direct the engineering of modern web applications using Next.js 15, TypeScript, Supabase, and pgvector RAG, integrating OpenCode Zen and Cloudflare AI Gateway with rigorous human-in-the-loop controls.",
     requirements: [
       "10+ years software engineering with at least 3+ years in architectural leadership",
       "Expert mastery of Next.js 14/15 App Router, React Server Components, and TypeScript",

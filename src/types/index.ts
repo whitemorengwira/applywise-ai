@@ -90,6 +90,7 @@ export interface JobListing {
   responsibilities: string[];
   skills: string[];
   applyUrl: string;
+  applicationUrl?: string;
   postedAt: string;
   createdAt: string;
 }

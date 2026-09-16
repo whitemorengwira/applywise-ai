@@ -4,124 +4,31 @@ import { repository } from "../db/repository";
 import { jobsAnalyzedTotal, agentRunsTotal, agentDurationSeconds } from "../observability/metrics";
 import { logger } from "../observability/logger";
 
+import { EligibilityService } from "./eligibility.service";
+
 export interface LocationEligibility {
   eligible: boolean;
   score: number;
-  status: "fully_eligible" | "conditionally_eligible" | "ineligible";
+  status: "fully_eligible" | "conditionally_eligible" | "unknown_verify" | "ineligible";
   reason: string;
 }
 
 export class MatchService {
   /**
-   * Validates non-negotiable location and work arrangement rules:
-   * - South Africa: 100% remote only.
-   * - Zimbabwe / Malawi: Remote, hybrid, or on-site.
-   * - Rest of Africa: 100% remote only.
-   * - Global: 100% remote only, with explicit country or contractor eligibility.
+   * Validates non-negotiable location and work arrangement rules via EligibilityService:
+   * - South Africa: Remote, Hybrid, or On-site is 100% ELIGIBLE.
+   * - Zimbabwe / Malawi: Remote, Hybrid, or On-site is 100% ELIGIBLE.
+   * - Wider Africa: Remote verified.
+   * - Global: Explicit cross-border/contractor eligibility required.
+   *   Unknown defaults strictly to unknown_verify ("UNKNOWN — VERIFY").
    */
   static checkLocationEligibility(job: JobListing, _candidateLocation?: string): LocationEligibility {
-    const loc = (job.location || "").toLowerCase();
-    const desc = (job.description || "").toLowerCase();
-    const candidateLoc = (_candidateLocation || "").toLowerCase();
-    const isRemote = job.remoteType === "Remote" || loc.includes("remote option") || desc.includes("remote option") || desc.includes("remote available");
-
-    // Check if candidate profile explicitly establishes residency / eligibility in this market
-    const candidateHasUkTies = (candidateLoc.includes("london") || candidateLoc.includes("uk")) && (loc.includes("london") || loc.includes("uk"));
-
-    // 1. Zimbabwe or Malawi: Remote, hybrid, or on-site permitted
-    if (loc.includes("zimbabwe") || loc.includes("harare") || loc.includes("malawi") || loc.includes("lilongwe") || loc.includes("blantyre")) {
-      return {
-        eligible: true,
-        score: 100,
-        status: "fully_eligible",
-        reason: "Permitted market (Zimbabwe/Malawi): On-site, hybrid, or remote accepted.",
-      };
-    }
-
-    // 2. South Africa: 100% remote only
-    if (loc.includes("south africa") || loc.includes("johannesburg") || loc.includes("cape town") || loc.includes("durban") || loc.includes("pretoria")) {
-      if (isRemote) {
-        return {
-          eligible: true,
-          score: 100,
-          status: "fully_eligible",
-          reason: "South Africa market: 100% remote arrangement verified.",
-        };
-      }
-      return {
-        eligible: false,
-        score: 20,
-        status: "ineligible",
-        reason: "Non-negotiable rule: South Africa roles must be 100% remote only. On-site or hybrid is disqualified.",
-      };
-    }
-
-    // 3. Other African countries: 100% remote only
-    const africanCountries = ["kenya", "nigeria", "ghana", "rwanda", "uganda", "egypt", "tanzania", "zambia", "botswana", "namibia"];
-    if (africanCountries.some((c) => loc.includes(c))) {
-      if (isRemote) {
-        return {
-          eligible: true,
-          score: 100,
-          status: "fully_eligible",
-          reason: "African regional market: 100% remote verified.",
-        };
-      }
-      return {
-        eligible: false,
-        score: 25,
-        status: "ineligible",
-        reason: "African regional market requires 100% remote arrangement.",
-      };
-    }
-
-    // 4. Candidate with explicit UK/London residency or Remote Option
-    if (candidateHasUkTies || isRemote) {
-      // Check for explicit exclusionary geo-fencing in remote roles
-      const geoRestrictions = [
-        "us only", "u.s. only", "united states only", "must reside in the us", "must reside in us",
-        "us citizens only", "security clearance required", "must be based in the us",
-      ];
-
-      const hasGeoLock = geoRestrictions.some((r) => loc.includes(r) || desc.includes(r));
-      if (hasGeoLock) {
-        return {
-          eligible: false,
-          score: 35,
-          status: "ineligible",
-          reason: "Role contains strict regional geographic lock (e.g., US residency/citizenship required).",
-        };
-      }
-
-      // Check for positive cross-border indicators
-      const globalPermissive = ["worldwide", "anywhere", "global", "emea", "contractor", "all countries", "africa", "international", "remote option"];
-      const isExplicitlyGlobal = globalPermissive.some((p) => loc.includes(p) || desc.includes(p)) || candidateHasUkTies;
-
-      if (isExplicitlyGlobal) {
-        return {
-          eligible: true,
-          score: 100,
-          status: "fully_eligible",
-          reason: candidateHasUkTies
-            ? "Candidate profile verifies UK/London eligibility with remote flexibility."
-            : "Global / EMEA remote with explicit cross-border or contractor eligibility.",
-        };
-      }
-
-      return {
-        eligible: true,
-        score: 85,
-        status: "conditionally_eligible",
-        reason: "Remote role — verify employer accepts international independent contractor arrangement.",
-      };
-    }
-
-    // 5. International on-site/hybrid without candidate residency match
+    const res = EligibilityService.evaluateLocationEligibility(job, _candidateLocation);
     return {
-      eligible: false,
-      score: 15,
-      status: "ineligible",
-      reason: "International roles must be 100% remote unless candidate maintains local residency.",
+      eligible: res.eligible,
+      score: res.score,
+      status: res.status,
+      reason: res.reason,
     };
   }
 

@@ -9,8 +9,11 @@ async function handleGet() {
     provider: "OpenCode Zen",
     suite: "Verified Free Tier",
     activeModels: {
-      reasoning: env.OPENROUTER_DEFAULT_MODEL,
-      fastExtraction: env.OPENROUTER_FAST_MODEL,
+      reasoning: env.OPENCODE_DEFAULT_REASONING_MODEL,
+      fastExtraction: env.OPENCODE_FAST_MODEL,
+      longContext: env.OPENCODE_LONG_CONTEXT_MODEL,
+      structured: env.OPENCODE_STRUCTURED_MODEL,
+      creative: env.OPENCODE_CREATIVE_MODEL,
     },
     models: OPENCODE_ZEN_MODELS,
   });

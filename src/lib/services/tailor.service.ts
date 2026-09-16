@@ -9,6 +9,8 @@ import {
 } from "../observability/metrics";
 import { logger } from "../observability/logger";
 
+import { CVIntegrityService } from "./cv-integrity.service";
+
 export interface TailorCVResult {
   tailoredSummary: string;
   tailoredAchievements: {
@@ -18,19 +20,23 @@ export interface TailorCVResult {
   }[];
   emphasizedSkills: string[];
   document: TailoredDocument;
+  masterCvHash: string;
+  isMasterCvImmutable: boolean;
 }
 
 export interface TailorCoverLetterResult {
   coverLetterText: string;
   keyThemes: string[];
   document: TailoredDocument;
+  cvHashUsed: string;
 }
 
 export class TailorService {
   /**
-   * Tailors candidate CV bullets and executive summary for a specific job listing.
-   * STRICT TRUST BOUNDARY: Only highlights, rewords, and emphasizes verified achievements.
-   * Never invents non-existent credentials, metrics, or technologies.
+   * Evaluates verified candidate CV evidence alignment for a specific job listing.
+   * STRICT IMMUTABILITY INVARIANT (Directive v2.0):
+   * The Master CV is 100% IMMUTABLE (SHA-256 locked). It is NEVER rewritten, shortened,
+   * or altered. Only matching alignment analysis and evidence highlighting are performed.
    */
   static async tailorCV(
     applicationId: string,
@@ -39,37 +45,40 @@ export class TailorService {
     experiences: WorkExperience[]
   ): Promise<TailorCVResult> {
     const startTime = Date.now();
+    // Cryptographic verification of master CV
+    const cvMeta = CVIntegrityService.verifyMasterCV();
+
     const verifiedAchievements = experiences.flatMap((e) =>
       e.achievements.map((ach) => ({ company: e.company, achievement: ach }))
     );
 
     const prompt = `
-You are an expert executive resume architect. Tailor the candidate's verified achievements to strongly align with the target role while obeying ZERO-HALLUCINATION constraints.
+You are an expert executive resume evidence analyzer. Analyze the candidate's verified achievements against the target role requirements without altering any candidate facts.
 
 TARGET ROLE:
 Title: ${job.title} at ${job.company}
 Key Requirements: ${job.requirements.join("; ")}
 Extracted Skills: ${job.skills.join(", ")}
 
-CANDIDATE VERIFIED DATA (Only use these facts):
-Current Headline: ${profile.headline}
-Current Summary: ${profile.summary}
+CANDIDATE VERIFIED EVIDENCE (Canonical facts):
+Headline: ${profile.headline}
+Summary: ${profile.summary}
 Verified Achievements:
 ${verifiedAchievements.map((a, i) => `[${i + 1}] (${a.company}) ${a.achievement}`).join("\n")}
 
 CRITICAL INSTRUCTIONS:
-1. Rewrite the executive summary to directly address the target role's core challenges.
-2. Select the top 4 most relevant achievements and reword them using strong action verbs, highlighting relevant technologies (e.g. Next.js, AI gateways, pgvector) present in both the candidate's history and the job description.
-3. DO NOT fabricate any numbers, metrics, or technologies not present in the verified input.
+1. Preserve the candidate's canonical executive summary (do NOT invent new credentials).
+2. Select the top 4 most relevant achievements and explain their alignment rationale for this role.
+3. Identify the matching technical skills present in both the candidate record and job listing.
 
 Return JSON in this format:
 {
-  "tailoredSummary": "string",
+  "tailoredSummary": "${profile.summary}",
   "tailoredAchievements": [
     {
       "original": "string",
-      "tailored": "string",
-      "rationale": "string"
+      "tailored": "string (unmodified original text)",
+      "rationale": "alignment explanation"
     }
   ],
   "emphasizedSkills": ["string"]
@@ -80,7 +89,7 @@ Return JSON in this format:
       taskType: "cv_tailoring",
       prompt,
       systemPrompt:
-        "You are an ATS compliance and executive resume optimizer. Strictly adhere to verified source data. Ground all statements.",
+        "You are an ATS compliance and executive resume evidence auditor. Strictly adhere to verified source data. The master CV text is immutable.",
     });
 
     repository.recordAILog(aiResult.log);
@@ -101,24 +110,20 @@ Return JSON in this format:
       parsed = null;
     }
 
-    const tailoredSummary =
-      parsed?.tailoredSummary ??
-      `Principal Technology Architect & AI Systems Engineer specializing in Next.js 15, multi-agent AI orchestration, and cloud-native platform delivery. Proven track record designing enterprise platforms including EarCodeX, Cineterns, and high-throughput media systems. Highly aligned with ${job.company}'s requirements for ${job.title}.`;
+    // Preserve master summary as canonical source of truth
+    const tailoredSummary = profile.summary;
 
-    const tailoredAchievements = parsed?.tailoredAchievements ?? [
-      {
-        original:
-          "Architected and integrated AI gateways with LiteLLM (multi-model routing, token cost tracking, Bedrock/Anthropic/OpenAI failover) and Cloudflare AI Gateway across 300+ cities.",
-        tailored: `Architected resilient enterprise AI Gateways with LiteLLM and Cloudflare across 300+ edge locations, directly delivering the scalable model routing and token cost controls required for ${job.title}.`,
-        rationale: "Aligns directly with target job's AI model routing and platform infrastructure requirements.",
-      },
-      {
-        original:
-          "Delivered EarCodeX from prototype to production as an AWS cloud-native InsurTech platform with automated document intelligence and immutable audit trails.",
-        tailored: `Delivered EarCodeX from concept to production on AWS, engineering automated document intelligence, claims reconciliation, and immutable audit trails under strict regulatory standards.`,
-        rationale: "Demonstrates production delivery, document intelligence, and enterprise compliance.",
-      },
-    ];
+    const tailoredAchievements: { original: string; tailored: string; rationale: string }[] =
+      parsed?.tailoredAchievements?.map((a) => ({
+        original: a.original,
+        tailored: a.original, // Invariant: text remains identical to verified original
+        rationale: a.rationale || "Direct technical evidence alignment",
+      })) ??
+      verifiedAchievements.slice(0, 4).map((a) => ({
+        original: a.achievement,
+        tailored: a.achievement,
+        rationale: `Verified experience at ${a.company} demonstrating core platform requirements.`,
+      }));
 
     const emphasizedSkills = parsed?.emphasizedSkills ?? job.skills.slice(0, 6);
 
@@ -168,6 +173,8 @@ ${tailoredAchievements.map((item) => `### Highlighted Impact\n- ${item.tailored}
       tailoredAchievements,
       emphasizedSkills,
       document: doc,
+      masterCvHash: cvMeta.actualHash,
+      isMasterCvImmutable: true,
     };
   }
 
@@ -181,6 +188,7 @@ ${tailoredAchievements.map((item) => `### Highlighted Impact\n- ${item.tailored}
     experiences: WorkExperience[]
   ): Promise<TailorCoverLetterResult> {
     const startTime = Date.now();
+    const cvMeta = CVIntegrityService.verifyMasterCV();
     const prompt = `
 Write a high-impact, professional executive cover letter for:
 Candidate: ${profile.fullName} (${profile.headline})
@@ -251,6 +259,7 @@ Principal Technology Architect & AI Systems Engineer`;
       coverLetterText,
       keyThemes: ["Enterprise Platform Architecture", "AI Gateway Engineering", "Document Intelligence"],
       document: doc,
+      cvHashUsed: cvMeta.actualHash,
     };
   }
 }

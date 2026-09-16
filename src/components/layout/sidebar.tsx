@@ -150,14 +150,14 @@ export function Sidebar() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground-muted flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              OpenRouter Engine
+              OpenCode Zen Engine
             </span>
             <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
               FREE TIER
             </span>
           </div>
           <p className="text-[11px] text-foreground-subtle leading-tight">
-            Gemini 2.0 Flash Thinking + pgvector Hybrid Search
+            Nemotron 3 Ultra + pgvector Hybrid RAG
           </p>
         </div>
       )}

@@ -13,7 +13,7 @@ async function handleGet() {
       totalOperations: logs.length,
       totalTokens,
       avgLatencyMs: avgLatency,
-      estimatedCostUSD: 0.0, // OpenRouter free models
+      estimatedCostUSD: 0.0, // OpenCode Zen 100% free models (FREE_ONLY_MODE=true)
     },
   });
 }

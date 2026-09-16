@@ -111,7 +111,7 @@ export default function Home() {
             </h2>
             <p className="text-sm text-foreground-muted leading-relaxed">
               Autonomous job matching operating system orchestrating multi-vector pgvector semantic search,
-              dynamic ATS-grade CV alignment, and agentic LLM routing via OpenRouter free tiers.
+              cryptographic master CV protection, and agentic LLM routing via OpenCode Zen free tiers.
             </p>
           </div>
 
