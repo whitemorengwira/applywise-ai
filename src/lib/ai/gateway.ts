@@ -24,19 +24,82 @@ export interface AICallResult {
   log: AIOperationLog;
 }
 
-// Model routing map adhering to ADR-005
+export interface ModelCatalogEntry {
+  id: string;
+  name: string;
+  provider: "OpenCode Zen" | "Google DeepMind" | "Meta" | "DeepSeek" | "Mistral";
+  tier: "Free" | "Paid";
+  capabilities: ("reasoning" | "fast" | "multimodal" | "creative" | "finance")[];
+  contextWindow: string;
+  description: string;
+}
+
+export const OPENCODE_ZEN_MODELS: ModelCatalogEntry[] = [
+  {
+    id: "opencode/nemotron-3-ultra:free",
+    name: "Nemotron 3 Ultra Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["reasoning", "fast"],
+    contextWindow: "64k",
+    description: "Flagship reasoning engine for multi-agent workflows, match scoring, and complex architectural evaluation.",
+  },
+  {
+    id: "opencode/nemotron-3.5-lightning:free",
+    name: "Nemotron 3.5 Lightning Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["fast"],
+    contextWindow: "32k",
+    description: "Ultra-low latency inference for job keyword extraction and real-time schema classification.",
+  },
+  {
+    id: "opencode/ling-3.0-flash-fin:free",
+    name: "Ling 3.0 Flash Fin Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["finance", "fast"],
+    contextWindow: "32k",
+    description: "Finance-specialized fast reasoning model optimized for compensation, equity, and market metrics analysis.",
+  },
+  {
+    id: "opencode/mimo-v2.5:free",
+    name: "MiMo V2.5 Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["multimodal", "fast"],
+    contextWindow: "32k",
+    description: "Multi-modal structuring engine for CV document layout analysis and portfolio asset parsing.",
+  },
+  {
+    id: "opencode/muse-spark-1.3:free",
+    name: "Muse Spark 1.3 Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["creative"],
+    contextWindow: "32k",
+    description: "Creative synthesis model specialized in compelling executive cover letters and personalized outreach.",
+  },
+];
+
+// Model routing map adhering to ADR-005 with OpenCode Zen defaults
 const MODEL_ROUTING_MAP: Record<AITaskType, string> = {
-  job_extraction: env.OPENROUTER_FAST_MODEL,
-  match_scoring: env.OPENROUTER_DEFAULT_MODEL,
-  cv_tailoring: env.OPENROUTER_DEFAULT_MODEL,
-  cover_letter_generation: env.OPENROUTER_DEFAULT_MODEL,
-  agentic_rag: env.OPENROUTER_DEFAULT_MODEL,
-  company_research: env.OPENROUTER_FAST_MODEL,
+  job_extraction: "opencode/nemotron-3.5-lightning:free",
+  match_scoring: "opencode/nemotron-3-ultra:free",
+  cv_tailoring: "opencode/nemotron-3-ultra:free",
+  cover_letter_generation: "opencode/muse-spark-1.3:free",
+  agentic_rag: "opencode/nemotron-3-ultra:free",
+  company_research: "opencode/ling-3.0-flash-fin:free",
 };
 
 export class AIGateway {
   static normalizeModelName(model: string): string {
     const lower = model.toLowerCase();
+    if (lower.includes('nemotron-3.5') || lower.includes('lightning')) return 'nemotron-3.5-lightning';
+    if (lower.includes('nemotron') || lower.includes('ultra')) return 'nemotron-3-ultra';
+    if (lower.includes('ling')) return 'ling-3.0-flash-fin';
+    if (lower.includes('mimo')) return 'mimo-v2.5';
+    if (lower.includes('muse')) return 'muse-spark-1.3';
     if (lower.includes('gemini')) return 'gemini-flash';
     if (lower.includes('qwen')) return 'qwen-72b';
     if (lower.includes('llama')) return 'llama-70b';

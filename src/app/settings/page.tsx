@@ -63,15 +63,28 @@ export default function SettingsPage() {
                 onChange={(e) => setReasoningModel(e.target.value)}
                 className="h-10 w-full rounded-xl border border-border bg-secondary/30 px-3 font-mono text-xs text-foreground focus:border-primary focus:outline-none"
               >
-                <option value="google/gemini-2.0-flash-thinking-exp:free">
-                  google/gemini-2.0-flash-thinking-exp:free (Recommended - 32k thinking context)
-                </option>
-                <option value="meta-llama/llama-3.3-70b-instruct:free">
-                  meta-llama/llama-3.3-70b-instruct:free (Open weights reasoning)
-                </option>
-                <option value="deepseek/deepseek-r1:free">
-                  deepseek/deepseek-r1:free (Deep mathematical/logic reasoning)
-                </option>
+                <optgroup label="OpenCode Zen (Verified Free Tier)">
+                  <option value="opencode/nemotron-3-ultra:free">
+                    Nemotron 3 Ultra Free [Free] (Recommended - 64k Deep Reasoning)
+                  </option>
+                  <option value="opencode/ling-3.0-flash-fin:free">
+                    Ling 3.0 Flash Fin Free [Free] (Finance & Governance Analysis)
+                  </option>
+                  <option value="opencode/muse-spark-1.3:free">
+                    Muse Spark 1.3 Free [Free] (Creative Tailoring & Synthesis)
+                  </option>
+                </optgroup>
+                <optgroup label="Google & Open Weights">
+                  <option value="google/gemini-2.0-flash-thinking-exp:free">
+                    google/gemini-2.0-flash-thinking-exp:free (32k thinking context)
+                  </option>
+                  <option value="deepseek/deepseek-r1:free">
+                    deepseek/deepseek-r1:free (Deep mathematical logic)
+                  </option>
+                  <option value="meta-llama/llama-3.3-70b-instruct:free">
+                    meta-llama/llama-3.3-70b-instruct:free (Open weights reasoning)
+                  </option>
+                </optgroup>
               </select>
             </div>
 
@@ -84,12 +97,22 @@ export default function SettingsPage() {
                 onChange={(e) => setFastModel(e.target.value)}
                 className="h-10 w-full rounded-xl border border-border bg-secondary/30 px-3 font-mono text-xs text-foreground focus:border-primary focus:outline-none"
               >
-                <option value="google/gemini-2.0-flash-exp:free">
-                  google/gemini-2.0-flash-exp:free (Sub-second structured output)
-                </option>
-                <option value="mistralai/mistral-7b-instruct:free">
-                  mistralai/mistral-7b-instruct:free (Fast edge inference)
-                </option>
+                <optgroup label="OpenCode Zen (Verified Free Tier)">
+                  <option value="opencode/nemotron-3.5-lightning:free">
+                    Nemotron 3.5 Lightning Free [Free] (Recommended - Sub-second Extraction)
+                  </option>
+                  <option value="opencode/mimo-v2.5:free">
+                    MiMo V2.5 Free [Free] (Multi-Modal Layout & CV Structuring)
+                  </option>
+                </optgroup>
+                <optgroup label="Google & Mistral">
+                  <option value="google/gemini-2.0-flash-exp:free">
+                    google/gemini-2.0-flash-exp:free (Fast structured output)
+                  </option>
+                  <option value="mistralai/mistral-7b-instruct:free">
+                    mistralai/mistral-7b-instruct:free (Fast edge inference)
+                  </option>
+                </optgroup>
               </select>
             </div>
 
