@@ -100,11 +100,17 @@ export class EligibilityService {
    * Classifies application submission route
    */
   static classifyApplicationRoute(job: Partial<JobListing>): ApplicationRoute {
-    const url = (job.applicationUrl || "").toLowerCase();
+    const url = (job.applicationUrl || job.applyUrl || "").toLowerCase();
     const source = (job.source || "").toLowerCase();
     const desc = (job.description || "").toLowerCase();
 
-    if (url.includes("mailto:") || desc.includes("send cv to") || desc.includes("email your application")) {
+    if (
+      url.includes("mailto:") ||
+      desc.includes("send cv to") ||
+      desc.includes("email your application") ||
+      desc.includes("recruitment@") ||
+      desc.includes("careers@")
+    ) {
       return "EMAIL";
     }
     if (url.includes("linkedin.com") || source.includes("linkedin")) {
@@ -116,7 +122,10 @@ export class EligibilityService {
       url.includes("workable.com") ||
       url.includes("ashbyhq.com") ||
       url.includes("smartrecruiters.com") ||
-      url.includes("bamboohr.com")
+      url.includes("bamboohr.com") ||
+      url.includes("careers.") ||
+      url.includes("/careers") ||
+      url.includes("/jobs")
     ) {
       return "DIRECT_PORTAL";
     }
@@ -126,7 +135,7 @@ export class EligibilityService {
     if (source.includes("recruiter") || desc.includes("recruitment agency")) {
       return "RECRUITER";
     }
-    return "UNKNOWN";
+    return "DIRECT_PORTAL";
   }
 
   /**
