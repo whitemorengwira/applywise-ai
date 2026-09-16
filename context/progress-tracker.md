@@ -1,7 +1,7 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-16T23:21:00+02:00
+2026-09-17T00:19:00+02:00
 
 ## Current Phase
 **FULL LIFECYCLE COMPLETE & VERIFIED — PRODUCTION ACTIVE**
@@ -33,11 +33,13 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 17** | Final Launch Directive & Dry Run | Completed | Section 11 Dry Run verified, Section 5 Freshness engine, Section 10/29 Zoho email rules, 52/52 tests passed |
 | **Phase 18** | Production Hardening & Perfection Patch | Completed | Resilient AI Model Circuit Breakers, Webhook Alert Dispatcher to Zoho email, Enhanced RAG Re-ranking (99%+ precision), Synthetic Uptime Monitoring (13 probes), 68/68 tests passed |
 | **Phase 19** | Live Autonomous Execution (2 Target Verification) | Completed | Executed `run-1789593666896` in `LIVE_PRODUCTION` via `/api/cron/autonomous-cycle`. Submitted 2 highest-fit Tier 1 African vacancies (SA Direct Portal `PROOF-AW-1789593666869-XTUX9`, ZW Zoho Email `PROOF-AW-1789593666893-XU5XO`). Quota updated: 198 remaining towards 200/week target. |
+| **Phase 20** | Core Production Deficiencies & UX Hardening | Completed | Strict RAG grounding guard (< 0.75 threshold declines ungrounded queries); interactive bottom-left model switcher across 5 OpenCode Zen models with localStorage persistence; `/dashboard` route implemented; Kanban board flexbox layout cleanup; Master CV immutability guaranteed; official ApplyWise AI branded SVG favicon deployed. 69/69 tests passed. |
 
 ---
 
 ## Production Endpoints & Platforms (Verified)
 - **Official Vercel Root**: `https://applywise-ai-app.vercel.app/` → HTTP 200
+- **Official Dashboard**: `https://applywise-ai-app.vercel.app/dashboard` → HTTP 200
 - **Alternative SaaS Alias**: `https://applywise-ai-saas.vercel.app/` → HTTP 200
 - **Synthetic Uptime API**: `https://applywise-ai-app.vercel.app/api/health/synthetic` → HTTP 200 (13 Probes Active)
 - **Alert Webhook Dispatcher**: `https://applywise-ai-app.vercel.app/api/alerts/webhook` → HTTP 200 (Zoho Mail Dispatch)
