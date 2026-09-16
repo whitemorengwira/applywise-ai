@@ -28,6 +28,7 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 12** | Production Deployment (Vercel) | Completed | Official project `applywise-ai`, live at `https://applywise-ai-app.vercel.app` (HTTP 200) |
 | **Phase 13** | External Platform Config | Completed | Dedicated Supabase project `applywise-ai` created & migrated; Grafana Cloud active with dashboards |
 | **Phase 14** | Candidate Intelligence & Geographic Rules | Completed | Master Prompt & Role Catalogue integrated, geographic eligibility enforced |
+| **Phase 15** | OpenCode Zen Model Suite Integration | Completed | All 5 OpenCode Zen free models configured, tested, verified live on `/settings` and `/api/ai/models` |
 
 ---
 
