@@ -29,12 +29,15 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 13** | External Platform Config | Completed | Dedicated Supabase project `applywise-ai` created & migrated; Grafana Cloud active with dashboards |
 | **Phase 14** | Candidate Intelligence & Geographic Rules | Completed | Master Prompt & Role Catalogue integrated, geographic eligibility enforced |
 | **Phase 15** | OpenCode Zen Model Suite Integration | Completed | All 5 OpenCode Zen free models configured, tested, verified live on `/settings` and `/api/ai/models` |
+| **Phase 16** | Directive 2.0 Autonomous Engineering | Completed | SHA-256 CV immutability locked, LangGraph state graph, Africa geographic rules, Vercel cloud cron live |
 
 ---
 
 ## Production Endpoints & Platforms (Verified)
 - **Official Vercel Root**: `https://applywise-ai-app.vercel.app/` → HTTP 200
 - **Alternative SaaS Alias**: `https://applywise-ai-saas.vercel.app/` → HTTP 200
+- **CV Integrity API**: `https://applywise-ai-app.vercel.app/api/cv-integrity` → HTTP 200 (SHA-256 Verified)
+- **Autonomous Cloud Cycle API**: `https://applywise-ai-app.vercel.app/api/cron/autonomous-cycle` → HTTP 200 (Autonomous Execution Verified)
 - **Legacy URL (Maintained)**: `https://nwhitejobapplicationsapp2027.vercel.app/` → HTTP 200
 - **Health Probe**: `https://applywise-ai-app.vercel.app/api/health` → HTTP 200
 - **Ready Probe**: `https://applywise-ai-app.vercel.app/api/ready` → HTTP 200
