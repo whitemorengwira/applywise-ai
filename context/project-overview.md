@@ -23,32 +23,35 @@ Whitemore Ngwira — Principal Technology Architect & AI Systems Engineer
 | Database | Supabase PostgreSQL + pgvector |
 | Auth | Supabase Auth (Email/Password + OAuth) |
 | Storage | Supabase Storage |
-| AI Provider | OpenRouter (free-tier models) |
-| AI Framework | LangChain.js + LangGraph.js |
+| AI Provider | OpenCode Zen (100% Free Tier) + Cloudflare AI Gateway proxy |
+| AI Framework | LangChain.js + LangGraph.js (Stateful 10-node agent graph) |
 | Job APIs | Adzuna + Arbeitnow |
-| Hosting | Vercel (Hobby tier) |
-| Testing | Vitest + Playwright |
-| VCS | Git + GitHub |
+| Hosting | Vercel (Hobby tier, serverless daily cron) |
+| Testing | Vitest + Playwright (52/52 passing unit tests) |
+| VCS | Git + GitHub (`whitemorengwira/applywise-ai`) |
 
 ## Repository
-GitHub: `applywise-ai`
+GitHub: `whitemorengwira/applywise-ai`
 
 ## Key Engineering Showcase Points
 - Full-stack Next.js + TypeScript
 - LangChain for AI application primitives
-- LangGraph for agent orchestration (4 agent graphs)
-- RAG + Agentic RAG with pgvector
-- Model routing across free AI models via OpenRouter
-- Supabase PostgreSQL with RLS + pgvector
+- LangGraph for stateful agent orchestration (10-node application lifecycle graph)
+- RAG + Agentic RAG with pgvector over Master CV and N.White Systems evidence
+- OpenCode Zen Free Model Suite routing with Cloudflare AI Gateway proxying
+- Supabase PostgreSQL with RLS + pgvector in dedicated project
+- Cryptographic Master CV immutability (SHA-256 locked, zero mutations)
+- Africa-First geographic eligibility engine (SA, ZW, MW Remote/Hybrid/On-site)
+- Autonomous cloud execution with zero laptop dependency via Vercel cron
 - Prompt injection defence and trust boundaries
-- Professional testing (unit, integration, E2E)
-- CI/CD with GitHub Actions
-- Production deployment on Vercel
+- Professional testing (52 passing unit tests across 11 suites)
+- CI/CD with GitHub Actions, Docker multi-stage, Kubernetes, Helm, Terraform
+- Production deployment on Vercel (`applywise-ai-app.vercel.app`)
 
 ## Engineering Methodology
 Context-driven agentic development:
-- 9 persistent context files (this system)
-- 5 agent workflow skills (/architect, /review, /imprint, /recover, /remember)
-- Phase-by-phase incremental development
+- 12 persistent context files (this system)
+- 21 operational JSM agent skills in `.agents/skills`
+- Phase-by-phase incremental development (Phases 0 through 17)
 - Review gates after each milestone
 - Persistent project memory across sessions
