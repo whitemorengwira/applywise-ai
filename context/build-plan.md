@@ -159,11 +159,12 @@
 ---
 
 ## Phase 12 — Production Deployment (Vercel)
-- [x] Production deployment live at `https://nwhitejobapplicationsapp2027.vercel.app`
+- [x] Production deployment live at `https://applywise-ai-app.vercel.app` (Aliased to `https://applywise-ai-saas.vercel.app` and `https://nwhitejobapplicationsapp2027.vercel.app`)
 - [x] Route verification (Root, Health, Ready, Metrics returning HTTP 200)
 - [x] Open Graph and SEO optimization
+- [x] Official Vercel project renamed to `applywise-ai`
 
-**Definition of Done:** Live public URL active and verified. Completed.
+**Definition of Done:** Live public URL active and verified under official ApplyWise AI domain. Completed.
 
 ---
 

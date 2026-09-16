@@ -1,13 +1,16 @@
 # ApplyWise AI — Production Launch State
 
 ## Executive Summary
-- **Product Name**: ApplyWise AI (Per ADR-001)
+- **Product Name**: ApplyWise AI (`applywise-ai`)
 - **Candidate Showcase**: Whitemore Ngwira (N. White)
-- **Production URL**: `https://nwhitejobapplicationsapp2027.vercel.app`
+- **Official Production URL**: `https://applywise-ai-app.vercel.app`
+- **Alternative SaaS URL**: `https://applywise-ai-saas.vercel.app`
+- **Legacy URL (Maintained)**: `https://nwhitejobapplicationsapp2027.vercel.app`
 - **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
-- **Deployment Platform**: Vercel Free Tier (Production Aliased)
+- **Local Directory**: `D:\applywise-ai`
+- **Vercel Project**: `applywise-ai`
 - **Deployment State**: READY / ACTIVE / FULLY CONFIGURED
-- **Verified Timestamp**: 2026-09-16T14:55:00+02:00
+- **Verified Timestamp**: 2026-09-16T15:10:00+02:00
 
 ---
 
@@ -15,10 +18,11 @@
 
 | Component | Target URL / Artifact | Status | Details |
 |---|---|---|---|
-| **Root Application** | `https://nwhitejobapplicationsapp2027.vercel.app/` | Verified (HTTP 200) | Landing & dashboard fully rendered |
-| **Liveness Probe** | `https://nwhitejobapplicationsapp2027.vercel.app/api/health` | Verified (HTTP 200) | Database healthy, AI gateway ready, RAG indexed |
-| **Readiness Probe** | `https://nwhitejobapplicationsapp2027.vercel.app/api/ready` | Verified (HTTP 200) | Profile data OK, heap memory stable |
-| **Prometheus Telemetry** | `https://nwhitejobapplicationsapp2027.vercel.app/api/metrics` | Verified (HTTP 200) | Full Prom-client exposition for Grafana Cloud |
+| **Official Application Root** | `https://applywise-ai-app.vercel.app/` | Verified (HTTP 200) | Landing & dashboard fully rendered |
+| **SaaS Alias Root** | `https://applywise-ai-saas.vercel.app/` | Verified (HTTP 200) | Secondary official alias active |
+| **Liveness Probe** | `https://applywise-ai-app.vercel.app/api/health` | Verified (HTTP 200) | Database healthy, AI gateway ready, RAG indexed |
+| **Readiness Probe** | `https://applywise-ai-app.vercel.app/api/ready` | Verified (HTTP 200) | Profile data OK, heap memory stable |
+| **Prometheus Telemetry** | `https://applywise-ai-app.vercel.app/api/metrics` | Verified (HTTP 200) | Full Prom-client exposition for Grafana Cloud |
 | **Supabase Project** | `https://vxiufajiipqdntsxmkjn.supabase.co` | Verified (HTTP 200) | Dedicated `applywise-ai` project with 25 tables |
 | **Grafana Workspace** | `https://ardentcosmos829.grafana.net` | Verified (HTTP 200) | Dashboards 01 & 06 imported and active |
 | **Type Check** | `npm run type-check` | Verified (0 errors) | Strict TypeScript compiler validation |

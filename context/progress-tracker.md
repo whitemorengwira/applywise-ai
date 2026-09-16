@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-16T14:55:00+02:00
+2026-09-16T15:10:00+02:00
 
 ## Current Phase
 **FULL LIFECYCLE COMPLETE & VERIFIED — PRODUCTION ACTIVE**
-Dedicated Supabase project (`applywise-ai`) provisioned and migrated with 25 tables. Grafana Cloud telemetry connected and dashboards imported. Production deployed to Vercel. Candidate intelligence and geographic rules engine operational.
+Official SaaS name `applywise-ai` established across all platforms: Vercel project (`applywise-ai`), Production URLs (`applywise-ai-app.vercel.app`, `applywise-ai-saas.vercel.app`), GitHub repository (`whitemorengwira/applywise-ai`), Supabase project (`applywise-ai`), and local workspace (`D:\applywise-ai`).
 
 ---
 
@@ -25,56 +25,24 @@ Dedicated Supabase project (`applywise-ai`) provisioned and migrated with 25 tab
 | **Phase 9** | Observability, Metrics & Alerting | Completed | `prom-client`, structured logger, 6 Grafana Dashboards as Code, Prometheus alerts |
 | **Phase 10** | Infrastructure-as-Code (Terraform) | Completed | Terraform modules, dev/prod environments, `terraform fmt`, `terraform validate` |
 | **Phase 11** | Recruiter Showcase & Documentation | Completed | `docs/observability-demo.md`, `docs/technology-stack.md`, updated `README.md` |
-| **Phase 12** | Production Deployment (Vercel) | Completed | Live at `https://nwhitejobapplicationsapp2027.vercel.app`, all endpoints verified |
+| **Phase 12** | Production Deployment (Vercel) | Completed | Official project `applywise-ai`, live at `https://applywise-ai-app.vercel.app` (HTTP 200) |
 | **Phase 13** | External Platform Config | Completed | Dedicated Supabase project `applywise-ai` created & migrated; Grafana Cloud active with dashboards |
 | **Phase 14** | Candidate Intelligence & Geographic Rules | Completed | Master Prompt & Role Catalogue integrated, geographic eligibility enforced |
 
 ---
 
-## Session History
-
-### Session 5 — 2026-09-16 (Afternoon)
-**Objective:** Autonomous creation of dedicated Supabase project, database schema migration, and Grafana Cloud Prometheus telemetry integration.
-
-**Completed:**
-- Created dedicated Supabase project `applywise-ai` (Ref: `vxiufajiipqdntsxmkjn`, Region: `eu-west-1`, Org: `nwhite-systems`).
-- Deployed full PostgreSQL 16 + pgvector database schema (25 core tables with RLS) via Supabase SQL Editor.
-- Configured Grafana Cloud Prometheus integration (`ardentcosmos829.grafana.net`, remote write endpoint, instance ID `3586744`, API token).
-- Imported Grafana Dashboards:
-  - Dashboard 01: `ApplyWise AI — Application Overview` (`/d/applywise-app-overview/...`)
-  - Dashboard 06: `06 — NWhite Systems Unified Cloud & Traffic Analytics` (`/d/nwhite-systems-unified-analytics/...`)
-- Populated `.env.local` with verified production credentials.
-- Verified connectivity with Node.js test script (HTTP 200 on Auth & REST APIs, Grafana authentication verified).
-
-### Session 4 — 2026-09-16 (Morning)
-**Objective:** Execute `/remember` workflow, synchronize context tracking files, track authoritative master candidate documents, and enforce geographic location eligibility rules.
-
-**Completed:**
-- Updated `context/build-plan.md` to reflect all completed phases.
-- Updated `context/ui-registry.md` marking all base, layout, page, and dashboard components as implemented.
-- Updated `context/execution-state.md` with checkpoint metadata and 6 Dashboards as Code inventory.
-- Tracked authoritative master job-search documents in `cv and cover letter/` in git.
-- Implemented geographic work arrangement validation and candidate role families in `src/lib/services/match.service.ts`.
-- Verified quality gates: `type-check`, `lint`, `test`, `build`. Committed as `cdb1b32`.
-
----
-
-## Quality Gate History
-- `npm run type-check`: 0 errors (strict mode)
-- `npm run lint`: 0 warnings, 0 errors
-- `npm test`: 4 test suites, 13/13 tests passing
-- `npm run build`: 22/22 routes compiled cleanly
-- `terraform fmt -check -recursive`: 0 violations
-- `terraform validate`: Success! Configuration is valid.
-
 ## Production Endpoints & Platforms (Verified)
-- **Vercel Root**: `https://nwhitejobapplicationsapp2027.vercel.app/` → HTTP 200
-- **Health Probe**: `https://nwhitejobapplicationsapp2027.vercel.app/api/health` → HTTP 200
-- **Ready Probe**: `https://nwhitejobapplicationsapp2027.vercel.app/api/ready` → HTTP 200
-- **Prometheus Metrics**: `https://nwhitejobapplicationsapp2027.vercel.app/api/metrics` → HTTP 200
-- **Supabase Project**: `https://vxiufajiipqdntsxmkjn.supabase.co` → Active (25 tables with RLS)
-- **Grafana Workspace**: `https://ardentcosmos829.grafana.net` → Active (Dashboards 01 & 06 imported)
+- **Official Vercel Root**: `https://applywise-ai-app.vercel.app/` → HTTP 200
+- **Alternative SaaS Alias**: `https://applywise-ai-saas.vercel.app/` → HTTP 200
+- **Legacy URL (Maintained)**: `https://nwhitejobapplicationsapp2027.vercel.app/` → HTTP 200
+- **Health Probe**: `https://applywise-ai-app.vercel.app/api/health` → HTTP 200
+- **Ready Probe**: `https://applywise-ai-app.vercel.app/api/ready` → HTTP 200
+- **Prometheus Metrics**: `https://applywise-ai-app.vercel.app/api/metrics` → HTTP 200
+- **Supabase Project**: `https://vxiufajiipqdntsxmkjn.supabase.co` (`applywise-ai`)
+- **Grafana Workspace**: `https://ardentcosmos829.grafana.net` (`ardentcosmos829`)
+- **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
+- **Local Directory**: `D:\applywise-ai` (Cloned & synchronized)
 
 ## Git History
-- Latest Commit: `cdb1b32` on `master` (`feat(matching): enforce non-negotiable location eligibility and update project memory`)
-- GitHub Repository: `https://github.com/whitemorengwira/applywise-ai`
+- Repository: `whitemorengwira/applywise-ai`
+- Default Branch: `master`

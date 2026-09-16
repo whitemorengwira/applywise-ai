@@ -1,11 +1,13 @@
 # ApplyWise AI — Machine-Readable Execution Checkpoint
 
 ## Metadata
-- **Last Updated**: 2026-09-16T14:55:00+02:00
+- **Last Updated**: 2026-09-16T15:10:00+02:00
 - **Current Phase**: ALL PHASES COMPLETE (Phases 0–14)
-- **System**: ApplyWise AI (Whitemore Ngwira Showcase)
-- **Production URL**: `https://nwhitejobapplicationsapp2027.vercel.app`
+- **System**: ApplyWise AI (`applywise-ai`)
+- **Official Production URL**: `https://applywise-ai-app.vercel.app`
+- **Secondary SaaS URL**: `https://applywise-ai-saas.vercel.app`
 - **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
+- **Local Directory**: `D:\applywise-ai`
 - **Supabase Project**: `https://vxiufajiipqdntsxmkjn.supabase.co` (`applywise-ai`)
 - **Grafana Cloud**: `https://ardentcosmos829.grafana.net` (`ardentcosmos829`)
 - **Status**: COMPLETE, VERIFIED & PRODUCTION-ACTIVE
@@ -28,7 +30,7 @@
 | **Phase 9** | Observability, Metrics, Logging & Alerting | `[x] COMPLETE` | `prom-client`, structured logger, 6 Dashboards as Code, Prometheus alerts |
 | **Phase 10** | Infrastructure-as-Code (Terraform) | `[x] COMPLETE` | Terraform modules, dev/prod, `terraform fmt`, `terraform validate` passed |
 | **Phase 11** | Recruiter Live Demonstration & Final Documentation | `[x] COMPLETE` | `docs/observability-demo.md`, `docs/technology-stack.md`, updated `README.md` |
-| **Phase 12** | Production Deployment (Vercel) | `[x] COMPLETE` | Aliased to `https://nwhitejobapplicationsapp2027.vercel.app` (HTTP 200) |
+| **Phase 12** | Production Deployment (Vercel) | `[x] COMPLETE` | Official project `applywise-ai`, live at `https://applywise-ai-app.vercel.app` (HTTP 200) |
 | **Phase 13** | External Platform Config (Supabase + Grafana Cloud) | `[x] COMPLETE` | Dedicated project created, 25 tables migrated, Grafana dashboards imported |
 | **Phase 14** | Candidate Intelligence & Geographic Rule Engine | `[x] COMPLETE` | Master prompt & role catalogue tracked; location rules enforced |
 
