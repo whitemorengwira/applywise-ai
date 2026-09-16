@@ -36,6 +36,31 @@ export interface PreparedEmailApplication {
   auditHash: string;
 }
 
+export interface OperationalAlertPayload {
+  alertName: string;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  summary: string;
+  description: string;
+  action?: string;
+  startsAt?: string;
+  generatorURL?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PreparedAlertNotification {
+  success: boolean;
+  to: string;
+  from: string;
+  subject: string;
+  body: string;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  alertName: string;
+  signaturePolicy: "PRESERVE_ZOHO_ACCOUNT_SIGNATURE";
+  languageVariant: "British English";
+  auditHash: string;
+  dispatchedAt: string;
+}
+
 export class ZohoEmailService {
   public static readonly OFFICIAL_SENDER = "whitemore@nwhite.systems";
   public static readonly SECONDARY_SENDER = "hello@nwhite.systems";
@@ -102,6 +127,54 @@ export class ZohoEmailService {
       signaturePolicy: "PRESERVE_ZOHO_ACCOUNT_SIGNATURE",
       languageVariant: "British English",
       auditHash,
+    };
+  }
+
+  /**
+   * Prepares and formats a critical operational alert notification for Zoho business email dispatch.
+   * Directly addressed to whitemore@nwhite.systems with British English terminology,
+   * structured executive layout, and signature preservation.
+   */
+  public static prepareAlertNotification(alert: OperationalAlertPayload): PreparedAlertNotification {
+    const { alertName, severity, summary, description, action, startsAt, metadata } = alert;
+    const timestamp = startsAt || new Date().toISOString();
+
+    const subject = `[ApplyWise AI Alert: ${severity}] ${alertName} — ${summary}`;
+
+    const metadataSection = metadata && Object.keys(metadata).length > 0
+      ? `\nAlert Metadata:\n${Object.entries(metadata).map(([k, v]) => `  • ${k}: ${JSON.stringify(v)}`).join("\n")}\n`
+      : "";
+
+    const actionSection = action ? `\nRecommended Remediating Action:\n${action}\n` : "";
+
+    const body = `Dear Whitemore,
+
+A critical operational alert has been triggered on the ApplyWise AI production platform:
+
+Alert Name: ${alertName}
+Severity: ${severity}
+Summary: ${summary}
+Description: ${description}
+Timestamp: ${timestamp}
+${metadataSection}${actionSection}
+Please inspect the system logs, Grafana Command Centre, and relevant cloud infrastructure components accordingly.
+
+Kind regards,`;
+
+    const auditHash = Buffer.from(`${ZohoEmailService.OFFICIAL_SENDER}|${alertName}|${severity}|${timestamp}`).toString("base64");
+
+    return {
+      success: true,
+      to: ZohoEmailService.OFFICIAL_SENDER,
+      from: ZohoEmailService.OFFICIAL_SENDER,
+      subject,
+      body,
+      severity,
+      alertName,
+      signaturePolicy: "PRESERVE_ZOHO_ACCOUNT_SIGNATURE",
+      languageVariant: "British English",
+      auditHash,
+      dispatchedAt: new Date().toISOString(),
     };
   }
 }

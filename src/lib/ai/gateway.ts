@@ -103,6 +103,144 @@ const MODEL_ROUTING_MAP: Record<AITaskType, string> = {
   company_research: "opencode/ling-3.0-flash-fin:free",
 };
 
+export type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
+
+export interface CircuitBreakerStatus {
+  modelId: string;
+  state: CircuitBreakerState;
+  failures: number;
+  lastFailureTime: number | null;
+  lastSuccessTime: number | null;
+  trippedCount: number;
+}
+
+/**
+ * ModelCircuitBreaker tracks per-model operational health.
+ * Automatically trips to OPEN after consecutive failures and enters
+ * HALF_OPEN probe state after a cooldown window.
+ */
+export class ModelCircuitBreaker {
+  private static failures: Map<string, number> = new Map();
+  private static state: Map<string, CircuitBreakerState> = new Map();
+  private static lastFailureTime: Map<string, number> = new Map();
+  private static lastSuccessTime: Map<string, number> = new Map();
+  private static trippedCount: Map<string, number> = new Map();
+
+  public static FAILURE_THRESHOLD = 3;
+  public static COOLDOWN_MS = 30000; // 30 seconds
+
+  public static getState(modelId: string): CircuitBreakerState {
+    const currentState = this.state.get(modelId) || "CLOSED";
+    if (currentState === "OPEN") {
+      const lastFail = this.lastFailureTime.get(modelId) || 0;
+      if (Date.now() - lastFail > this.COOLDOWN_MS) {
+        this.state.set(modelId, "HALF_OPEN");
+        return "HALF_OPEN";
+      }
+    }
+    return currentState;
+  }
+
+  public static isAvailable(modelId: string): boolean {
+    const st = this.getState(modelId);
+    return st === "CLOSED" || st === "HALF_OPEN";
+  }
+
+  public static recordSuccess(modelId: string): void {
+    this.failures.set(modelId, 0);
+    this.state.set(modelId, "CLOSED");
+    this.lastSuccessTime.set(modelId, Date.now());
+  }
+
+  public static recordFailure(modelId: string, error?: string): CircuitBreakerState {
+    const currentFailures = (this.failures.get(modelId) || 0) + 1;
+    this.failures.set(modelId, currentFailures);
+    this.lastFailureTime.set(modelId, Date.now());
+
+    if (currentFailures >= this.FAILURE_THRESHOLD) {
+      this.state.set(modelId, "OPEN");
+      this.trippedCount.set(modelId, (this.trippedCount.get(modelId) || 0) + 1);
+      logger.warn("circuit_breaker_tripped", `Circuit breaker TRIPPED for model: ${modelId}`, {
+        metadata: { modelId, failures: currentFailures, error },
+      });
+      return "OPEN";
+    }
+
+    return this.state.get(modelId) || "CLOSED";
+  }
+
+  public static tripManually(modelId: string): void {
+    this.failures.set(modelId, this.FAILURE_THRESHOLD);
+    this.state.set(modelId, "OPEN");
+    this.lastFailureTime.set(modelId, Date.now());
+    this.trippedCount.set(modelId, (this.trippedCount.get(modelId) || 0) + 1);
+  }
+
+  public static reset(modelId?: string): void {
+    if (modelId) {
+      this.failures.delete(modelId);
+      this.state.delete(modelId);
+      this.lastFailureTime.delete(modelId);
+      this.lastSuccessTime.delete(modelId);
+      this.trippedCount.delete(modelId);
+    } else {
+      this.failures.clear();
+      this.state.clear();
+      this.lastFailureTime.clear();
+      this.lastSuccessTime.clear();
+      this.trippedCount.clear();
+    }
+  }
+
+  public static getStatuses(): CircuitBreakerStatus[] {
+    return OPENCODE_ZEN_MODELS.map((m) => ({
+      modelId: m.id,
+      state: this.getState(m.id),
+      failures: this.failures.get(m.id) || 0,
+      lastFailureTime: this.lastFailureTime.get(m.id) || null,
+      lastSuccessTime: this.lastSuccessTime.get(m.id) || null,
+      trippedCount: this.trippedCount.get(m.id) || 0,
+    }));
+  }
+}
+
+/**
+ * Fallback rotation sequences strictly within the verified OpenCode Zen 100% Free-Tier Suite.
+ * Enforces zero cost and zero paid inference.
+ */
+export const MODEL_ROTATION_FALLBACKS: Record<AITaskType, string[]> = {
+  job_extraction: [
+    "opencode/nemotron-3.5-lightning:free",
+    "opencode/nemotron-3-ultra:free",
+    "opencode/ling-3.0-flash-fin:free",
+  ],
+  match_scoring: [
+    "opencode/nemotron-3-ultra:free",
+    "opencode/nemotron-3.5-lightning:free",
+    "opencode/ling-3.0-flash-fin:free",
+  ],
+  cv_tailoring: [
+    "opencode/nemotron-3-ultra:free",
+    "opencode/nemotron-3.5-lightning:free",
+    "opencode/muse-spark-1.3:free",
+  ],
+  cover_letter_generation: [
+    "opencode/muse-spark-1.3:free",
+    "opencode/nemotron-3-ultra:free",
+    "opencode/nemotron-3.5-lightning:free",
+  ],
+  agentic_rag: [
+    "opencode/nemotron-3-ultra:free",
+    "opencode/nemotron-3.5-lightning:free",
+    "opencode/ling-3.0-flash-fin:free",
+  ],
+  company_research: [
+    "opencode/ling-3.0-flash-fin:free",
+    "opencode/nemotron-3-ultra:free",
+    "opencode/nemotron-3.5-lightning:free",
+  ],
+};
+
 export class AIGateway {
   static normalizeModelName(model: string): string {
     const lower = model.toLowerCase();
@@ -119,31 +257,70 @@ export class AIGateway {
     return MODEL_ROUTING_MAP[taskType] || env.OPENCODE_DEFAULT_REASONING_MODEL;
   }
 
+  /**
+   * Builds an ordered chain of OpenCode Zen free fallback candidates.
+   */
+  static getRotationCandidates(taskType: AITaskType, override?: string): string[] {
+    const primary = this.selectModel(taskType, override);
+    const fallbacks = MODEL_ROTATION_FALLBACKS[taskType] || [
+      "opencode/nemotron-3-ultra:free",
+      "opencode/nemotron-3.5-lightning:free",
+    ];
+    return [primary, ...fallbacks.filter((m) => m !== primary)];
+  }
+
   static async complete(options: AICallOptions): Promise<AICallResult> {
     const startTime = Date.now();
-    const model = this.selectModel(options.taskType, options.modelOverride);
-    const boundedModel = this.normalizeModelName(model);
+    const primaryModel = this.selectModel(options.taskType, options.modelOverride);
+    const candidates = this.getRotationCandidates(options.taskType, options.modelOverride);
 
     // 100% Free-Tier Governance Enforcement
     if (env.FREE_ONLY_MODE) {
-      const isFree = OPENCODE_ZEN_MODELS.some((m) => m.id === model && m.tier === "Free");
-      if (!isFree && !model.includes(":free")) {
-        throw new Error(
-          `[FREE_TIER_VIOLATION] Paid inference strictly blocked under FREE_ONLY_MODE=true for model: ${model}. Only verified OpenCode Zen free models permitted.`
-        );
+      for (const candidate of candidates) {
+        const isFree = OPENCODE_ZEN_MODELS.some((m) => m.id === candidate && m.tier === "Free");
+        if (!isFree && !candidate.includes(":free")) {
+          throw new Error(
+            `[FREE_TIER_VIOLATION] Paid inference strictly blocked under FREE_ONLY_MODE=true for model: ${candidate}. Only verified OpenCode Zen free models permitted.`
+          );
+        }
       }
     }
 
-    // If no live external API key is configured or offline simulation is needed
-    if (
+    // Determine if simulation mode applies
+    const isSimulatedMode =
       !env.OPENCODE_ZEN_API_KEY ||
       env.OPENCODE_ZEN_API_KEY.includes("free_tier_active") ||
-      env.OPENCODE_ZEN_API_KEY.includes("demo")
-    ) {
-      const mockResult = this.generateMockResponse(options.taskType);
+      env.OPENCODE_ZEN_API_KEY.includes("demo");
+
+    if (isSimulatedMode) {
+      // Find the first available candidate whose circuit breaker is not tripped
+      let selectedModel = primaryModel;
+      let rotated = false;
+
+      for (const candidate of candidates) {
+        if (ModelCircuitBreaker.isAvailable(candidate)) {
+          selectedModel = candidate;
+          if (candidate !== primaryModel) rotated = true;
+          break;
+        }
+      }
+
+      const boundedModel = this.normalizeModelName(selectedModel);
       const latencyMs = Math.max(1, Date.now() - startTime);
 
-      // Prometheus Telemetry: Record simulation metrics & structured log
+      if (rotated) {
+        aiFallbacksTotal.inc({
+          primary_model: this.normalizeModelName(primaryModel),
+          fallback_model: boundedModel,
+          reason: "circuit_breaker_rotation",
+        });
+        logger.info("ai_gateway_circuit_rotated", `Circuit breaker rotated request from ${primaryModel} to ${selectedModel}`, {
+          durationMs: latencyMs,
+          metadata: { primaryModel, selectedModel, taskType: options.taskType },
+        });
+      }
+
+      // Prometheus Telemetry: Record simulation metrics
       aiRequestsTotal.inc({ model_id: `${boundedModel}-sim`, task_type: options.taskType, status: "simulated" });
       aiLatencySeconds.observe({ model_id: `${boundedModel}-sim`, task_type: options.taskType }, latencyMs / 1000);
       aiTokenUsageTotal.inc({ model_id: `${boundedModel}-sim`, token_type: "prompt" }, 120);
@@ -151,122 +328,167 @@ export class AIGateway {
 
       logger.info("ai_gateway_simulated", `AI request executed in simulation mode for ${options.taskType}`, {
         durationMs: latencyMs,
-        metadata: { model: boundedModel, taskType: options.taskType },
+        metadata: { model: boundedModel, taskType: options.taskType, rotated },
       });
 
       const log: AIOperationLog = {
         id: `opencode-mock-${Date.now()}`,
         taskType: options.taskType,
-        model: `${model} (Simulated)`,
+        model: `${selectedModel} (Simulated)`,
         promptTokens: 120,
         completionTokens: 280,
         latencyMs,
         success: true,
         createdAt: new Date().toISOString(),
       };
-      return {
-        content: mockResult,
-        modelUsed: `${model} (Simulated Mode)`,
-        log,
-      };
-    }
-
-    try {
-      // Route through Cloudflare AI Gateway when enabled, or direct OpenCode Zen endpoint
-      const targetEndpoint =
-        env.CLOUDFLARE_AI_GATEWAY_ENABLED && env.CLOUDFLARE_AI_GATEWAY_URL
-          ? `${env.CLOUDFLARE_AI_GATEWAY_URL}/chat/completions`
-          : `${env.OPENCODE_ZEN_BASE_URL}/chat/completions`;
-
-      const response = await fetch(targetEndpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${env.OPENCODE_ZEN_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
-          "X-Title": "ApplyWise AI",
-          "cf-aig-cache": "true",
-          "cf-aig-metadata": JSON.stringify({ taskType: options.taskType, model }),
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            ...(options.systemPrompt ? [{ role: "system", content: options.systemPrompt }] : []),
-            { role: "user", content: options.prompt },
-          ],
-          temperature: options.temperature ?? 0.3,
-          max_tokens: options.maxTokens ?? 1500,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenCode Zen Gateway error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content ?? "";
-      const latencyMs = Date.now() - startTime;
-      const promptTokens = data.usage?.prompt_tokens ?? 0;
-      const completionTokens = data.usage?.completion_tokens ?? 0;
-
-      // Telemetry: Record successful AI invocation metrics
-      aiRequestsTotal.inc({ model_id: boundedModel, task_type: options.taskType, status: "success" });
-      aiLatencySeconds.observe({ model_id: boundedModel, task_type: options.taskType }, latencyMs / 1000);
-      if (promptTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "prompt" }, promptTokens);
-      if (completionTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "completion" }, completionTokens);
-
-      logger.info("ai_gateway_success", `AI call successful for ${options.taskType}`, {
-        durationMs: latencyMs,
-        metadata: { model: boundedModel, taskType: options.taskType, promptTokens, completionTokens },
-      });
-
-      const log: AIOperationLog = {
-        id: data.id || `log-${Date.now()}`,
-        taskType: options.taskType,
-        model,
-        promptTokens,
-        completionTokens,
-        latencyMs,
-        success: true,
-        createdAt: new Date().toISOString(),
-      };
-
-      return {
-        content,
-        modelUsed: model,
-        log,
-      };
-    } catch (error: unknown) {
-      const latencyMs = Date.now() - startTime;
-      const errorMsg = error instanceof Error ? error.message : "Unknown OpenCode Zen gateway error";
-
-      // Telemetry: Record AI error & fallback metrics
-      aiErrorsTotal.inc({ model_id: boundedModel, error_code: "invocation_failed" });
-      aiFallbacksTotal.inc({ primary_model: boundedModel, fallback_model: "simulated_fallback", reason: "api_error" });
-
-      logger.error("ai_gateway_fallback", `AI call failed, falling back safely to simulation: ${errorMsg}`, {
-        durationMs: latencyMs,
-        metadata: { model: boundedModel, taskType: options.taskType, error: errorMsg },
-      });
-
-      const log: AIOperationLog = {
-        id: `err-${Date.now()}`,
-        taskType: options.taskType,
-        model,
-        promptTokens: 0,
-        completionTokens: 0,
-        latencyMs,
-        success: false,
-        errorMessage: errorMsg,
-        createdAt: new Date().toISOString(),
-      };
 
       return {
         content: this.generateMockResponse(options.taskType),
-        modelUsed: `${model} (Fallback)`,
+        modelUsed: rotated ? `${selectedModel} (Rotated Fallback)` : `${selectedModel} (Simulated Mode)`,
         log,
       };
     }
+
+    // Live Execution with Circuit Breaker & Automatic Model Rotation
+    let lastError: Error | null = null;
+    for (const model of candidates) {
+      if (!ModelCircuitBreaker.isAvailable(model)) {
+        logger.warn("circuit_breaker_skipped", `Skipping tripped model: ${model} in rotation chain`, {
+          metadata: { model, taskType: options.taskType },
+        });
+        continue;
+      }
+
+      const boundedModel = this.normalizeModelName(model);
+
+      try {
+        const targetEndpoint =
+          env.CLOUDFLARE_AI_GATEWAY_ENABLED && env.CLOUDFLARE_AI_GATEWAY_URL
+            ? `${env.CLOUDFLARE_AI_GATEWAY_URL}/chat/completions`
+            : `${env.OPENCODE_ZEN_BASE_URL}/chat/completions`;
+
+        const response = await fetch(targetEndpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${env.OPENCODE_ZEN_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
+            "X-Title": "ApplyWise AI",
+            "cf-aig-cache": "true",
+            "cf-aig-metadata": JSON.stringify({ taskType: options.taskType, model }),
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              ...(options.systemPrompt ? [{ role: "system", content: options.systemPrompt }] : []),
+              { role: "user", content: options.prompt },
+            ],
+            temperature: options.temperature ?? 0.3,
+            max_tokens: options.maxTokens ?? 1500,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`OpenCode Zen Gateway error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content ?? "";
+        const latencyMs = Date.now() - startTime;
+        const promptTokens = data.usage?.prompt_tokens ?? 0;
+        const completionTokens = data.usage?.completion_tokens ?? 0;
+
+        // Model succeeded — mark circuit breaker healthy
+        ModelCircuitBreaker.recordSuccess(model);
+
+        if (model !== primaryModel) {
+          aiFallbacksTotal.inc({
+            primary_model: this.normalizeModelName(primaryModel),
+            fallback_model: boundedModel,
+            reason: "circuit_breaker_rotation",
+          });
+          logger.info("ai_gateway_circuit_rotated", `Rotated inference successfully executed on ${model}`, {
+            durationMs: latencyMs,
+            metadata: { primaryModel, model, taskType: options.taskType },
+          });
+        }
+
+        aiRequestsTotal.inc({ model_id: boundedModel, task_type: options.taskType, status: "success" });
+        aiLatencySeconds.observe({ model_id: boundedModel, task_type: options.taskType }, latencyMs / 1000);
+        if (promptTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "prompt" }, promptTokens);
+        if (completionTokens > 0) aiTokenUsageTotal.inc({ model_id: boundedModel, token_type: "completion" }, completionTokens);
+
+        const log: AIOperationLog = {
+          id: data.id || `log-${Date.now()}`,
+          taskType: options.taskType,
+          model,
+          promptTokens,
+          completionTokens,
+          latencyMs,
+          success: true,
+          createdAt: new Date().toISOString(),
+        };
+
+        return {
+          content,
+          modelUsed: model !== primaryModel ? `${model} (Rotated Fallback)` : model,
+          log,
+        };
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        ModelCircuitBreaker.recordFailure(model, lastError.message);
+        aiErrorsTotal.inc({ model_id: boundedModel, error_code: "invocation_failed" });
+        logger.warn("ai_model_failure", `Failure on model ${model}, attempting next rotation candidate: ${lastError.message}`, {
+          metadata: { model, taskType: options.taskType, error: lastError.message },
+        });
+      }
+    }
+
+    // If all rotation candidates failed or were tripped, fallback safely to simulation mode
+    const fallbackLatencyMs = Date.now() - startTime;
+    const boundedPrimary = this.normalizeModelName(primaryModel);
+    const errorMsg = lastError ? lastError.message : "All rotation models tripped or unavailable";
+
+    aiFallbacksTotal.inc({
+      primary_model: boundedPrimary,
+      fallback_model: "simulated_fallback",
+      reason: "circuit_breaker_exhausted",
+    });
+
+    logger.error("ai_gateway_circuit_exhausted", `All models exhausted, engaging safe simulation fallback: ${errorMsg}`, {
+      durationMs: fallbackLatencyMs,
+      metadata: { primaryModel, taskType: options.taskType, error: errorMsg },
+    });
+
+    const log: AIOperationLog = {
+      id: `err-${Date.now()}`,
+      taskType: options.taskType,
+      model: primaryModel,
+      promptTokens: 0,
+      completionTokens: 0,
+      latencyMs: fallbackLatencyMs,
+      success: false,
+      errorMessage: errorMsg,
+      createdAt: new Date().toISOString(),
+    };
+
+    return {
+      content: this.generateMockResponse(options.taskType),
+      modelUsed: `${primaryModel} (Fallback)`,
+      log,
+    };
+  }
+
+  static getCircuitBreakerStatuses(): CircuitBreakerStatus[] {
+    return ModelCircuitBreaker.getStatuses();
+  }
+
+  static resetCircuitBreakers(): void {
+    ModelCircuitBreaker.reset();
+  }
+
+  static tripCircuitBreaker(modelId: string): void {
+    ModelCircuitBreaker.tripManually(modelId);
   }
 
   static getCatalog(): ModelCatalogEntry[] {

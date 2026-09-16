@@ -293,6 +293,30 @@ export const supabaseVectorReady = new Gauge({
 });
 
 // -----------------------------------------------------------------------------
+// Synthetic Route & Uptime Metrics
+// -----------------------------------------------------------------------------
+export const syntheticUptimeScore = new Gauge({
+  name: 'applywise_synthetic_uptime_score',
+  help: 'Synthetic health check availability score (0-100%)',
+  registers: [registry],
+});
+
+export const syntheticProbeDurationSeconds = new Histogram({
+  name: 'applywise_synthetic_probe_duration_seconds',
+  help: 'Latency of synthetic route and probe checks in seconds',
+  labelNames: ['route', 'type', 'status'] as const,
+  buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
+  registers: [registry],
+});
+
+export const syntheticProbeRunsTotal = new Counter({
+  name: 'applywise_synthetic_probe_runs_total',
+  help: 'Total count of synthetic route health checks executed',
+  labelNames: ['route', 'type', 'status'] as const,
+  registers: [registry],
+});
+
+// -----------------------------------------------------------------------------
 // Initialize Default Process & Node.js Metrics Once
 // -----------------------------------------------------------------------------
 if (!globalForMetrics.metricsInitialized) {

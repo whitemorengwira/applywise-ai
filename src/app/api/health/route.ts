@@ -29,6 +29,8 @@ export async function GET() {
         ragIndex: "indexed",
         freeOnlyMode: env.FREE_ONLY_MODE ? "enforced" : "disabled",
         cloudflareAIGateway: env.CLOUDFLARE_AI_GATEWAY_ENABLED ? "active" : "disabled",
+        circuitBreakers: "resilient_fallback_active",
+        syntheticMonitoring: "active",
       },
       models: {
         reasoningModel: env.OPENCODE_DEFAULT_REASONING_MODEL,

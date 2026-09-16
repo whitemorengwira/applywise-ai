@@ -111,15 +111,17 @@ export async function evaluateGeographyAndEligibilityNode(state: ApplicationWork
 export async function retrieveCandidateEvidenceNode(state: ApplicationWorkflowState): Promise<Partial<ApplicationWorkflowState>> {
   const step = "RETRIEVE_CANDIDATE_EVIDENCE";
   const job = state.job || {};
-  const query = `${job.title} ${job.skills?.join(" ")} ${job.description || ""}`;
-
-  const evidence = RAGService.retrieveRelevantChunks(query, 4);
+  const { chunks, overallPrecision, averageGroundingConfidence } = RAGService.retrieveGroundedChunksForCoverLetter(
+    job.title || "Senior Software Engineer",
+    `${job.description || ""} ${(job.skills || []).join(" ")}`,
+    4
+  );
 
   return {
-    retrievedEvidence: evidence,
+    retrievedEvidence: chunks,
     currentStep: step,
     auditTrail: [
-      `[${new Date().toISOString()}] RAG evidence retrieved: ${evidence.length} chunks sourced from Master CV and N.White Systems`,
+      `[${new Date().toISOString()}] RAG evidence retrieved: ${chunks.length} chunks sourced with ${averageGroundingConfidence}% grounding confidence (${overallPrecision} precision)`,
     ],
   };
 }

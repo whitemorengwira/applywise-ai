@@ -36,26 +36,62 @@ groups:
         for: 5m
         labels:
           severity: CRITICAL
+          channel: zoho-email
         annotations:
           summary: "High AI Gateway model error rate"
-          description: "OpenRouter or inference gateway calls are failing at a rate exceeding 0.1 errors/sec."
-          action: "Verify OpenRouter API key validity, rate limit quotas, and model status."
+          description: "OpenCode Zen free inference gateway calls are failing at a rate exceeding 0.1 errors/sec."
+          action: "Verify OpenCode Zen API key validity, rate limit quotas, Cloudflare AI Gateway proxy, and model status."
 
       - alert: ExcessiveModelFallbacks
         expr: sum(rate(applywise_ai_fallbacks_total[10m])) > 0.05
         for: 10m
         labels:
           severity: WARNING
+          channel: zoho-email
         annotations:
           summary: "High AI model fallback frequency"
-          description: "Primary AI models are frequently failing over to simulated or backup engines."
-          action: "Inspect OpenRouter rate limits and upstream provider latencies."
+          description: "Primary AI models are frequently rotating to backup OpenCode Zen free models or simulation."
+          action: "Inspect OpenCode Zen rate limits, model circuit breaker statuses, and upstream provider latencies."
+
+      - alert: AIModelCircuitBreakerTripped
+        expr: sum(rate(applywise_ai_fallbacks_total{reason="circuit_breaker_rotation"}[5m])) > 0.02
+        for: 2m
+        labels:
+          severity: CRITICAL
+          channel: zoho-email
+        annotations:
+          summary: "OpenCode Zen AI Model Circuit Breaker Tripped"
+          description: "A primary free AI model has tripped its circuit breaker and the gateway has engaged automatic fallback rotation."
+          action: "Check AIGateway.getCircuitBreakerStatuses() and inspect OpenCode Zen status."
+
+      - alert: CVIntegrityViolation
+        expr: applywise_cv_integrity_valid == 0
+        for: 30s
+        labels:
+          severity: CRITICAL
+          channel: zoho-email
+        annotations:
+          summary: "Security Violation: Master CV Cryptographic Hash Mismatch"
+          description: "The certified Master CV PDF hash diverges from SHA-256 3994A09C76CB5922F41F6A212AA99E1392D0A06DBECF650CB307756D5EF2423F."
+          action: "HALT ALL APPLICATION SUBMISSIONS IMMEDIATELY. Restore Master CV from certified origin."
+
+      - alert: SyntheticRouteProbeFailure
+        expr: applywise_synthetic_uptime_score < 95
+        for: 2m
+        labels:
+          severity: CRITICAL
+          channel: zoho-email
+        annotations:
+          summary: "Synthetic Frontend Route & Probe Failure"
+          description: "One or more synthetic route probes (frontend pages or API probes) failed to respond within SLA."
+          action: "Check /api/health/synthetic, Vercel deployments, and serverless logs."
 
       - alert: LangGraphWorkflowFailures
         expr: sum(rate(applywise_agent_runs_total{status="failed"}[10m])) > 0
         for: 5m
         labels:
           severity: WARNING
+          channel: zoho-email
         annotations:
           summary: "LangGraph agent workflow failures detected"
           description: "One or more agentic workflows (job analysis, CV tailoring, RAG copilot) failed."
@@ -66,6 +102,7 @@ groups:
         for: 3m
         labels:
           severity: CRITICAL
+          channel: zoho-email
         annotations:
           summary: "Supabase database errors detected"
           description: "Database transactions or pgvector queries are failing."
