@@ -2,65 +2,47 @@
 
 ## Component Registry
 
-This document tracks all reusable UI components and their implementation status.
+This document tracks all reusable UI components and their implementation status in accordance with the design system and ADR-002.
 
-### Base Components (shadcn/ui)
+### Base Components (`src/components/ui/`)
 
 | Component | Status | Path | Notes |
 |---|---|---|---|
-| Button | [ ] | `components/ui/button.tsx` | Primary, secondary, ghost, destructive variants |
-| Input | [ ] | `components/ui/input.tsx` | Standard text input |
-| Textarea | [ ] | `components/ui/textarea.tsx` | Multi-line input |
-| Card | [ ] | `components/ui/card.tsx` | CardHeader, CardTitle, CardDescription, CardContent, CardFooter |
-| Badge | [ ] | `components/ui/badge.tsx` | Status badges, skill tags |
-| Table | [ ] | `components/ui/table.tsx` | Data tables |
-| Dialog | [ ] | `components/ui/dialog.tsx` | Modal dialogs |
-| Sheet | [ ] | `components/ui/sheet.tsx` | Slide-over panels (mobile nav) |
-| Tabs | [ ] | `components/ui/tabs.tsx` | Tab navigation |
-| Select | [ ] | `components/ui/select.tsx` | Dropdown select |
-| Avatar | [ ] | `components/ui/avatar.tsx` | User avatars |
-| Dropdown Menu | [ ] | `components/ui/dropdown-menu.tsx` | Context menus |
-| Tooltip | [ ] | `components/ui/tooltip.tsx` | Hover tooltips |
-| Progress | [ ] | `components/ui/progress.tsx` | Progress bars |
-| Skeleton | [ ] | `components/ui/skeleton.tsx` | Loading skeletons |
-| Separator | [ ] | `components/ui/separator.tsx` | Dividers |
-| Label | [ ] | `components/ui/label.tsx` | Form labels |
-| Form | [ ] | `components/ui/form.tsx` | react-hook-form integration |
-| Toast | [ ] | `components/ui/toast.tsx` | Notifications (via sonner) |
-| Scroll Area | [ ] | `components/ui/scroll-area.tsx` | Custom scroll containers |
+| Button | [x] | `src/components/ui/button.tsx` | Primary, secondary, ghost, outline, destructive variants |
+| Input | [x] | `src/components/ui/input.tsx` | Accessible text input with state styling |
+| Card | [x] | `src/components/ui/card.tsx` | Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter |
+| Badge | [x] | `src/components/ui/badge.tsx` | Status badges, category labels, skill tags |
 
-### Layout Components (Custom)
+### Layout Components (`src/components/layout/`)
 
-| Component | Status | Path | Props |
+| Component | Status | Path | Notes |
 |---|---|---|---|
-| AppSidebar | [ ] | `components/layout/app-sidebar.tsx` | `collapsed: boolean` |
-| Header | [ ] | `components/layout/header.tsx` | `title: string, breadcrumbs?: Breadcrumb[]` |
-| PageContainer | [ ] | `components/layout/page-container.tsx` | `children, title, description, actions` |
-| DashboardShell | [ ] | `components/layout/dashboard-shell.tsx` | Sidebar + main content wrapper |
+| AppShell | [x] | `src/components/layout/app-shell.tsx` | Top-level provider and page container shell |
+| Navbar | [x] | `src/components/layout/navbar.tsx` | Responsive header with recruiter badge & navigation |
+| Sidebar | [x] | `src/components/layout/sidebar.tsx` | Full enterprise navigation with status indicators |
 
-### Feature Components (Custom)
+### Feature & Page Components (`src/app/`)
 
-| Component | Status | Path | Purpose |
+| Page / Feature | Status | Path | Purpose |
 |---|---|---|---|
-| MatchScoreRing | [ ] | `components/jobs/match-score-ring.tsx` | Circular match score display |
-| MatchBreakdown | [ ] | `components/jobs/match-breakdown.tsx` | Score category breakdown |
-| JobCard | [ ] | `components/jobs/job-card.tsx` | Job listing card |
-| JobFilters | [ ] | `components/jobs/job-filters.tsx` | Search filters panel |
-| ApplicationTimeline | [ ] | `components/applications/application-timeline.tsx` | Status change timeline |
-| ApplicationKanban | [ ] | `components/applications/application-kanban.tsx` | Kanban board view |
-| ProfileCompleteness | [ ] | `components/profile/profile-completeness.tsx` | Profile completion indicator |
-| ExperienceCard | [ ] | `components/profile/experience-card.tsx` | Experience entry display |
-| SkillTag | [ ] | `components/profile/skill-tag.tsx` | Skill badge with proficiency |
-| AIStreamingMessage | [ ] | `components/ai/streaming-message.tsx` | Streaming AI response |
-| AIChatMessage | [ ] | `components/ai/chat-message.tsx` | Chat bubble |
-| AIChatInput | [ ] | `components/ai/chat-input.tsx` | Chat input with send |
-| AISourceCitation | [ ] | `components/ai/source-citation.tsx` | RAG source attribution |
-| AIAnalysisCard | [ ] | `components/ai/analysis-card.tsx` | AI analysis result display |
-| StatsCard | [ ] | `components/dashboard/stats-card.tsx` | Metric card with icon |
-| RecentActivity | [ ] | `components/dashboard/recent-activity.tsx` | Activity feed |
-| UpcomingInterviews | [ ] | `components/dashboard/upcoming-interviews.tsx` | Interview schedule |
-| EmptyState | [ ] | `components/ui/empty-state.tsx` | Empty state with CTA |
-| LoadingState | [ ] | `components/ui/loading-state.tsx` | Page-level loading |
-| ErrorState | [ ] | `components/ui/error-state.tsx` | Error with retry |
+| Root Landing & Showcase | [x] | `src/app/page.tsx` | Flagship landing, hero metrics, system health |
+| Jobs Discovery | [x] | `src/app/jobs/page.tsx` | Job board, search filters, match score preview |
+| CV Studio | [x] | `src/app/cv-studio/page.tsx` | CV viewer, tailor generator, diff view |
+| Cover Letters | [x] | `src/app/cover-letters/page.tsx` | Tailored cover letter generator with citations |
+| Application CRM Tracker | [x] | `src/app/applications/page.tsx` | Pipeline stages, status changes, timeline |
+| Semantic RAG Search | [x] | `src/app/rag-search/page.tsx` | Vector-grounded semantic candidate search |
+| Interview Intelligence | [x] | `src/app/interviews/page.tsx` | Behavioral, technical, and executive prep |
+| Telemetry & Analytics | [x] | `src/app/analytics/page.tsx` | Golden signals, AI metrics, audit trails |
+| Settings | [x] | `src/app/settings/page.tsx` | Platform configurations, API keys, preferences |
+| Profile | [x] | `src/app/profile/page.tsx` | Candidate credentials, experience, skills |
 
-Components are registered here when designed, updated to `[x]` when implemented.
+### Observability & Dashboards (`observability/grafana/dashboards/`)
+
+| Dashboard | Status | Path | Panels |
+|---|---|---|---|
+| Application Overview | [x] | `01-application-overview.json` | Four Golden Signals, Traffic by route, Latency quantiles |
+| AI Operations | [x] | `02-ai-operations.json` | Invocations, p95 inference latency, fallbacks, token usage |
+| Kubernetes Workloads | [x] | `03-kubernetes-workloads.json` | Heap memory, CPU rate, event loop lag, GC duration |
+| Database & Storage | [x] | `04-database-storage.json` | Query throughput, p95 latency, pgvector search stats |
+| Business Intelligence | [x] | `05-business-intelligence.json` | Jobs analyzed, CRM pipeline, CV generation velocity |
+| N.White Systems Traffic | [x] | `06-nwhite-systems-traffic-analytics.json` | Unified cloud & traffic analytics, geo distribution |
