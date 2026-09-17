@@ -1,0 +1,151 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Cloud Autonomy & Execution Leases",
+      "type": "row"
+    },
+    {
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "type": "stat",
+      "title": "Autonomous Cycles Run",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(applywise_agent_runs_total{agent_name=\"autonomous_cycle\"}) or vector(1)",
+          "legendFormat": "Cycles",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "type": "stat",
+      "title": "Fresh Vacancies Discovered",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(applywise_jobs_discovered_total) or vector(0)",
+          "legendFormat": "Jobs",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "type": "stat",
+      "title": "Autonomous Submissions Confirmed",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(applywise_applications_submitted_total) or vector(0)",
+          "legendFormat": "Submitted",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "type": "stat",
+      "title": "Target Quota Remaining (Rolling 7-Day)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "200 - (sum(applywise_applications_submitted_total) or vector(0))",
+          "legendFormat": "Quota Remaining",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 150 },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 0 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "Pipeline Integrity & Resiliency",
+      "type": "row"
+    },
+    {
+      "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "type": "timeseries",
+      "title": "Job Pipeline Velocity & Analysis Rate",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(rate(applywise_jobs_analyzed_total[5m])) * 60",
+          "legendFormat": "Jobs Analyzed / min",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(applywise_applications_submitted_total[5m])) * 60",
+          "legendFormat": "Applications Submitted / min",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "type": "timeseries",
+      "title": "AI Model Circuit Breaker & Fallback Rotations",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(rate(applywise_ai_fallbacks_total[5m])) by (primary_model, fallback_model)",
+          "legendFormat": "{{primary_model}} -> {{fallback_model}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["applywise", "scheduler", "autonomy", "pipeline"],
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "08 — ApplyWise AI — Autonomous Cloud Scheduler & Pipeline Operations",
+  "uid": "applywise-autonomous-scheduler"
+}

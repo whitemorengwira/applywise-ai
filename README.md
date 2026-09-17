@@ -17,12 +17,12 @@
 
 Unlike superficial AI wrapper prototypes, ApplyWise AI demonstrates a comprehensive, senior-level systems engineering lifecycle:
 - **Strict Anti-Hallucination Boundaries**: AI generation is anchored to verified career milestones (EarCodeX InsurTech on AWS, Socinga Smart Mining telemetry, Cineterns & Oasis College, 21 media broadcast automation pipelines).
-- **Multi-Model Routing Gateway**: Dynamic routing between high-reasoning free models (Gemini 2.0 Flash Thinking, Qwen 2.5 72B, Llama 3.3 70B) with automated fallback.
+- **Multi-Model Routing Gateway**: Dynamic routing between verified OpenCode Zen free models (Nemotron 3 Ultra, Nemotron 3.5 Lightning, Ling 3.0 Flash Fin, MiMo 2.5, Muse Spark 1.3) with circuit breakers and Cloudflare AI Gateway caching.
 - **Agentic Career Copilot (RAG)**: Dense vector similarity retrieval with metadata filtering, provenance transparency, and clickable source citation pills.
 - **Enterprise Cloud Native**: Hardened multi-stage Docker container (<180MB, non-root UID 1001), Kubernetes manifests with 3-tier health probes, HPA, and Helm v3 packaging.
-- **Production Observability Stack**: First-class Prometheus metrics scraping (`/api/metrics`), low-cardinality label design, Grafana Cloud Free integration, and 5 version-controlled Dashboards as Code.
+- **Production Observability Stack**: First-class Prometheus metrics scraping (`/api/metrics`), low-cardinality label design, Grafana Cloud Free integration, and version-controlled Dashboards as Code.
 - **Infrastructure as Code (Terraform)**: Modular Terraform configurations declaring Grafana Cloud workspaces, folders, dashboards, and alerting contact points.
-- **100% Free-Tier Architecture**: Built to operate within legitimate free developer tiers across OpenRouter, Supabase PostgreSQL/pgvector, Grafana Cloud, and Vercel.
+- **100% Free-Tier Architecture**: Built to operate within legitimate free developer tiers across OpenCode Zen, Cloudflare AI Gateway, Supabase PostgreSQL/pgvector, Grafana Cloud, and Vercel.
 
 ---
 
@@ -53,11 +53,13 @@ graph TD
         AuditLog[(Security & Token Telemetry)]
     end
     
-    subgraph External AI Model Mesh
-        OpenRouter[OpenRouter Free Tier Gateway]
-        Gemini[Google Gemini 2.0 Flash Thinking]
-        Qwen[Qwen 2.5 72B Instruct]
-        Llama[Meta Llama 3.3 70B Instruct]
+    subgraph External AI Model Mesh [OpenCode Zen 100% Free Suite]
+        OpenCodeGateway[Cloudflare AI Gateway & OpenCode Zen]
+        NemotronUltra[Nemotron 3 Ultra Free: Reasoning]
+        NemotronFast[Nemotron 3.5 Lightning Free: Fast Extraction]
+        LingFin[Ling 3.0 Flash Fin Free: Finance & Governance]
+        MiMo[MiMo 2.5 Free: Structured Multi-Modal]
+        MuseSpark[Muse Spark 1.3 Free: Creative Synthesis]
     end
 
     Ingress --> AppUI
@@ -69,11 +71,11 @@ graph TD
     Router --> RAGSvc
     Router --> InterviewSvc
     
-    MatchSvc --> OpenRouter
-    TailorSvc --> OpenRouter
+    MatchSvc --> OpenCodeGateway
+    TailorSvc --> OpenCodeGateway
     RAGSvc --> PGVector
-    RAGSvc --> OpenRouter
-    InterviewSvc --> OpenRouter
+    RAGSvc --> OpenCodeGateway
+    InterviewSvc --> OpenCodeGateway
     
     Router --> Supabase
     Router --> AuditLog
@@ -124,7 +126,7 @@ graph LR
 | **LangChain** | AI primitives for structured prompt templates, output parsers, and vector store retrieval abstractions. |
 | **LangGraph** | Stateful, cyclic agent graph orchestration for iterative job analysis, candidate gap evaluation, and ATS tailoring. |
 | **RAG & Agentic RAG** | Hybrid dense semantic and keyword retrieval ensuring all career copilot answers are backed by immutable project evidence. |
-| **OpenRouter** | Intelligent model gateway dynamically routing between high-reasoning free models (Gemini 2.0 Flash Thinking, Qwen, Llama). |
+| **OpenCode Zen** | 100% Free-Tier AI Model Suite (Nemotron 3 Ultra, Nemotron 3.5 Lightning, Ling 3.0, MiMo 2.5, Muse Spark 1.3) routed via Cloudflare AI Gateway with circuit breakers. |
 | **Docker** | Multi-stage, hardened container image on `node:20-alpine` running as non-root user `nextjs` (UID 1001) with standalone bundle (<180MB). |
 | **Kubernetes** | Production orchestration with 2-replica Deployment, RollingUpdates, HorizontalPodAutoscaler (HPA), and NetworkPolicies. |
 | **Helm v3** | Parameterized packaging for reproducible cluster deployments with environment overlays (`values-development.yaml`, `values-production.yaml`). |

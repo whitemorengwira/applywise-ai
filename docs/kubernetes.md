@@ -33,7 +33,7 @@ k8s/
 - **Limits**: `cpu: 500m`, `memory: 512Mi`
 
 ### 4. Zero-Trust Network Policy
-Allows ingress strictly on port 3000, egress for DNS (port 53) and HTTPS (port 443) to OpenRouter AI models and Supabase PostgreSQL.
+Allows ingress strictly on port 3000, egress for DNS (port 53) and HTTPS (port 443) to OpenCode Zen AI models and Supabase PostgreSQL.
 
 ## Local Deployment (Kind / Minikube)
 

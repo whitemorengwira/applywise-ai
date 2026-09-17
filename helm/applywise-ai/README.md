@@ -7,7 +7,7 @@ Production Helm v3 chart for deploying **ApplyWise AI** on Kubernetes clusters (
 - Kubernetes 1.26+
 - Helm 3.10+
 - Ingress controller (optional)
-- Secrets configured for OpenRouter / Supabase credentials
+- Secrets configured for OpenCode Zen / Supabase credentials
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ helm install applywise-dev helm/applywise-ai \
   --namespace applywise-ai \
   --create-namespace \
   --values helm/applywise-ai/values-development.yaml \
-  --set secrets.openrouterApiKey="$OPENROUTER_API_KEY" \
+  --set secrets.opencodeZenApiKey="$OPENCODE_ZEN_API_KEY" \
   --set secrets.supabaseUrl="$NEXT_PUBLIC_SUPABASE_URL" \
   --set secrets.supabaseAnonKey="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
 ```

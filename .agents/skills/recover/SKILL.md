@@ -74,11 +74,11 @@ For each failure type:
 4. Verify Supabase project is not paused
 
 **AI Service Error:**
-1. Check OpenRouter status
-2. Check rate limits (429 response)
-3. Check model availability (model may have been removed from free tier)
-4. Check for malformed prompts
-5. Test with `openrouter/free` auto-router as fallback
+1. Check OpenCode Zen / Cloudflare AI Gateway connectivity
+2. Check model availability in verified free tier catalog
+3. Check ModelCircuitBreaker status in `src/lib/ai/gateway.ts`
+4. Verify FREE_ONLY_MODE=true is respected (zero paid fallbacks)
+5. Test rotation sequence across OpenCode Zen free models (`nemotron-3-ultra:free`, `nemotron-3.5-lightning:free`)
 
 ### 5. Fix — Smallest Safe Change
 - Make the **minimum change** that fixes the error
@@ -133,7 +133,7 @@ git stash pop
 4. Wait for it to come back online
 5. Verify database connectivity
 
-### OpenRouter Rate Limited
-1. Wait for rate limit window to reset (typically 1 minute for RPM, midnight UTC for RPD)
-2. Implement request queuing if not already present
-3. Check if daily limit reached → consider purchasing $10 credits for 1000 RPD
+### AI Gateway Rate Limiting or Outage
+1. Inspect `ModelCircuitBreaker.getStatuses()` to identify tripped models
+2. Automatic fallback will rotate between verified OpenCode Zen free models
+3. If all free models are degraded, queue operations safely; NEVER invoke paid models (enforce `FREE_ONLY_MODE=true`)

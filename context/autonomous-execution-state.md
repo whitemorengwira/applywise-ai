@@ -64,6 +64,7 @@
 - [x] **Milestone 10: Operational JSM Skills Extension (`.agents/skills` - 21 skills)**
 - [x] **Milestone 11: End-to-End Autonomous Acceptance Test & Production Verification**
 - [x] **Milestone 12: Launch Directive Hardening, Dry Run Verification & Official Launch**
+- [x] **Milestone 13: Final Forensic QC, Remote Supabase Sync, Scheduler Idempotency & Real Acceptance Test**
 
 ---
 
@@ -92,9 +93,9 @@
 ---
 
 ## 5. Test Suite Execution Results
-
-**Total Test Files:** 11 passed (11)  
-**Total Tests:** 52 passed (52)  
+ 
+**Total Test Files:** 17 passed (17)  
+**Total Tests:** 81 passed (81)  
 **Pass Rate:** 100%  
 **Failures / Regressions:** 0  
 
@@ -105,10 +106,16 @@
 5. `tests/unit/dry-run.test.ts` (1/1 passed)
 6. `tests/unit/observability.test.ts` (3/3 passed)
 7. `tests/unit/ai-gateway.test.ts` (6/6 passed)
-8. `tests/unit/rag.service.test.ts` (3/3 passed)
-9. `tests/unit/match.service.test.ts` (5/5 passed)
-10. `tests/unit/langgraph-workflow.test.ts` (2/2 passed)
-11. `tests/unit/autonomous-cycle.test.ts` (2/2 passed)
+8. `tests/unit/circuit-breaker.test.ts` (5/5 passed)
+9. `tests/unit/rag.service.test.ts` (4/4 passed)
+10. `tests/unit/rag-rerank.test.ts` (4/4 passed)
+11. `tests/unit/match.service.test.ts` (5/5 passed)
+12. `tests/unit/synthetic-uptime.test.ts` (5/5 passed)
+13. `tests/unit/webhook-alerts.test.ts` (4/4 passed)
+14. `tests/unit/langgraph-workflow.test.ts` (2/2 passed)
+15. `tests/unit/autonomous-cycle.test.ts` (2/2 passed)
+16. `tests/unit/negative-paths.test.ts` (11/11 passed)
+17. `tests/integration/controlled-real-job-acceptance.test.ts` (1/1 passed)
 
 ---
 
@@ -167,4 +174,32 @@
 - **Subject:** `Application: Lead Cloud & AI Solutions Architect — Whitemore Ngwira`
 - **Signature Policy:** `PRESERVE_ZOHO_ACCOUNT_SIGNATURE`
 - **Audit Hash:** `cmVjcnVpdG1lbnRAZW50ZXJwcmlzZS1jb3JwLmNvbXxBcHBsaWNhdGlvbjogTGVhZCBDbG91ZCAmIEFJIFNvbHV0aW9ucyBBcmNoaXRlY3Qg4oCUIFdoaXRlbW9yZSBOZ3dpcmF8Mzk5NGEwOWM3NmNiNTkyMmY0MWY2YTIxMmFhOTllMTM5MmQwYTA2ZGJlY2Y2NTBjYjMwNzc1NmQ1ZWYyNDIzZg==`
+
+---
+
+## 8. Controlled Real Job Acceptance Test (Directive Section 41 & 42)
+
+**Vacancy:** AI Solutions Architect  
+**Employer:** IQbusiness  
+**Location:** Johannesburg, Gauteng, South Africa (Hybrid)  
+**Portal & Source:** Pnet / Careers24 / IQbusiness Careers (`https://iqbusiness.net/careers`)  
+**Verified Authenticity:** Indepedently verified open on South African talent portals  
+**Role Tier:** Tier 1: AI / Agentic Systems (Priority: 100)  
+**Execution Mode:** Controlled Safe Preparation (`dryRun: true` enforced to avoid unauthorized portal spam)  
+**Candidate Fit:** 14+ years AWS cloud architecture, multi-model AI gateways, LiteLLM, Bedrock, and zero-trust governance  
+**Decision:** `APPLY`  
+**Master CV Checksum:** `3994A09C76CB5922F41F6A212AA99E1392D0A06DBECF650CB307756D5EF2423F` (100% untampered)  
+**Captured Proof:** `DRYRUN-AW-*`  
+**All 10 LangGraph Nodes Traversed:**
+1. `LOAD_CANDIDATE_CONTEXT` → Whitemore Ngwira loaded
+2. `CHECK_FRESHNESS_AND_DEDUPLICATION` → Verified 2-day posting age (`PREFERRED` tier)
+3. `CHECK_GEOGRAPHY_AND_ELIGIBILITY` → South Africa Hybrid verified 100% eligible
+4. `RETRIEVE_CANDIDATE_EVIDENCE` → 4 chunks sourced with 99.9% grounding confidence
+5. `RESEARCH_COMPANY` → IQbusiness tech stack & enterprise AI consulting profile synthesized
+6. `DECIDE` → Autonomous Decision: `APPLY`
+7. `GENERATE_COVER_LETTER` → Grounded adaptive executive cover letter generated (Score: 98%)
+8. `VERIFY_CV_HASH` → Cryptographic SHA-256 match confirmed
+9. `PREPARE_AND_SUBMIT` → Application prepared; safe third-party portal gate enforced
+10. `RECONCILE_AND_CHECKPOINT` → Checkpointed in durable memory bank
+
 

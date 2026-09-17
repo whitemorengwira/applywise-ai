@@ -343,17 +343,6 @@ export default function SettingsPage() {
                     Muse Spark 1.3 Free [Free] (Creative Tailoring & Synthesis)
                   </option>
                 </optgroup>
-                <optgroup label="Alternative Open Weights">
-                  <option value="google/gemini-2.0-flash-thinking-exp:free">
-                    google/gemini-2.0-flash-thinking-exp:free (32k thinking context)
-                  </option>
-                  <option value="deepseek/deepseek-r1:free">
-                    deepseek/deepseek-r1:free (Deep mathematical logic)
-                  </option>
-                  <option value="meta-llama/llama-3.3-70b-instruct:free">
-                    meta-llama/llama-3.3-70b-instruct:free (Open weights reasoning)
-                  </option>
-                </optgroup>
               </select>
             </div>
 
@@ -372,14 +361,6 @@ export default function SettingsPage() {
                   </option>
                   <option value="opencode/mimo-v2.5:free">
                     MiMo V2.5 Free [Free] (Multi-Modal Layout & CV Structuring)
-                  </option>
-                </optgroup>
-                <optgroup label="Alternative Fast Models">
-                  <option value="google/gemini-2.0-flash-exp:free">
-                    google/gemini-2.0-flash-exp:free (Fast structured output)
-                  </option>
-                  <option value="mistralai/mistral-7b-instruct:free">
-                    mistralai/mistral-7b-instruct:free (Fast edge inference)
                   </option>
                 </optgroup>
               </select>

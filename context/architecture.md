@@ -16,7 +16,7 @@ Client (Browser)
                  ├─ Applications Service
                  ├─ Documents Service
                  └─ AI Service Layer
-                      ├─ AI Gateway → Model Router → Provider Adapter → OpenRouter
+                      ├─ AI Gateway → Model Router → Provider Adapter → OpenCode Zen / Cloudflare AI Gateway
                       ├─ LangChain (prompts, chains, docs, embeddings)
                       ├─ LangGraph (agent graphs with typed state)
                       └─ RAG Pipeline (ingest → chunk → embed → retrieve → generate)
@@ -57,7 +57,7 @@ src/
 │   ├── ai/
 │   │   ├── gateway.ts       # AI Gateway (entry point)
 │   │   ├── router.ts        # Model Router (task → model mapping)
-│   │   ├── provider.ts      # OpenRouter adapter
+│   │   ├── provider.ts      # OpenCode Zen / Cloudflare AI Gateway adapter
 │   │   ├── prompts/         # Prompt templates
 │   │   ├── chains/          # LangChain chains
 │   │   ├── agents/          # LangGraph agent definitions
@@ -102,7 +102,7 @@ Form Submit → Server Action → Validate (Zod) → Service → Supabase Client
 **AI Path (API Routes):**
 ```
 Client Request → API Route → AI Gateway → Model Router → Select Model
-  → Provider Adapter → OpenRouter API → Stream Response → Client
+  → Provider Adapter → OpenCode Zen / Cloudflare AI Gateway → Stream Response → Client
 ```
 
 **RAG Path:**
@@ -115,7 +115,7 @@ Query → AI Gateway → Agentic RAG Agent (LangGraph)
 
 ### Key Architectural Invariants
 1. All database access goes through Supabase clients with RLS enforced
-2. All AI calls go through the AI Gateway — never call OpenRouter directly from components
+2. All AI calls go through the AI Gateway — never call OpenCode Zen or external APIs directly from components
 3. External data (job descriptions, web content) is always treated as untrusted
 4. AI output is always labelled as generated, never presented as verified fact
 5. Server Actions handle all mutations; API routes handle streaming/long-running AI tasks

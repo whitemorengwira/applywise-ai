@@ -40,7 +40,7 @@
 ### LangChain.js
 - **`langchain`** — Core framework
 - **`@langchain/core`** — Base classes, prompts, output parsers
-- **`@langchain/openai`** — OpenAI-compatible chat models (works with OpenRouter)
+- **`@langchain/openai`** — OpenAI-compatible chat models (works with OpenCode Zen / Cloudflare AI Gateway)
 - **`@langchain/community`** — Community integrations
 
 Key usage patterns:
@@ -49,14 +49,14 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from 'langchain/output_parsers';
 
-// OpenRouter via OpenAI-compatible API
+// OpenCode Zen via Cloudflare AI Gateway
 const model = new ChatOpenAI({
-  modelName: 'nvidia/nemotron-3-ultra:free',
+  modelName: 'opencode/nemotron-3-ultra:free',
   configuration: {
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: { 'HTTP-Referer': 'https://applywise-ai.vercel.app' },
+    baseURL: process.env.CLOUDFLARE_AI_GATEWAY_URL || 'https://api.opencodezen.com/v1',
+    defaultHeaders: { 'HTTP-Referer': 'https://applywise-ai-app.vercel.app' },
   },
-  openAIApiKey: process.env.OPENROUTER_API_KEY,
+  openAIApiKey: process.env.OPENCODE_ZEN_API_KEY,
 });
 ```
 
@@ -104,13 +104,12 @@ const graph = new StateGraph(AgentState)
 
 ## External APIs
 
-### OpenRouter
-- **Base URL:** `https://openrouter.ai/api/v1`
-- **Auth:** Bearer token via `OPENROUTER_API_KEY`
+### OpenCode Zen & Cloudflare AI Gateway
+- **Base URL:** `https://api.opencodezen.com/v1` or `https://gateway.ai.cloudflare.com/v1/nwhite-systems/applywise-ai`
+- **Auth:** Bearer token via `OPENCODE_ZEN_API_KEY`
 - **Compatible with:** OpenAI SDK / LangChain `ChatOpenAI`
-- **Free models:** Identified by `:free` suffix
-- **Rate limits:** 20 RPM, 50-1000 RPD depending on account tier
-- **Required headers:** `HTTP-Referer` (your app URL), `X-Title` (app name)
+- **Free models:** `opencode/nemotron-3-ultra:free`, `opencode/nemotron-3.5-lightning:free`, `opencode/ling-3.0-flash-fin:free`, `opencode/mimo-v2.5:free`, `opencode/muse-spark-1.3:free`
+- **Governance:** Hard-locked `FREE_ONLY_MODE=true` (zero silent paid fallbacks)
 
 ### Adzuna
 - **Base URL:** `https://api.adzuna.com/v1/api/jobs`

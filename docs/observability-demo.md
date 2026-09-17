@@ -26,7 +26,7 @@ This guide provides a live, step-by-step walkthrough script for **Whitemore Ngwi
    - Request received by `/api/match` wrapped with `withObservability`.
    - Correlation ID generated (`x-correlation-id: req-xxxx`).
    - `MatchService` computes deterministic overlap and invokes `AIGateway`.
-   - `AIGateway` routes to Gemini 2.0 Flash Thinking via OpenRouter.
+   - `AIGateway` routes to Nemotron 3 Ultra via OpenCode Zen / Cloudflare AI Gateway.
    - Structured JSON audit log emitted to console and database.
    - Increments `applywise_http_requests_total`, `applywise_jobs_analyzed_total`, and records duration histograms.
 

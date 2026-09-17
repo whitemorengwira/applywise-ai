@@ -101,7 +101,7 @@ env:
 # In local development, values-development.yaml or placeholder secret is used
 secrets:
   create: true
-  openrouterApiKey: ""
+  opencodeZenApiKey: ""
   supabaseUrl: ""
   supabaseAnonKey: ""
   supabaseServiceRoleKey: ""

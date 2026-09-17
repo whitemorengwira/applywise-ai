@@ -28,7 +28,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Allow HTTPS to external APIs (OpenRouter, Supabase, Adzuna)
+    # Allow HTTPS to external APIs (OpenCode Zen, Cloudflare, Supabase, Adzuna)
     - ports:
         - protocol: TCP
           port: 443
