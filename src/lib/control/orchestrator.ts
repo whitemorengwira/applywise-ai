@@ -226,7 +226,7 @@ export class ControlPlaneOrchestrator {
         message =
           `**Master CV Cryptographic Integrity Verification**\n\n` +
           `• **File**: \`${cvData.filename}\`\n` +
-          `• **SHA-256 Hash**: \`${cvData.actualHash}\`\n` +
+          `• **SHA-256 Hash**: \`${cvData.actualHash}\` (${String(cvData.actualHash).toUpperCase()})\n` +
           `• **File Size**: ${cvData.fileSizeBytes} bytes\n` +
           `• **Immutability Status**: **${cvData.status}**\n` +
           `• **Enforcement**: Zero mutation policy active. Any tailored or modified CV PDF fails closed immediately.`;
@@ -438,7 +438,7 @@ export class ControlPlaneOrchestrator {
           `**Application Prepared Successfully (Non-Destructive Safe Mode)**\n\n` +
           `• **Job**: **${data.title}** at **${data.company}**\n` +
           `• **Status**: \`${data.status}\` (Held in \`${data.approvalState}\`)\n` +
-          `• **Master CV Hash Verified**: **YES** (\`${data.masterCVHash}\`)\n` +
+          `• **Master CV Hash Verified**: **YES** (\`${String(data.masterCVHash).toUpperCase()}\`)\n` +
           `• **Cover Letter Grounding Score**: **${data.groundingScore}%** (British English, zero hallucination)\n` +
           `• **Preparation Proof ID**: \`${data.proofId}\`\n\n` +
           `The complete application package has been generated and validated against your verified evidence base. It is ready for your submission confirmation.`;
