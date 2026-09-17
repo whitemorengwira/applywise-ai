@@ -250,6 +250,7 @@ export class IntentClassifier {
     // 10. APPLICATION PREPARATION
     if (
       lower.includes("prepare application") ||
+      lower.includes("prepare an application") ||
       lower.includes("prepare the application") ||
       lower.includes("draft application") ||
       lower.includes("prepare for")
@@ -355,6 +356,7 @@ export class IntentClassifier {
 
     // 16. OBSERVABILITY & TELEMETRY
     if (
+      lower.includes("observability") ||
       lower.includes("prometheus") ||
       lower.includes("grafana") ||
       lower.includes("metrics") ||

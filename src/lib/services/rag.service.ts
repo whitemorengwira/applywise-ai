@@ -76,6 +76,20 @@ export const KNOWLEDGE_CHUNKS: RAGChunk[] = [
     category: "Media",
     text: "Architected high-throughput camera-to-cloud media pipelines, checksum-verified ingest, distributed post-production compute, and S3 Glacier archival preservation across 21 major productions (Netflix, MultiChoice Studios, SABC, 2010 FIFA World Cup), achieving automated quality control (QC) and playout compliance.",
   },
+  {
+    id: "chunk-professional-background",
+    source: "Whitemore Ngwira Master CV (Executive Summary)",
+    title: "Whitemore Ngwira — Professional Background & Systems Architect Profile",
+    category: "Architecture",
+    text: "Whitemore Ngwira is a Principal Systems Architect and Enterprise AI Engineer with over 14 years of professional experience delivering mission-critical cloud platforms, distributed architectures, and agentic AI systems. Founder of N.White Systems, with verified case studies spanning EarCodeX InsurTech, Supabets gaming infrastructure, NICO Life digital platforms, Socinga Smart Mining industrial IoT, and SAMF cryptographic media archives.",
+  },
+  {
+    id: "chunk-nwhite-systems-overview",
+    source: "N.White Systems Corporate Profile (nwhite.systems)",
+    title: "N.White Systems — Enterprise Architecture & AI Engineering Consultancy",
+    category: "Architecture",
+    text: "N.White Systems (nwhite.systems) is the boutique systems architecture and AI engineering practice led by Whitemore Ngwira. Specialized in agentic automation workflows, multi-model AI gateways (LiteLLM and Cloudflare AI Gateway across 300+ edge locations), cloud platform modernization, and high-throughput transactional backends.",
+  },
 ];
 
 export interface ReRankedChunk {
@@ -101,7 +115,8 @@ export class SemanticReRanker {
     "pgvector", "langgraph", "tailscale", "aws", "rds", "dynamodb",
     "s3", "glacier", "300+", "37 modular", "21 productions", "sub-second",
     "multi-az", "kms", "socinga", "cineterns", "oasis", "14+", "next.js", "typescript",
-    "nico", "nico life", "supabets", "smart mining", "samf", "whitemore", "ngwira"
+    "nico", "nico life", "supabets", "smart mining", "samf", "whitemore", "ngwira",
+    "nwhite", "n.white", "systems", "background", "professional", "portfolio", "consultancy"
   ];
 
   public static reRank(query: string, candidateChunks: RAGChunk[]): ReRankedChunk[] {
@@ -197,7 +212,8 @@ export class SemanticReRanker {
       const verifiedEntities = [
         "earcodex", "nico", "supabets", "socinga", "samf", "litellm",
         "gateway", "terraform", "pgvector", "langgraph", "whitemore", "ngwira",
-        "oasis", "cineterns", "aws", "next.js", "typescript"
+        "oasis", "cineterns", "aws", "next.js", "typescript",
+        "nwhite", "n.white", "systems", "background", "professional", "portfolio"
       ];
       for (const ent of verifiedEntities) {
         if (query.toLowerCase().includes(ent) && fullLower.includes(ent)) {
