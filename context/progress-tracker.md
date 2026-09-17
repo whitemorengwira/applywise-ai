@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-17T00:19:00+02:00
+2026-09-17T14:50:00+02:00
 
 ## Current Phase
-**FULL LIFECYCLE COMPLETE & VERIFIED — PRODUCTION ACTIVE**
-Official SaaS name `applywise-ai` established across all platforms: Vercel project (`applywise-ai`), Production URLs (`applywise-ai-app.vercel.app`, `applywise-ai-saas.vercel.app`), GitHub repository (`whitemorengwira/applywise-ai`), Supabase project (`applywise-ai`), and local workspace (`D:\applywise-ai`).
+**PHASE 23 COMPLETE & PRODUCTION VERIFIED: REAL AI RUNTIME & ZERO SIMULATION**
+`SIMULATION_HEURISTIC` permanently eliminated from production runtime. Canonical OpenCode Zen model router (`https://opencode.ai/zen/v1`) active. Truthful runtime reporting (`REAL_AI` vs `AI_RUNTIME_UNAVAILABLE`). Section 15 provider failure contract strictly enforced (zero fabricated AI output). 100% test pass (21 test files, 120/120 tests). 10/10 live acceptance tests passed against `https://applywise-ai-app.vercel.app`.
 
 ---
 
@@ -36,6 +36,7 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 20** | Core Production Deficiencies & UX Hardening | Completed | Strict RAG grounding guard (< 0.75 threshold declines ungrounded queries); interactive bottom-left model switcher across 5 OpenCode Zen models with localStorage persistence; `/dashboard` route implemented; Kanban board flexbox layout cleanup; Master CV immutability guaranteed; official ApplyWise AI branded SVG favicon deployed. 69/69 tests passed. |
 | **Phase 21** | Final Forensic QC & Autonomous Operations | Completed | Total forensic claims audit (`CLAIM | EVIDENCE | STATUS`); zero OpenRouter references verified; remote Supabase pgvector populated with 13 chunks & candidate profile; deterministic idempotency keys (`CYCLE-YYYY-MM-DD-B{n}`) & lease management on cloud scheduler; Grafana Dashboards 07 & 08 created; controlled acceptance test on real verified vacancy (IQbusiness AI Solutions Architect, Johannesburg, SA); 17 test files, 81/81 tests passed; 0 lint errors, 0 type errors; 27/27 Next.js production routes compiled. |
 | **Phase 22** | Intelligent Control-Plane Chat & Agent Orchestrator | Completed | Dedicated `/control` command centre; 24-intent classifier; 20-tool registry; LangGraph multi-agent coordination; truthful runtime status reporting (`REAL_AI` vs `SIMULATION_HEURISTIC`); strict approval boundaries for mutating operations; Grafana Dashboard 09 (`09-applywise-control-plane.json`); 20 test files, 118/118 tests passed (100%); 0 lint errors; 0 type errors; 31/31 Next.js production routes compiled. |
+| **Phase 23** | Real AI Runtime & Blocker Remediation | Completed | Permanently eliminated `SIMULATION_HEURISTIC` from production (`SIMULATION_REACHABLE_FROM_PRODUCTION = false`). Connected canonical OpenCode Zen API (`https://opencode.ai/zen/v1`). Enforced Section 15 Provider Failure contract (zero fake AI). Verified model switcher backend routing. 21 test files, 120/120 tests passed (100%). 10/10 Live Acceptance Matrix passed on production. |
 
 ---
 
