@@ -325,7 +325,17 @@ export class RAGService {
   /**
    * Agentic RAG Q&A: Synthesizes an answer grounded strictly in verified candidate evidence.
    */
-  static async queryCopilot(userQuestion: string): Promise<RAGAnswerResult> {
+  static async queryCopilot(
+    userQuestion: string,
+    userProfile?: Record<string, unknown>,
+    modelOverride?: string
+  ): Promise<{
+    answer: string;
+    citedChunks: RAGChunk[];
+    modelUsed: string;
+    runtimeStatus?: "REAL_AI" | "AI_RUNTIME_UNAVAILABLE";
+    latencyMs: number;
+  }> {
     const startTime = Date.now();
     const allChunks = this.getAllKnowledgeChunks();
     const reRanked = SemanticReRanker.reRank(userQuestion, allChunks);
@@ -343,6 +353,7 @@ export class RAGService {
         answer: `I do not have verified candidate records or production architectural evidence in Whitemore Ngwira's Master CV or N.White Systems case studies regarding this specific inquiry (grounding match: ${matchPct}%, strictly below the 75.0% strict grounding threshold).\n\nAs an AI Career Copilot operating under strict zero-hallucination governance, I only state verified facts from certified production blueprints and portfolio case studies, including:\n• EarCodeX InsurTech Platform (AWS cloud-native claims administration, document intelligence & immutable audit trails)\n• Enterprise AI Gateways (LiteLLM model routing, Cloudflare AI Gateway across 300+ cities with edge caching)\n• NICO Life InsurTech Platform (Mobile performance & regulatory compliance for trust-sensitive customer journeys)\n• Supabets High-Traffic Gaming Platform (Regulated, sub-second latency architecture & transactional integrity)\n• Socinga Smart Mining Platform (Industrial IoT telemetry & shaft-to-mill sensor data flows)\n• SAMF Digital Archival & Media Pipelines (Cryptographic SHA-256 preservation & automated QC across 21 productions)\n• Infrastructure as Code & Zero-Trust (37 modular AWS Terraform blueprints, KMS envelope encryption & Tailscale VPN)`,
         citedChunks: [],
         modelUsed: "ApplyWise Grounding Guard (Zero-Hallucination)",
+        runtimeStatus: "AI_RUNTIME_UNAVAILABLE",
         latencyMs: Date.now() - startTime,
       };
     }
@@ -372,6 +383,7 @@ RULES:
       prompt,
       systemPrompt:
         "You are an authoritative AI Career Copilot. Only answer with facts directly verifiable from the provided source chunks.",
+      modelOverride,
     });
 
     repository.recordAILog(aiResult.log);
@@ -386,13 +398,20 @@ RULES:
 
     logger.info("rag_copilot_completed", `RAG Copilot query processed with ${relevantChunks.length} chunks`, {
       durationMs: Date.now() - startTime,
-      metadata: { chunksCount: relevantChunks.length, model: aiResult.modelUsed },
+      metadata: { chunksCount: relevantChunks.length, model: aiResult.modelUsed, runtimeStatus: aiResult.runtimeStatus },
     });
 
+    const isRealAI = aiResult.runtimeStatus === "REAL_AI";
+    const answer = isRealAI
+      ? aiResult.content
+      : `The upstream AI provider (${aiResult.modelUsed}) is currently unavailable. Grounded knowledge retrieved directly from the verified candidate evidence base:\n\n` +
+        relevantChunks.map((c, i) => `**[Source ${i + 1}: ${c.title}]** (${c.source})\n${c.text}`).join("\n\n");
+
     return {
-      answer: aiResult.content,
+      answer,
       citedChunks: relevantChunks,
       modelUsed: aiResult.modelUsed,
+      runtimeStatus: aiResult.runtimeStatus,
       latencyMs: Date.now() - startTime,
     };
   }

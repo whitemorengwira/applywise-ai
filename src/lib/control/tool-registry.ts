@@ -10,7 +10,7 @@ import { EligibilityService } from "@/lib/services/eligibility.service";
 import { RAGService } from "@/lib/services/rag.service";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { env } from "@/lib/env";
-import { OPENCODE_ZEN_MODELS } from "@/lib/ai/gateway";
+import { AIGateway, OPENCODE_ZEN_MODELS } from "@/lib/ai/gateway";
 import { applicationGraph } from "@/lib/agents/application-graph";
 import { ZohoEmailService } from "@/lib/services/zoho-email.service";
 import { controlChatToolCallsTotal } from "@/lib/observability/metrics";
@@ -122,17 +122,19 @@ export class ToolRegistry {
       requiresApproval: false,
       execute: async (params) => {
         const question = (params.question as string) || "Overview of architectural experience";
-        const result = await RAGService.queryCopilot(question);
+        const modelOverride = params.modelOverride as string | undefined;
+        const result = await RAGService.queryCopilot(question, undefined, modelOverride);
         return {
           success: true,
-          provenance: "RAG Semantic Re-ranking Engine",
+          provenance: "RAG Semantic Re-ranking Engine & OpenCode Zen",
           data: {
             question,
             answer: result.answer,
             citedChunksCount: result.citedChunks.length,
             citations: result.citedChunks.map(c => ({ id: c.id, title: c.title, category: c.category })),
             isGrounded: result.citedChunks.length > 0,
-            modelUsed: result.modelUsed
+            modelUsed: result.modelUsed,
+            runtimeStatus: result.runtimeStatus || "AI_RUNTIME_UNAVAILABLE"
           }
         };
       }
@@ -481,8 +483,13 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async () => {
-        const isSimulated = !env.OPENCODE_ZEN_API_KEY || env.OPENCODE_ZEN_API_KEY.includes("free_tier");
-        const runtimeStatus = isSimulated ? "SIMULATION_HEURISTIC" : "REAL_AI";
+        const hasValidKey = !!env.OPENCODE_ZEN_API_KEY && !env.OPENCODE_ZEN_API_KEY.includes("free_tier") && !env.OPENCODE_ZEN_API_KEY.includes("public");
+        const runtimeStatus = hasValidKey ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
+        const circuitBreakers = AIGateway.getCircuitBreakerStatuses();
+        const cbMap: Record<string, string> = {};
+        for (const cb of circuitBreakers) {
+          cbMap[cb.modelId] = cb.state === "CLOSED" ? "HEALTHY" : cb.state;
+        }
 
         return {
           success: true,
@@ -492,15 +499,10 @@ export class ToolRegistry {
             activeReasoningModel: env.OPENCODE_DEFAULT_REASONING_MODEL,
             activeFastModel: env.OPENCODE_FAST_MODEL,
             provider: "OpenCode Zen 100% Free-Tier Suite",
+            apiBaseUrl: env.OPENCODE_ZEN_BASE_URL,
             freeOnlyMode: env.FREE_ONLY_MODE,
             cloudflareAIGateway: env.CLOUDFLARE_AI_GATEWAY_ENABLED ? "ACTIVE_EDGE_PROXY" : "DIRECT",
-            circuitBreakers: {
-              "opencode/nemotron-3-ultra:free": "HEALTHY",
-              "opencode/nemotron-3.5-lightning:free": "HEALTHY",
-              "opencode/ling-3.0-flash-fin:free": "HEALTHY",
-              "opencode/mimo-v2.5:free": "HEALTHY",
-              "opencode/muse-spark-1.3:free": "HEALTHY"
-            },
+            circuitBreakers: cbMap,
             availableModels: OPENCODE_ZEN_MODELS.map(m => ({
               id: m.id,
               name: m.name,

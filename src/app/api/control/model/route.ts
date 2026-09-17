@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OPENCODE_ZEN_MODELS } from "@/lib/ai/gateway";
+import { AIGateway, OPENCODE_ZEN_MODELS } from "@/lib/ai/gateway";
 import { withObservability } from "@/lib/observability/http";
 import { env } from "@/lib/env";
 
@@ -13,7 +13,8 @@ async function handlePost(request: Request) {
       );
     }
 
-    const modelEntry = OPENCODE_ZEN_MODELS.find((m) => m.id === modelId);
+    const canonicalId = AIGateway.toCanonicalModelId(modelId);
+    const modelEntry = OPENCODE_ZEN_MODELS.find((m) => m.id === canonicalId || m.id === modelId);
     if (!modelEntry) {
       return NextResponse.json(
         {
@@ -24,8 +25,8 @@ async function handlePost(request: Request) {
       );
     }
 
-    const isSimulated = !env.OPENCODE_ZEN_API_KEY || env.OPENCODE_ZEN_API_KEY.includes("free_tier");
-    const runtimeStatus = isSimulated ? "SIMULATION_HEURISTIC" : "REAL_AI";
+    const hasValidKey = !!env.OPENCODE_ZEN_API_KEY && !env.OPENCODE_ZEN_API_KEY.includes("free_tier") && !env.OPENCODE_ZEN_API_KEY.includes("public");
+    const runtimeStatus = hasValidKey ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
 
     return NextResponse.json({
       success: true,

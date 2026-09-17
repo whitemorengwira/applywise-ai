@@ -27,7 +27,7 @@ export interface ModelOption {
 
 export const OPENCODE_MODELS: ModelOption[] = [
   {
-    id: "opencode/nemotron-3-ultra:free",
+    id: "nemotron-3-ultra-free",
     name: "Nemotron 3 Ultra Free",
     shortName: "Nemotron 3 Ultra",
     role: "Complex Reasoning & Agentic Workflows",
@@ -38,7 +38,7 @@ export const OPENCODE_MODELS: ModelOption[] = [
     bgActive: "bg-purple-500/10",
   },
   {
-    id: "opencode/nemotron-3.5-lightning:free",
+    id: "nemotron-3.5-lightning-free",
     name: "Nemotron 3.5 Lightning Free",
     shortName: "Nemotron 3.5 Lightning",
     role: "Fast Extraction & Parsing",
@@ -49,7 +49,7 @@ export const OPENCODE_MODELS: ModelOption[] = [
     bgActive: "bg-amber-500/10",
   },
   {
-    id: "opencode/ling-3.0-flash-fin:free",
+    id: "ling-3.0-flash-fin-free",
     name: "Ling 3.0 Flash Fin Free",
     shortName: "Ling 3.0 Flash Fin",
     role: "Financial & System Benchmarks",
@@ -60,7 +60,7 @@ export const OPENCODE_MODELS: ModelOption[] = [
     bgActive: "bg-emerald-500/10",
   },
   {
-    id: "opencode/mimo-v2.5:free",
+    id: "mimo-v2.5-free",
     name: "MiMo V2.5 Free",
     shortName: "MiMo V2.5",
     role: "Multimodal Layout Analysis",
@@ -71,7 +71,7 @@ export const OPENCODE_MODELS: ModelOption[] = [
     bgActive: "bg-cyan-500/10",
   },
   {
-    id: "opencode/muse-spark-1.3:free",
+    id: "muse-spark-1.3-contributor-free",
     name: "Muse Spark 1.3 Free",
     shortName: "Muse Spark 1.3",
     role: "Adaptive Creative Drafting",
@@ -93,10 +93,10 @@ export function ModelSwitcher({ collapsed = false }: ModelSwitcherProps) {
       return (
         localStorage.getItem("applywise_active_model") ||
         localStorage.getItem("applywise_reasoning_model") ||
-        "opencode/nemotron-3-ultra:free"
+        "nemotron-3-ultra-free"
       );
     }
-    return "opencode/nemotron-3-ultra:free";
+    return "nemotron-3-ultra-free";
   });
   const [isOpen, setIsOpen] = React.useState(false);
   const popoverRef = React.useRef<HTMLDivElement>(null);

@@ -52,7 +52,7 @@ describe("Control Plane Tool Registry (Sections 11, 12, 16)", () => {
     expect(res.success).toBe(true);
     const data = res.data as Record<string, unknown>;
     expect(data.provider).toContain("OpenCode Zen");
-    expect(["REAL_AI", "SIMULATION_HEURISTIC"]).toContain(data.runtimeStatus);
+    expect(["REAL_AI", "AI_RUNTIME_UNAVAILABLE"]).toContain(data.runtimeStatus);
   });
 
   it("executes get_system_health with all services healthy", async () => {

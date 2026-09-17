@@ -41,7 +41,8 @@ export type ControlRuntimeStatus =
   | "REAL_AI"
   | "DEGRADED"
   | "SIMULATION_HEURISTIC"
-  | "UNAVAILABLE";
+  | "UNAVAILABLE"
+  | "AI_RUNTIME_UNAVAILABLE";
 
 export interface PendingApprovalAction {
   actionId: string;
@@ -63,6 +64,15 @@ export interface ToolExecutionRecord {
   error?: string;
 }
 
+export interface ControlResponseMetadata {
+  provider: string;
+  model: string;
+  runtime: ControlRuntimeStatus;
+  requestId: string;
+  latencyMs: number;
+  fallback: boolean;
+}
+
 export interface ControlPlaneResponse {
   message: string;
   intent: ControlIntent;
@@ -80,6 +90,7 @@ export interface ControlPlaneResponse {
   pendingAction?: PendingApprovalAction;
   auditId: string;
   timestamp: string;
+  metadata?: ControlResponseMetadata;
 }
 
 export interface ControlChatMessage {

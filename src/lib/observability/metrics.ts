@@ -144,6 +144,20 @@ export const aiErrorsTotal = new Counter({
   registers: [registry],
 });
 
+export const aiSimulationTotal = new Counter({
+  name: 'applywise_ai_simulation_total',
+  help: 'Total simulated AI responses. In production, this must strictly remain 0.',
+  labelNames: ['model_id', 'task_type'] as const,
+  registers: [registry],
+});
+
+export const aiProviderUnavailableTotal = new Counter({
+  name: 'applywise_ai_provider_unavailable_total',
+  help: 'Total requests where AI provider was unavailable and failed truthfully',
+  labelNames: ['model_id', 'status_code'] as const,
+  registers: [registry],
+});
+
 // -----------------------------------------------------------------------------
 // 4. Vector Search & RAG Copilot Metrics
 // -----------------------------------------------------------------------------

@@ -50,7 +50,7 @@ describe("Control Plane 10-Step Acceptance Test Sequence (Section 44)", () => {
     expect(res.intent).toBe("MODEL_STATUS");
     expect(res.toolCalls.some((t) => t.toolName === "get_ai_model_status")).toBe(true);
     expect(res.message).toContain("OpenCode Zen");
-    expect(["REAL_AI", "SIMULATION_HEURISTIC"]).toContain(res.runtimeStatus);
+    expect(["REAL_AI", "AI_RUNTIME_UNAVAILABLE"]).toContain(res.runtimeStatus);
   });
 
   // TEST 5: User asks "What are my latest eligible South African AI jobs?" -> Real discovery

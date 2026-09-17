@@ -105,7 +105,9 @@ export class IntentClassifier {
       lower.includes("runtime status") ||
       lower.includes("nemotron") ||
       lower.includes("ling-3") ||
-      lower.includes("muse-spark")
+      lower.includes("muse-spark") ||
+      lower.includes("mimo") ||
+      (lower.includes("model") && (lower.includes("unavailable") || lower.includes("answering") || lower.includes("running") || lower.includes("active")))
     ) {
       return {
         intent: "MODEL_STATUS",
@@ -180,7 +182,23 @@ export class IntentClassifier {
       };
     }
 
-    // 8. RAG & CANDIDATE EVIDENCE
+    // 9. CAREER STRATEGY & OBJECTIVES (Section 15 Mandatory Provider Test)
+    if (
+      lower.includes("career strategy") ||
+      lower.includes("career objectives") ||
+      lower.includes("career plan") ||
+      lower.includes("career path") ||
+      (lower.includes("career") && lower.includes("strategy"))
+    ) {
+      return {
+        intent: "CAREER_INTELLIGENCE",
+        confidence: 0.95,
+        extractedEntities: {},
+        reasoning: "Inquiry into candidate career strategy requiring real AI inference.",
+      };
+    }
+
+    // 10. RAG & CANDIDATE EVIDENCE
     if (
       lower.includes("evidence") ||
       lower.includes("earcodex") ||
@@ -191,6 +209,16 @@ export class IntentClassifier {
       lower.includes("aws architecture") ||
       lower.includes("terraform blueprints") ||
       lower.includes("experience with") ||
+      lower.includes("professional background") ||
+      lower.includes("my background") ||
+      lower.includes("n.white systems") ||
+      lower.includes("nwhite systems") ||
+      lower.includes("nwhite.systems") ||
+      lower.includes("about n.white") ||
+      lower.includes("about nwhite") ||
+      lower.includes("know about me") ||
+      lower.includes("know about my") ||
+      lower.includes("candidate evidence") ||
       lower.includes("rag")
     ) {
       return {

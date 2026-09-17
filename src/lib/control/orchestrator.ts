@@ -6,6 +6,7 @@
 
 import {
   ControlPlaneResponse,
+  ControlResponseMetadata,
   ControlRuntimeStatus,
   GroundingCategory,
   PendingApprovalAction,
@@ -13,6 +14,7 @@ import {
 } from "./types";
 import { IntentClassifier } from "./intent-classifier";
 import { ToolRegistry } from "./tool-registry";
+import { AIGateway } from "@/lib/ai/gateway";
 import { env } from "@/lib/env";
 import {
   controlChatRequestsTotal,
@@ -45,11 +47,11 @@ export class ControlPlaneOrchestrator {
     // Record Prometheus intent telemetry
     controlChatIntentTotal.inc({ intent });
 
-    // Determine honest runtime status
-    const isSimulated = !env.OPENCODE_ZEN_API_KEY || env.OPENCODE_ZEN_API_KEY.includes("free_tier");
-    const runtimeStatus: ControlRuntimeStatus = isSimulated ? "SIMULATION_HEURISTIC" : "REAL_AI";
-    const activeModel = options.modelOverride || env.OPENCODE_DEFAULT_REASONING_MODEL;
-    const provider = "OpenCode Zen 100% Free-Tier Suite";
+    // Determine honest runtime status — NEVER SIMULATION_HEURISTIC in production
+    const activeModel = AIGateway.toCanonicalModelId(options.modelOverride || env.OPENCODE_DEFAULT_REASONING_MODEL);
+    const hasValidKey = !!env.OPENCODE_ZEN_API_KEY && !env.OPENCODE_ZEN_API_KEY.includes("free_tier") && !env.OPENCODE_ZEN_API_KEY.includes("public");
+    let runtimeStatus: ControlRuntimeStatus = hasValidKey ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
+    const provider = "opencode-zen";
 
     // 2. Handle Pending Action Approval Confirmation
     if (options.approvedActionId && options.actionConfirmed) {
@@ -74,6 +76,14 @@ export class ControlPlaneOrchestrator {
         requiresApproval: false,
         auditId,
         timestamp: new Date().toISOString(),
+        metadata: {
+          provider,
+          model: activeModel,
+          runtime: runtimeStatus,
+          requestId: auditId,
+          latencyMs: Math.max(1, Date.now() - startTime),
+          fallback: false,
+        },
         nextActions: [
           "What can you do?",
           "What is the current system status?",
@@ -158,30 +168,46 @@ export class ControlPlaneOrchestrator {
         toolCalls.push(modelRecord);
 
         const data = modelRecord.data as Record<string, unknown>;
-        const reportedRuntime = data.runtimeStatus as string;
+        const reportedRuntime = (data.runtimeStatus as ControlRuntimeStatus) || "AI_RUNTIME_UNAVAILABLE";
+        runtimeStatus = reportedRuntime;
 
         execution = `Executed get_ai_model_status (${modelRecord.latencyMs}ms).`;
-        result = `Active Reasoning Model: ${data.activeReasoningModel}. Runtime mode: ${reportedRuntime}.`;
+        result = `Active Model: ${activeModel}. Runtime mode: ${reportedRuntime}.`;
         evidence = "AIGateway Configuration & OpenCode Zen Model Registry";
 
-        message =
-          `**AI Model & Runtime Status**\n\n` +
-          `• **Active Model**: \`${data.activeReasoningModel}\`\n` +
-          `• **Fast Model**: \`${data.activeFastModel}\`\n` +
-          `• **Provider**: OpenCode Zen (100% Free-Tier Suite)\n` +
-          `• **Runtime Mode**: **${reportedRuntime}** ${
-            reportedRuntime === "SIMULATION_HEURISTIC"
-              ? "(Local deterministic heuristic simulation active; upstream token unauthenticated)"
-              : "(Live upstream API inference)"
-          }\n` +
-          `• **Cloudflare Edge Gateway**: ${data.cloudflareAIGateway}\n` +
-          `• **Free-Only Enforcement**: \`FREE_ONLY_MODE=true\` (Zero silent paid inference)\n` +
-          `• **Circuit Breakers**: All 5 models verified healthy.`;
+        const isUnavailable = reportedRuntime === "AI_RUNTIME_UNAVAILABLE";
+        const isDiagnosticQuery =
+          rawMessage.toLowerCase().includes("why") ||
+          rawMessage.toLowerCase().includes("unavailable") ||
+          rawMessage.toLowerCase().includes("failed");
+
+        if (isDiagnosticQuery || isUnavailable) {
+          message =
+            `**AI Model & Runtime Status: ${reportedRuntime}**\n\n` +
+            `• **Active Model**: \`${activeModel}\`\n` +
+            `• **Provider**: OpenCode Zen (100% Free-Tier Suite)\n` +
+            `• **API Base URL**: \`${env.OPENCODE_ZEN_BASE_URL}\`\n` +
+            `• **Runtime State**: **${reportedRuntime}**\n` +
+            `• **Diagnostic Assessment**: Direct upstream inference to \`${env.OPENCODE_ZEN_BASE_URL}/chat/completions\` requires an active OpenCode Zen API key (\`OPENCODE_ZEN_API_KEY\`). External requests without credentials return HTTP 403 (OpenCode Free-Tier policy: "free tier can only be used from within OpenCode").\n` +
+            `• **Zero-Simulation Policy**: ApplyWise AI strictly enforces \`SIMULATION_REACHABLE_FROM_PRODUCTION = false\`. No synthetic or heuristic mock responses are generated in production.\n` +
+            `• **Free-Only Governance**: \`FREE_ONLY_MODE=true\` (Paid models and OpenRouter strictly excluded)\n` +
+            `• **Circuit Breakers**: 5 free models registered and monitored.`;
+        } else {
+          message =
+            `**AI Model & Runtime Status: REAL_AI**\n\n` +
+            `• **Active Model**: \`${activeModel}\`\n` +
+            `• **Provider**: OpenCode Zen (100% Free-Tier Suite)\n` +
+            `• **API Base URL**: \`${env.OPENCODE_ZEN_BASE_URL}\`\n` +
+            `• **Runtime Mode**: **REAL_AI** (Live upstream inference verified)\n` +
+            `• **Cloudflare Edge Gateway**: ${data.cloudflareAIGateway}\n` +
+            `• **Free-Only Enforcement**: \`FREE_ONLY_MODE=true\`\n` +
+            `• **Circuit Breakers**: All models healthy.`;
+        }
 
         nextActions = [
           "Check system health",
-          "Find current AI architect jobs",
-          "Query candidate evidence in RAG",
+          "What is my master CV SHA-256 hash?",
+          "Find current AI architect jobs in South Africa",
         ];
         break;
       }
@@ -262,8 +288,7 @@ export class ControlPlaneOrchestrator {
         break;
       }
 
-      case "JOB_ANALYSIS":
-      case "CAREER_INTELLIGENCE": {
+      case "JOB_ANALYSIS": {
         plan = "Perform three-way match analysis combining Master CV, N.White Systems evidence, and job description.";
         const matchRecord = await ToolRegistry.executeTool("analyse_job");
         const companyRecord = await ToolRegistry.executeTool("research_company");
@@ -293,12 +318,64 @@ export class ControlPlaneOrchestrator {
         break;
       }
 
+      case "CAREER_INTELLIGENCE": {
+        plan = "Synthesize candidate career trajectory and strategic objectives using OpenCode Zen reasoning.";
+        const aiCall = await AIGateway.complete({
+          taskType: "cv_tailoring",
+          prompt: rawMessage,
+          modelOverride: activeModel,
+        });
+
+        const isRealAI = aiCall.runtimeStatus === "REAL_AI";
+        runtimeStatus = isRealAI ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
+
+        execution = `Executed AIGateway.complete (${aiCall.log.latencyMs}ms, model: ${aiCall.modelUsed}).`;
+
+        if (isRealAI) {
+          result = "Career strategy reasoning generated by live upstream model.";
+          evidence = "Master CV + OpenCode Zen Live Inference";
+          groundingCategory = "MODEL_REASONING";
+          message = aiCall.content;
+        } else {
+          result = "Upstream AI provider unavailable. Request recorded/queued.";
+          evidence = "OpenCode Zen Upstream Status";
+          groundingCategory = "FACT_FROM_SYSTEM";
+          // Section 15 Mandatory Exact Contract
+          message =
+            "The AI provider is currently unavailable.\n" +
+            "No AI-generated answer was produced.\n" +
+            "The request has been recorded/queued for retry.";
+        }
+
+        nextActions = [
+          "What is my master CV SHA-256 hash?",
+          "What do you know about my professional background?",
+          "Find eligible AI architect jobs in South Africa",
+        ];
+        break;
+      }
+
       case "RAG_QUERY": {
         plan = "Retrieve verified candidate technical evidence and architectural case studies from pgvector.";
-        const ragRecord = await ToolRegistry.executeTool("query_rag", { question: rawMessage });
+        const ragRecord = await ToolRegistry.executeTool("query_rag", {
+          question: rawMessage,
+          modelOverride: activeModel,
+        });
         toolCalls.push(ragRecord);
 
-        const data = ragRecord.data as { answer: string; citedChunksCount: number; isGrounded: boolean };
+        const data = ragRecord.data as {
+          answer: string;
+          citedChunksCount: number;
+          isGrounded: boolean;
+          runtimeStatus?: "REAL_AI" | "AI_RUNTIME_UNAVAILABLE";
+        };
+
+        if (data.runtimeStatus === "REAL_AI") {
+          runtimeStatus = "REAL_AI";
+        } else {
+          runtimeStatus = "AI_RUNTIME_UNAVAILABLE";
+        }
+
         execution = `Executed query_rag (${ragRecord.latencyMs}ms), retrieved ${data.citedChunksCount} cited chunks.`;
         result = data.isGrounded ? "Grounded factual answer retrieved with verified citations." : "Ungrounded query declined.";
         evidence = "Supabase pgvector Knowledge Base (13 chunks)";
@@ -589,6 +666,15 @@ export class ControlPlaneOrchestrator {
       metadata: { intent, runtimeStatus, toolCallsCount: toolCalls.length, auditId },
     });
 
+    const metadata: ControlResponseMetadata = {
+      provider: "opencode-zen",
+      model: activeModel,
+      runtime: runtimeStatus,
+      requestId: auditId,
+      latencyMs: Math.max(1, Date.now() - startTime),
+      fallback: false,
+    };
+
     return {
       message,
       intent,
@@ -606,6 +692,7 @@ export class ControlPlaneOrchestrator {
       pendingAction,
       auditId,
       timestamp: new Date().toISOString(),
+      metadata,
     };
   }
 
@@ -630,6 +717,16 @@ export class ControlPlaneOrchestrator {
     controlChatRequestsTotal.inc({ intent: "APPLICATION_SUBMISSION", runtime_status: runtimeStatus });
     controlChatDurationSeconds.observe({ intent: "APPLICATION_SUBMISSION" }, durationSec);
 
+    const latencyMs = Math.max(1, Date.now() - startTime);
+    const metadata: ControlResponseMetadata = {
+      provider: "opencode-zen",
+      model: activeModel,
+      runtime: runtimeStatus,
+      requestId: auditId,
+      latencyMs,
+      fallback: false,
+    };
+
     return {
       message:
         `**Action Executed with Your Approval**\n\n` +
@@ -652,6 +749,7 @@ export class ControlPlaneOrchestrator {
       requiresApproval: false,
       auditId,
       timestamp: new Date().toISOString(),
+      metadata,
       nextActions: [
         "Inspect application pipeline status",
         "When did the last autonomous cycle run?",

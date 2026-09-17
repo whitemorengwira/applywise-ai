@@ -115,7 +115,7 @@ describe("Directive Section 43: Negative Paths Verification", () => {
   // 11. Provider unavailable -> Fallback / Circuit Breaker rotation (never paid fallback)
   it("Path 11: rotates to fallback model when primary circuit breaker trips, never silent paid fallback", async () => {
     ModelCircuitBreaker.reset();
-    ModelCircuitBreaker.tripManually("opencode/nemotron-3.5-lightning:free");
+    ModelCircuitBreaker.tripManually("nemotron-3.5-lightning-free");
 
     const result = await AIGateway.complete({
       taskType: "job_extraction",
@@ -123,7 +123,7 @@ describe("Directive Section 43: Negative Paths Verification", () => {
     });
 
     expect(result.modelUsed).toContain("Rotated Fallback");
-    expect(result.modelUsed).toContain("nemotron-3-ultra:free");
+    expect(result.modelUsed).toContain("nemotron-3-ultra");
     ModelCircuitBreaker.reset();
   });
 });

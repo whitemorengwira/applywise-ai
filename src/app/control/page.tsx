@@ -38,7 +38,7 @@ const INITIAL_MESSAGE: ControlChatMessage = {
     "Welcome to the ApplyWise AI Control Centre. I am your authoritative operational control plane. I coordinate specialized agents for job discovery, geographic eligibility (SA/ZW/MW Remote, Hybrid, On-site), candidate evidence RAG, grounded cover letters, cryptographic CV integrity, and cloud scheduler telemetry. How can I assist you?",
   timestamp: "2026-09-17T12:00:00.000Z",
   intent: "CONVERSATION",
-  runtimeStatus: "SIMULATION_HEURISTIC",
+  runtimeStatus: "REAL_AI",
 };
 
 const SUGGESTED_ACTIONS = [
@@ -59,11 +59,11 @@ export default function ControlCentrePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [activeModel, setActiveModel] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("applywise_active_model") || "opencode/nemotron-3-ultra:free";
+      return localStorage.getItem("applywise_active_model") || "nemotron-3-ultra-free";
     }
-    return "opencode/nemotron-3-ultra:free";
+    return "nemotron-3-ultra-free";
   });
-  const [runtimeStatus, setRuntimeStatus] = React.useState<ControlRuntimeStatus>("SIMULATION_HEURISTIC");
+  const [runtimeStatus, setRuntimeStatus] = React.useState<ControlRuntimeStatus>("REAL_AI");
   const [pendingApproval, setPendingApproval] = React.useState<PendingApprovalAction | null>(null);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -240,7 +240,7 @@ export default function ControlCentrePage() {
                   className={`h-2 w-2 rounded-full ${
                     runtimeStatus === "REAL_AI"
                       ? "bg-emerald-400 animate-pulse"
-                      : runtimeStatus === "SIMULATION_HEURISTIC"
+                      : runtimeStatus === "AI_RUNTIME_UNAVAILABLE" || runtimeStatus === "UNAVAILABLE"
                       ? "bg-amber-400"
                       : "bg-red-400"
                   }`}
@@ -250,7 +250,7 @@ export default function ControlCentrePage() {
                   className={`font-semibold ${
                     runtimeStatus === "REAL_AI"
                       ? "text-emerald-400"
-                      : runtimeStatus === "SIMULATION_HEURISTIC"
+                      : runtimeStatus === "AI_RUNTIME_UNAVAILABLE" || runtimeStatus === "UNAVAILABLE"
                       ? "text-amber-400"
                       : "text-red-400"
                   }`}

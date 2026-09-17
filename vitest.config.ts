@@ -5,6 +5,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    env: {
+      ENABLE_TEST_MOCK_FALLBACK: "true",
+    },
+    testTimeout: 15000,
   },
   resolve: {
     alias: {

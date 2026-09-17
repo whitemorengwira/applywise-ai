@@ -24,6 +24,12 @@ async function handlePost(request: Request) {
     return NextResponse.json({
       success: true,
       ...response,
+      provider: response.metadata?.provider || response.provider,
+      model: response.metadata?.model || response.activeModel,
+      runtime: response.metadata?.runtime || response.runtimeStatus,
+      requestId: response.metadata?.requestId || response.auditId,
+      latencyMs: response.metadata?.latencyMs ?? 0,
+      fallback: response.metadata?.fallback ?? false,
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
