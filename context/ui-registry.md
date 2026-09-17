@@ -12,6 +12,7 @@ This document tracks all reusable UI components and their implementation status 
 | Input | [x] | `src/components/ui/input.tsx` | Accessible text input with state styling |
 | Card | [x] | `src/components/ui/card.tsx` | Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter |
 | Badge | [x] | `src/components/ui/badge.tsx` | Status badges, category labels, skill tags |
+| ChatMarkdownRenderer | [x] | `src/components/control/chat-markdown.tsx` | Zero-dependency markdown parser for tables, code blocks, emerald citation chips |
 
 ### Layout Components (`src/components/layout/`)
 
@@ -26,6 +27,8 @@ This document tracks all reusable UI components and their implementation status 
 | Page / Feature | Status | Path | Purpose |
 |---|---|---|---|
 | Root Landing & Showcase | [x] | `src/app/page.tsx` | Flagship landing, hero metrics, system health |
+| Dashboard Overview | [x] | `src/app/dashboard/page.tsx` | Executive summary, active targets, quick actions |
+| Control Centre (Chat) | [x] | `src/app/control/page.tsx` | Multi-turn conversational orchestrator, command centre |
 | Jobs Discovery | [x] | `src/app/jobs/page.tsx` | Job board, search filters, match score preview |
 | CV Studio | [x] | `src/app/cv-studio/page.tsx` | CV viewer, tailor generator, diff view |
 | Cover Letters | [x] | `src/app/cover-letters/page.tsx` | Tailored cover letter generator with citations |
@@ -41,8 +44,11 @@ This document tracks all reusable UI components and their implementation status 
 | Dashboard | Status | Path | Panels |
 |---|---|---|---|
 | Application Overview | [x] | `01-application-overview.json` | Four Golden Signals, Traffic by route, Latency quantiles |
-| AI Operations | [x] | `02-ai-operations.json` | Invocations, p95 inference latency, fallbacks, token usage |
+| AI Operations | [x] | `02-ai-operations.json` | Invocations, p95 inference latency, circuit breakers, token usage |
 | Kubernetes Workloads | [x] | `03-kubernetes-workloads.json` | Heap memory, CPU rate, event loop lag, GC duration |
 | Database & Storage | [x] | `04-database-storage.json` | Query throughput, p95 latency, pgvector search stats |
 | Business Intelligence | [x] | `05-business-intelligence.json` | Jobs analyzed, CRM pipeline, CV generation velocity |
 | N.White Systems Traffic | [x] | `06-nwhite-systems-traffic-analytics.json` | Unified cloud & traffic analytics, geo distribution |
+| Idempotency & Leases | [x] | `07-idempotency-and-leases.json` | Distributed lease locks, cycle idempotency keys |
+| Claims Verification | [x] | `08-claims-verification.json` | Truthful claims verification table, zero-simulation audit |
+| Control Plane Telemetry | [x] | `09-applywise-control-plane.json` | 24-intent classification, tool latency, approvals |

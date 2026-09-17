@@ -113,6 +113,19 @@ Query → AI Gateway → Agentic RAG Agent (LangGraph)
   → Generate Grounded Response → Validate → Return with Citations
 ```
 
+**Control Plane & Multi-Turn Chat Path:**
+```
+Client (/control) → POST /api/control/chat (message + history)
+  → ControlPlaneOrchestrator.processMessage
+  → resolveContextualQuery (resolves pronouns/ordinals against prior turns)
+  → IntentClassifier (24 intents)
+  → ToolRegistry (20 real backend tools: query_rag, search_jobs, prepare_application, etc.)
+  → SemanticReRanker (empirical keywords + candidate entity boosts + 75% threshold)
+  → Synthesize Grounded Evidence with [Source N: Title] citation tags
+  → Return structured ControlPlaneResponse (message, plan, execution, result, evidence, nextActions)
+  → Render ChatMarkdownRenderer with code blocks, tables, and emerald citation badges
+```
+
 ### Key Architectural Invariants
 1. All database access goes through Supabase clients with RLS enforced
 2. All AI calls go through the AI Gateway — never call OpenCode Zen or external APIs directly from components
@@ -120,3 +133,7 @@ Query → AI Gateway → Agentic RAG Agent (LangGraph)
 4. AI output is always labelled as generated, never presented as verified fact
 5. Server Actions handle all mutations; API routes handle streaming/long-running AI tasks
 6. Every AI operation creates an audit record
+7. **Zero-Simulation in Production**: `SIMULATION_REACHABLE_FROM_PRODUCTION = false`. All production components truthfully report `REAL_AI` vs `AI_RUNTIME_UNAVAILABLE`.
+8. **Master CV Cryptographic Invariance**: `whitemore_ngwira_cv_n.white.pdf` SHA-256 hash `3994A09C...` is immutable and verified on every submission.
+9. **Multi-Turn Context Resolution**: Control plane maintains conversation turns and resolves context before semantic RAG retrieval.
+10. **Strict Grounding Threshold**: Semantic scores below 75.0% return a Factual Boundary Notice rather than fabricating claims.
