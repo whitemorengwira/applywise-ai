@@ -20,6 +20,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
+import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
 
 function getTimestamp(): string {
   return new Date().toISOString();
@@ -64,6 +65,7 @@ export default function ControlCentrePage() {
     return "nemotron-3-ultra-free";
   });
   const [runtimeStatus, setRuntimeStatus] = React.useState<ControlRuntimeStatus>("REAL_AI");
+  const [loadingStatusText, setLoadingStatusText] = React.useState("Evaluating intent & coordinating domain agents...");
   const [pendingApproval, setPendingApproval] = React.useState<PendingApprovalAction | null>(null);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -124,6 +126,37 @@ export default function ControlCentrePage() {
 
     setInputValue("");
     setIsLoading(true);
+
+    const lowerText = userText.toLowerCase();
+    let initialProgress = "Evaluating intent & coordinating domain agents...";
+    if (lowerText.includes("cv") || lowerText.includes("hash") || lowerText.includes("sha")) {
+      initialProgress = "Validating Master CV cryptographic SHA-256 hash...";
+    } else if (
+      lowerText.includes("architect") ||
+      lowerText.includes("background") ||
+      lowerText.includes("experience") ||
+      lowerText.includes("earcodex") ||
+      lowerText.includes("supabets") ||
+      lowerText.includes("nico") ||
+      lowerText.includes("socinga") ||
+      lowerText.includes("samf") ||
+      lowerText.includes("aws") ||
+      lowerText.includes("terraform") ||
+      lowerText.includes("evidence")
+    ) {
+      initialProgress = "Executing tool: query_rag & synthesizing candidate evidence...";
+    } else if (lowerText.includes("job") || lowerText.includes("find") || lowerText.includes("search")) {
+      initialProgress = "Executing tool: search_jobs across African markets...";
+    } else if (lowerText.includes("scheduler") || lowerText.includes("cycle") || lowerText.includes("cron")) {
+      initialProgress = "Executing tool: get_scheduler_status & checking lease locks...";
+    } else if (lowerText.includes("model") || lowerText.includes("runtime")) {
+      initialProgress = "Executing tool: get_ai_model_status & verifying provider...";
+    } else if (lowerText.includes("observability") || lowerText.includes("grafana") || lowerText.includes("metrics")) {
+      initialProgress = "Executing tool: get_observability_status...";
+    } else if (lowerText.includes("prepare")) {
+      initialProgress = "Executing tool: prepare_application via LangGraph...";
+    }
+    setLoadingStatusText(initialProgress);
 
     try {
       const res = await fetch("/api/control/chat", {
@@ -300,7 +333,7 @@ export default function ControlCentrePage() {
         {/* Main Workspace Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
           {/* Chat Stream (3 cols) */}
-          <div className="lg:col-span-3 flex flex-col rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md overflow-hidden">
+          <div className="lg:col-span-3 min-w-0 flex flex-col rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md overflow-hidden">
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg) => {
@@ -345,9 +378,13 @@ export default function ControlCentrePage() {
                       </div>
 
                       {/* Main Message Text */}
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {msg.content}
-                      </div>
+                      {isUser ? (
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                          {msg.content}
+                        </div>
+                      ) : (
+                        <ChatMarkdownRenderer content={msg.content} />
+                      )}
 
                       {/* Structured Operation Details (PLAN / EXECUTION / RESULT / EVIDENCE) */}
                       {(msg.plan || msg.execution || msg.result || msg.evidence) && (
@@ -471,9 +508,9 @@ export default function ControlCentrePage() {
               )}
 
               {isLoading && (
-                <div className="flex items-center gap-2 text-xs text-foreground-muted font-mono p-3 rounded-xl bg-card border border-border/60 w-fit">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  <span>Control Plane Orchestrator evaluating intent & coordinating agents...</span>
+                <div className="flex items-center gap-2.5 text-xs text-foreground-muted font-mono p-3 rounded-xl bg-card/90 border border-primary/40 shadow-[0_0_15px_rgba(14,165,233,0.15)] w-fit animate-in fade-in duration-150">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                  <span className="text-foreground font-semibold">{loadingStatusText}</span>
                 </div>
               )}
 
@@ -517,13 +554,13 @@ export default function ControlCentrePage() {
           </div>
 
           {/* Right Activity & Diagnostics Panel (1 col) */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md p-4 overflow-y-auto text-xs">
+          <div className="lg:col-span-1 min-w-0 flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md p-4 overflow-y-auto text-xs">
             <div>
               <h3 className="text-xs font-bold text-foreground font-mono uppercase tracking-wider flex items-center gap-2 mb-2">
                 <Layers className="h-3.5 w-3.5 text-primary" />
                 Specialized Agents
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[
                   { name: "Candidate Intelligence", status: "READY", color: "text-emerald-400" },
                   { name: "Job Discovery", status: "ACTIVE", color: "text-emerald-400" },
@@ -536,12 +573,46 @@ export default function ControlCentrePage() {
                 ].map((agent, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/40"
+                    className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/40 min-w-0 gap-2"
                   >
-                    <span className="text-foreground-muted">{agent.name}</span>
-                    <span className={`font-mono text-[10px] font-semibold ${agent.color}`}>
+                    <span className="text-foreground-muted truncate">{agent.name}</span>
+                    <span className={`font-mono text-[10px] font-semibold shrink-0 ${agent.color}`}>
                       {agent.status}
                     </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Registered Deterministic Domain Tools */}
+            <div className="pt-3 border-t border-border/60">
+              <h3 className="text-xs font-bold text-foreground font-mono uppercase tracking-wider flex items-center gap-2 mb-2">
+                <Terminal className="h-3.5 w-3.5 text-primary" />
+                Domain Tools (7)
+              </h3>
+              <div className="space-y-1.5">
+                {[
+                  { tool: "query_rag", status: "BOUND", desc: "pgvector evidence search", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+                  { tool: "search_jobs", status: "BOUND", desc: "African vacancy discovery", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+                  { tool: "prepare_application", status: "SAFE", desc: "LangGraph safe preparation", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" },
+                  { tool: "get_master_cv_integrity", status: "LOCKED", desc: "SHA-256 byte invariant", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+                  { tool: "get_ai_model_status", status: "ACTIVE", desc: "OpenCode Zen routing", color: "text-purple-400 bg-purple-500/10 border-purple-500/30" },
+                  { tool: "get_scheduler_status", status: "READY", desc: "Cloud cron execution leases", color: "text-blue-400 bg-blue-500/10 border-blue-500/30" },
+                  { tool: "get_observability_status", status: "ACTIVE", desc: "Prometheus & Grafana", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="p-1.5 rounded-lg bg-secondary/30 border border-border/40 min-w-0"
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <span className="font-mono text-[11px] font-semibold text-foreground truncate">
+                        `{item.tool}`
+                      </span>
+                      <span className={`font-mono text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${item.color}`}>
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-foreground-subtle truncate">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -553,7 +624,7 @@ export default function ControlCentrePage() {
                 Governance & Policies
               </h3>
               <ul className="space-y-1.5 text-[11px] text-foreground-muted leading-relaxed">
-                <li>• **CV Immutability**: Exact SHA-256 byte lock. Zero mutations permitted.</li>
+                <li>• **CV Immutability**: Exact SHA-256 byte lock (`3994A09C`). Zero mutation.</li>
                 <li>• **Geography**: SA, ZW, MW Remote, Hybrid, and On-site eligible.</li>
                 <li>• **Free Tier**: 100% zero-cost operation under `FREE_ONLY_MODE=true`.</li>
                 <li>• **Grounding**: Strict &gt;= 75% threshold. Zero hallucinations.</li>

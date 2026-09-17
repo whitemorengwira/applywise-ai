@@ -637,21 +637,73 @@ export class ControlPlaneOrchestrator {
       }
 
       default: {
-        // UNKNOWN intent handling (Section 7: ask clarifying question, never invent)
+        const lowerPrompt = rawMessage.toLowerCase();
+        const hasTechnicalOrCareerIntent =
+          lowerPrompt.includes("architect") ||
+          lowerPrompt.includes("system") ||
+          lowerPrompt.includes("cloud") ||
+          lowerPrompt.includes("aws") ||
+          lowerPrompt.includes("terraform") ||
+          lowerPrompt.includes("devops") ||
+          lowerPrompt.includes("project") ||
+          lowerPrompt.includes("case stud") ||
+          lowerPrompt.includes("experience") ||
+          lowerPrompt.includes("background") ||
+          lowerPrompt.includes("competenc") ||
+          lowerPrompt.includes("portfolio") ||
+          lowerPrompt.includes("infrastructure") ||
+          lowerPrompt.includes("database") ||
+          lowerPrompt.includes("engineering") ||
+          lowerPrompt.includes("whitemore") ||
+          lowerPrompt.includes("ngwira") ||
+          lowerPrompt.includes("nwhite");
+
+        if (hasTechnicalOrCareerIntent) {
+          plan = "Recognized candidate technical/architectural inquiry in fallback path; routing deterministically to query_rag.";
+          const ragRecord = await ToolRegistry.executeTool("query_rag", {
+            question: rawMessage,
+            modelOverride: activeModel,
+          });
+          toolCalls.push(ragRecord);
+
+          const data = ragRecord.data as {
+            answer: string;
+            citedChunksCount: number;
+            isGrounded: boolean;
+            runtimeStatus?: "REAL_AI" | "AI_RUNTIME_UNAVAILABLE";
+          };
+
+          runtimeStatus = data.runtimeStatus === "REAL_AI" ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
+          execution = `Executed query_rag (${ragRecord.latencyMs}ms), retrieved ${data.citedChunksCount} cited chunks.`;
+          result = data.isGrounded ? "Grounded factual answer retrieved with verified citations." : "Ungrounded query declined.";
+          evidence = "Supabase pgvector Knowledge Base (13 chunks)";
+          groundingCategory = data.isGrounded ? "FACT_FROM_CANDIDATE_EVIDENCE" : "UNKNOWN";
+          message = data.answer;
+          nextActions = [
+            "Explain your experience with Supabets",
+            "What is your Terraform blueprint strategy?",
+            "Find matching AI architect jobs",
+          ];
+          break;
+        }
+
+        // UNKNOWN intent handling (Section 7: transparent boundary without generic helpless fallback)
         groundingCategory = "UNKNOWN";
         message =
-          "I am not entirely certain how to interpret your request. As the ApplyWise AI control plane, I can:\n\n" +
-          "• **Inspect System State**: Health checks, Master CV hash (`3994A09C...`), database, or observability.\n" +
-          "• **Job Search & Eligibility**: Discover verified African vacancies and test work arrangement eligibility.\n" +
-          "• **Application Pipeline**: Prepare grounded application packages or review submission queues.\n" +
-          "• **Candidate Evidence (RAG)**: Retrieve verified portfolio case studies (EarCodeX, Supabets, NICO Life, AWS Terraform).\n" +
-          "• **Autonomous Operations**: Inspect cloud scheduler leases and execution quotas.\n\n" +
-          "Could you please clarify your objective?";
+          "### Operational Directive Unrecognized\n\n" +
+          "Your prompt could not be deterministically mapped to a registered domain action. To protect system invariants and prevent ungrounded hallucinations, ApplyWise AI requires an explicit command or technical inquiry:\n\n" +
+          "• **Inspect System State**: `What is the current system status?`, `Verify master CV hash`, `Database status`\n" +
+          "• **AI Runtime & Models**: `What AI model is currently running?`, `AI usage metrics`\n" +
+          "• **Job Search & Eligibility**: `Find current AI architect jobs in South Africa`, `Is this role eligible for me?`\n" +
+          "• **Candidate Evidence (RAG)**: `What do you know about my professional systems architecture background?`, `What AWS architecture evidence do I have?`\n" +
+          "• **Application Pipeline**: `Prepare the application`, `How many applications did you submit this week?`\n" +
+          "• **Autonomous Cloud Scheduler**: `When did the last autonomous cycle run?`, `Scheduler status`\n\n" +
+          "Please specify one of the actions above.";
         nextActions = [
           "What can you do?",
           "Check system health",
+          "What do you know about my professional systems architecture background?",
           "Find current AI architect jobs in South Africa",
-          "What AI model is currently running?",
         ];
         break;
       }

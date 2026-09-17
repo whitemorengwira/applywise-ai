@@ -49,4 +49,20 @@ describe("Enhanced RAG Semantic Re-ranking Layer", () => {
     expect(results[0].id).toBe("chunk-terraform-cloud");
     expect(results[0].title).toContain("Infrastructure as Code");
   });
+
+  it("re-ranks professional systems architecture background with high precision and formats citation badges", async () => {
+    const query = "What do you know about my professional systems architecture background?";
+    const allChunks = RAGService.getAllKnowledgeChunks();
+    const reRanked = SemanticReRanker.reRank(query, allChunks);
+
+    expect(reRanked[0].precisionScore).toBeGreaterThanOrEqual(0.75);
+    expect(reRanked[0].groundingConfidence).toBeGreaterThanOrEqual(99.0);
+
+    const copilotResult = await RAGService.queryCopilot(query);
+    expect(copilotResult.answer).toContain("[Source 1: Master CV]");
+    expect(copilotResult.answer).toContain("[Source 2: N.White Systems]");
+    expect(copilotResult.answer).toContain("EarCodeX");
+    expect(copilotResult.answer).toContain("Supabets");
+    expect(copilotResult.citedChunks.length).toBeGreaterThanOrEqual(3);
+  });
 });

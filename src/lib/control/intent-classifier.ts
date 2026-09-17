@@ -29,36 +29,62 @@ export class IntentClassifier {
 
     // 1. GREETINGS & CASUAL CONVERSATION (Section 6 & 18 Mandatory Requirement)
     // Simple conversational messages MUST remain conversational and not trigger operational agents or hallucinations.
-    const greetingPatterns = [
-      /^hi[\s!.,?]*$/i,
-      /^hello[\s!.,?]*$/i,
-      /^hey[\s!.,?]*$/i,
-      /^greetings[\s!.,?]*$/i,
-      /^good (morning|afternoon|evening|day)[\s!.,?]*$/i,
-      /^how are you[\s!.,?]*$/i,
-      /^what'?s up[\s!.,?]*$/i,
-      /^yo[\s!.,?]*$/i,
-    ];
+    // Domain inquiries (architecture, systems, AWS, case studies, jobs, CV, etc.) MUST NEVER be misclassified as greetings.
+    const hasDomainInquiryKeywords =
+      lower.includes("architect") ||
+      lower.includes("system") ||
+      lower.includes("cloud") ||
+      lower.includes("aws") ||
+      lower.includes("terraform") ||
+      lower.includes("project") ||
+      lower.includes("case stud") ||
+      lower.includes("cv") ||
+      lower.includes("job") ||
+      lower.includes("application") ||
+      lower.includes("model") ||
+      lower.includes("scheduler") ||
+      lower.includes("background") ||
+      lower.includes("experience") ||
+      lower.includes("earcodex") ||
+      lower.includes("supabets") ||
+      lower.includes("nico") ||
+      lower.includes("socinga") ||
+      lower.includes("samf") ||
+      lower.includes("evidence") ||
+      lower.includes("rag");
 
-    for (const pattern of greetingPatterns) {
-      if (pattern.test(text)) {
+    if (!hasDomainInquiryKeywords) {
+      const greetingPatterns = [
+        /^hi[\s!.,?]*$/i,
+        /^hello[\s!.,?]*$/i,
+        /^hey[\s!.,?]*$/i,
+        /^greetings[\s!.,?]*$/i,
+        /^good (morning|afternoon|evening|day)[\s!.,?]*$/i,
+        /^how are you[\s!.,?]*$/i,
+        /^what'?s up[\s!.,?]*$/i,
+        /^yo[\s!.,?]*$/i,
+      ];
+
+      for (const pattern of greetingPatterns) {
+        if (pattern.test(text)) {
+          return {
+            intent: "CONVERSATION",
+            confidence: 1.0,
+            extractedEntities: {},
+            reasoning: "Exact match for conversational greeting. Handled courteously without operational tool execution.",
+          };
+        }
+      }
+
+      // Gratitude and conversational pleasantries
+      if (/^(thanks|thank you|cheers|great|awesome|cool|ok|okay)[\s!.,]*$/i.test(text)) {
         return {
           intent: "CONVERSATION",
-          confidence: 1.0,
+          confidence: 0.95,
           extractedEntities: {},
-          reasoning: "Exact match for conversational greeting. Handled courteously without operational tool execution.",
+          reasoning: "Conversational acknowledgment or pleasantry.",
         };
       }
-    }
-
-    // Gratitude and conversational pleasantries
-    if (/^(thanks|thank you|cheers|great|awesome|cool|ok|okay)[\s!.,]*$/i.test(text)) {
-      return {
-        intent: "CONVERSATION",
-        confidence: 0.95,
-        extractedEntities: {},
-        reasoning: "Conversational acknowledgment or pleasantry.",
-      };
     }
 
     // 2. CAPABILITIES & IDENTITY ("What can you do?", "Who are you?", "Help")
@@ -198,19 +224,51 @@ export class IntentClassifier {
       };
     }
 
-    // 10. RAG & CANDIDATE EVIDENCE
+    // 10. RAG & CANDIDATE EVIDENCE (Deterministic tool: query_rag)
+    const isRagRegexMatch =
+      /know.*about.*(my|whitemore|the candidate)/i.test(text) ||
+      /(professional|technical|systems|cloud|software|enterprise|solutions?)\s+(architecture|background|experience|profile|history|projects?|track\s*record)/i.test(text) ||
+      /(client|enterprise|past|previous|verified)\s+(projects?|case\s*stud(y|ies)|work|deployments?|blueprints?)/i.test(text) ||
+      /(systems?|cloud|enterprise|solution|technical)\s+architect(ure)?/i.test(text) ||
+      /(aws|terraform|cloud|infrastructure|devops)\s+(architecture|deployments?|blueprints?|experience|multi-region)/i.test(text) ||
+      /case\s*stud(y|ies)/i.test(text) ||
+      /tell\s+me\s+about.*(system|architect|background|experience|cloud|aws|project)/i.test(text);
+
     if (
+      isRagRegexMatch ||
       lower.includes("evidence") ||
       lower.includes("earcodex") ||
       lower.includes("nico life") ||
       lower.includes("supabets") ||
       lower.includes("socinga") ||
       lower.includes("samf") ||
+      lower.includes("cineterns") ||
+      lower.includes("oasis college") ||
+      lower.includes("systems architecture") ||
+      lower.includes("system architecture") ||
+      lower.includes("cloud architecture") ||
+      lower.includes("enterprise architecture") ||
       lower.includes("aws architecture") ||
-      lower.includes("terraform blueprints") ||
-      lower.includes("experience with") ||
+      lower.includes("architecture background") ||
+      lower.includes("architectural background") ||
+      lower.includes("technical background") ||
+      lower.includes("systems background") ||
       lower.includes("professional background") ||
       lower.includes("my background") ||
+      lower.includes("terraform blueprints") ||
+      lower.includes("terraform") ||
+      lower.includes("multi-region") ||
+      lower.includes("litellm") ||
+      lower.includes("ai gateway") ||
+      lower.includes("ai gateways") ||
+      lower.includes("past projects") ||
+      lower.includes("client projects") ||
+      lower.includes("enterprise projects") ||
+      lower.includes("case study") ||
+      lower.includes("case studies") ||
+      lower.includes("experience with") ||
+      lower.includes("architectural experience") ||
+      lower.includes("cloud experience") ||
       lower.includes("n.white systems") ||
       lower.includes("nwhite systems") ||
       lower.includes("nwhite.systems") ||
@@ -218,12 +276,17 @@ export class IntentClassifier {
       lower.includes("about nwhite") ||
       lower.includes("know about me") ||
       lower.includes("know about my") ||
+      lower.includes("know about whitemore") ||
+      lower.includes("what do you know") ||
       lower.includes("candidate evidence") ||
+      lower.includes("verified evidence") ||
+      lower.includes("evidence base") ||
+      lower.includes("portfolio") ||
       lower.includes("rag")
     ) {
       return {
         intent: "RAG_QUERY",
-        confidence: 0.93,
+        confidence: 0.95,
         extractedEntities: {
           technology: lower.includes("aws") ? "AWS" : lower.includes("terraform") ? "Terraform" : undefined,
           companyName: lower.includes("earcodex") ? "EarCodeX" : lower.includes("nico") ? "NICO Life" : undefined,
@@ -401,7 +464,41 @@ export class IntentClassifier {
       };
     }
 
-    // 19. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
+    // 19. BROAD TECHNICAL & CAREER SAFETY NET
+    // Ensure recognizable technical, architectural, or career inquiries never fall to UNKNOWN
+    const isTechnicalOrCareerInquiry =
+      lower.includes("architect") ||
+      lower.includes("system") ||
+      lower.includes("cloud") ||
+      lower.includes("aws") ||
+      lower.includes("terraform") ||
+      lower.includes("devops") ||
+      lower.includes("project") ||
+      lower.includes("case stud") ||
+      lower.includes("experience") ||
+      lower.includes("background") ||
+      lower.includes("competenc") ||
+      lower.includes("portfolio") ||
+      lower.includes("infrastructure") ||
+      lower.includes("database") ||
+      lower.includes("engineering") ||
+      lower.includes("whitemore") ||
+      lower.includes("ngwira") ||
+      lower.includes("nwhite");
+
+    if (isTechnicalOrCareerInquiry) {
+      return {
+        intent: "RAG_QUERY",
+        confidence: 0.88,
+        extractedEntities: {
+          technology: lower.includes("aws") ? "AWS" : lower.includes("terraform") ? "Terraform" : undefined,
+          companyName: lower.includes("earcodex") ? "EarCodeX" : lower.includes("nico") ? "NICO Life" : undefined,
+        },
+        reasoning: "Recognized technical, architectural, or candidate career inquiry mapped deterministically to candidate evidence base.",
+      };
+    }
+
+    // 20. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
     return {
       intent: "UNKNOWN",
       confidence: 0.40,

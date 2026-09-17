@@ -53,6 +53,23 @@ describe("Control Plane Intent Classifier (Sections 6, 7, 18)", () => {
     expect(result.intent).toBe("RAG_QUERY");
   });
 
+  it("classifies professional systems architecture inquiry as RAG_QUERY (Acceptance Prompt)", () => {
+    const result = IntentClassifier.classify("What do you know about my professional systems architecture background?");
+    expect(result.intent).toBe("RAG_QUERY");
+    expect(result.confidence).toBeGreaterThanOrEqual(0.85);
+  });
+
+  it("never misclassifies technical inquiries with leading greetings as CONVERSATION", () => {
+    const result = IntentClassifier.classify("Hello, what is your systems architecture experience?");
+    expect(result.intent).toBe("RAG_QUERY");
+  });
+
+  it("classifies client case studies and enterprise project queries as RAG_QUERY", () => {
+    expect(IntentClassifier.classify("Tell me about your client case studies").intent).toBe("RAG_QUERY");
+    expect(IntentClassifier.classify("What enterprise projects have you delivered?").intent).toBe("RAG_QUERY");
+    expect(IntentClassifier.classify("Tell me about AWS Terraform multi-region deployments").intent).toBe("RAG_QUERY");
+  });
+
   it("classifies application review inquiries as APPLICATION_REVIEW", () => {
     const result = IntentClassifier.classify("How many applications did you submit this week?");
     expect(result.intent).toBe("APPLICATION_REVIEW");

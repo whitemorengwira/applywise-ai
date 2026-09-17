@@ -122,4 +122,18 @@ describe("Control Plane 10-Step Acceptance Test Sequence (Section 44)", () => {
     expect(res.message).toContain("0 6 * * *");
     expect(res.message).toContain("ZERO");
   });
+
+  // TEST 11: Acceptance Prompt: "What do you know about my professional systems architecture background?"
+  it("TEST 11: Acceptance Prompt -> executes query_rag, synthesizes evidence with formatted citation badges", async () => {
+    const res = await ControlPlaneOrchestrator.processMessage({
+      message: "What do you know about my professional systems architecture background?",
+    });
+    expect(res.intent).toBe("RAG_QUERY");
+    expect(res.toolCalls.some((t) => t.toolName === "query_rag")).toBe(true);
+    expect(res.message).not.toContain("I am not entirely certain how to interpret your request");
+    expect(res.message).toContain("[Source 1: Master CV]");
+    expect(res.message).toContain("[Source 2: N.White Systems]");
+    expect(res.message).toContain("EarCodeX");
+    expect(res.message).toContain("Supabets");
+  });
 });

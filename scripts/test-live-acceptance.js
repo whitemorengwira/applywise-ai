@@ -1,3 +1,4 @@
+/* eslint-disable */
 const https = require('https');
 
 const BASE_URL = 'https://applywise-ai-app.vercel.app';
