@@ -18,6 +18,10 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  Copy,
+  Check,
+  RotateCcw,
+  Download,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
 import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
@@ -31,6 +35,14 @@ function createMessageId(prefix: string): string {
   msgSeq += 1;
   return `${prefix}-${Date.now()}-${msgSeq}`;
 }
+
+const MODEL_OPTIONS = [
+  { id: "nemotron-3-ultra-free", name: "Nemotron 3 Ultra (Free)" },
+  { id: "nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning (Free)" },
+  { id: "ling-3.0-flash-fin-free", name: "Ling 3.0 Flash Fin (Free)" },
+  { id: "muse-spark-1.3-contributor-free", name: "Muse Spark 1.3 Contributor (Free)" },
+  { id: "deepseek-v3.0-coder-free", name: "DeepSeek v3 Coder (Free)" },
+];
 
 const INITIAL_MESSAGE: ControlChatMessage = {
   id: "welcome-msg",
@@ -68,7 +80,10 @@ export default function ControlCentrePage() {
   const [loadingStatusText, setLoadingStatusText] = React.useState("Evaluating intent & coordinating domain agents...");
   const [pendingApproval, setPendingApproval] = React.useState<PendingApprovalAction | null>(null);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Sync active model from localStorage and listen to changes
   React.useEffect(() => {
@@ -109,6 +124,78 @@ export default function ControlCentrePage() {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleCopyMessage = (id: string, content: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: createMessageId("welcome"),
+        role: "assistant",
+        content:
+          "Conversation cleared. I am ready for your next command, inquiry, or operational workflow.",
+        timestamp: getTimestamp(),
+        intent: "CONVERSATION",
+        runtimeStatus: "REAL_AI",
+      },
+    ]);
+  };
+
+  const handleExportTranscript = () => {
+    const lines = [
+      `# ApplyWise AI Control Centre — Conversation Transcript`,
+      `**Exported At**: ${new Date().toISOString()}`,
+      `**Active Model**: ${activeModel}`,
+      `**Runtime Status**: ${runtimeStatus}`,
+      `**Master CV SHA-256**: 3994A09C2...`,
+      ``,
+      `---`,
+      ``,
+    ];
+
+    for (const msg of messages) {
+      const author = msg.role === "user" ? "Candidate / Operator" : "ApplyWise Control Plane";
+      const intentTag = msg.intent ? ` [${msg.intent}]` : "";
+      lines.push(`### ${author}${intentTag} (${msg.timestamp})`);
+      lines.push(``);
+      lines.push(msg.content);
+      lines.push(``);
+      if (msg.plan || msg.execution || msg.result || msg.evidence) {
+        lines.push(`> **Trace**:`);
+        if (msg.plan) lines.push(`> - PLAN: ${msg.plan}`);
+        if (msg.execution) lines.push(`> - EXECUTION: ${msg.execution}`);
+        if (msg.result) lines.push(`> - RESULT: ${msg.result}`);
+        if (msg.evidence) lines.push(`> - EVIDENCE: ${msg.evidence}`);
+        lines.push(``);
+      }
+      lines.push(`---`);
+      lines.push(``);
+    }
+
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `applywise-transcript-${new Date().toISOString().slice(0, 10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleModelSelect = (newModel: string) => {
+    setActiveModel(newModel);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("applywise_active_model", newModel);
+      window.dispatchEvent(new CustomEvent("applywise_model_changed", { detail: newModel }));
+    }
+  };
+
   const handleSendMessage = async (textToSend: string, approvedActionId?: string) => {
     if (!textToSend.trim() && !approvedActionId) return;
     if (isLoading) return;
@@ -125,6 +212,9 @@ export default function ControlCentrePage() {
     }
 
     setInputValue("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     setIsLoading(true);
 
     const lowerText = userText.toLowerCase();
@@ -158,12 +248,20 @@ export default function ControlCentrePage() {
     }
     setLoadingStatusText(initialProgress);
 
+    // Build multi-turn conversational history payload (last 10 turns)
+    const historyPayload = messages.slice(-10).map((m) => ({
+      role: m.role,
+      content: m.content,
+      intent: m.intent,
+    }));
+
     try {
       const res = await fetch("/api/control/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userText,
+          history: historyPayload,
           modelOverride: activeModel,
           approvedActionId,
           actionConfirmed: !!approvedActionId,
@@ -258,14 +356,23 @@ export default function ControlCentrePage() {
               </div>
             </div>
 
-            {/* Runtime Telemetry Indicators */}
+            {/* Runtime Telemetry Indicators & Controls */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              {/* Interactive Model Selector Dropdown */}
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/60 border border-border/60">
-                <Cpu className="h-3.5 w-3.5 text-purple-400" />
+                <Cpu className="h-3.5 w-3.5 text-purple-400 shrink-0" />
                 <span className="text-foreground-muted">Model:</span>
-                <span className="font-semibold text-foreground truncate max-w-[140px]">
-                  {activeModel.replace("opencode/", "").replace(":free", "")}
-                </span>
+                <select
+                  value={activeModel}
+                  onChange={(e) => handleModelSelect(e.target.value)}
+                  className="bg-transparent font-semibold text-foreground text-xs focus:outline-none cursor-pointer border-none"
+                >
+                  {MODEL_OPTIONS.map((m) => (
+                    <option key={m.id} value={m.id} className="bg-card text-foreground">
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/60 border border-border/60">
@@ -308,6 +415,26 @@ export default function ControlCentrePage() {
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="text-foreground-muted">Master CV:</span>
                 <span className="font-semibold text-emerald-400">3994A09C</span>
+              </div>
+
+              {/* Action Buttons: Export & Clear */}
+              <div className="flex items-center gap-1 ml-1">
+                <button
+                  onClick={handleExportTranscript}
+                  title="Export conversation transcript as Markdown"
+                  className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-secondary/40 text-foreground-muted hover:text-foreground hover:bg-secondary/80 border border-border/40 transition-colors cursor-pointer"
+                >
+                  <Download className="h-3 w-3" />
+                  <span>Export</span>
+                </button>
+                <button
+                  onClick={handleClearChat}
+                  title="Clear conversation"
+                  className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-secondary/40 text-foreground-muted hover:text-rose-400 hover:bg-rose-500/10 border border-border/40 transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Clear</span>
+                </button>
               </div>
             </div>
           </div>
@@ -374,6 +501,19 @@ export default function ControlCentrePage() {
                               [{msg.runtimeStatus}]
                             </span>
                           )}
+                          <button
+                            onClick={() => handleCopyMessage(msg.id, msg.content)}
+                            title="Copy message content"
+                            className="p-1 rounded hover:bg-secondary/80 text-foreground-subtle hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            {copiedId === msg.id ? (
+                              <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-sans">
+                                <Check className="h-3 w-3" /> Copied
+                              </span>
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </button>
                         </div>
                       </div>
 
@@ -524,31 +664,48 @@ export default function ControlCentrePage() {
                   e.preventDefault();
                   handleSendMessage(inputValue);
                 }}
-                className="flex items-center gap-2"
+                className="flex flex-col gap-1.5"
               >
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask a question, inspect system state, or request an operational agent workflow..."
-                  disabled={isLoading}
-                  className="flex-1 rounded-xl bg-secondary/50 border border-border/80 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <Button
-                  type="submit"
-                  variant="default"
-                  disabled={isLoading || !inputValue.trim()}
-                  className="rounded-xl px-4 py-2.5 gap-2"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Send</span>
-                      <Send className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </Button>
+                <div className="flex items-end gap-2">
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(inputValue);
+                      }
+                    }}
+                    placeholder="Ask a question, inspect system state, or request an operational agent workflow..."
+                    disabled={isLoading}
+                    className="flex-1 max-h-44 min-h-[44px] resize-none rounded-xl bg-secondary/50 border border-border/80 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+                  />
+                  <Button
+                    type="submit"
+                    variant="default"
+                    disabled={isLoading || !inputValue.trim()}
+                    className="rounded-xl px-4 py-2.5 gap-2 shrink-0 h-[44px]"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Send</span>
+                        <Send className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-foreground-subtle px-1 font-mono">
+                  <span>Press <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Enter ↵</kbd> to send, <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Shift + Enter</kbd> for new line</span>
+                  {inputValue.length > 0 && <span>{inputValue.length} chars</span>}
+                </div>
               </form>
             </div>
           </div>

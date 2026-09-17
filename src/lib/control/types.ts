@@ -109,6 +109,12 @@ export interface ControlChatMessage {
   pendingAction?: PendingApprovalAction;
 }
 
+export interface ChatHistoryMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  intent?: ControlIntent;
+}
+
 export interface ControlTool {
   name: string;
   description: string;

@@ -5,6 +5,7 @@
  */
 
 import {
+  ChatHistoryMessage,
   ControlPlaneResponse,
   ControlResponseMetadata,
   ControlRuntimeStatus,
@@ -26,12 +27,106 @@ import { logger } from "@/lib/observability/logger";
 
 export interface OrchestratorOptions {
   message: string;
+  history?: ChatHistoryMessage[];
   modelOverride?: string;
   approvedActionId?: string;
   actionConfirmed?: boolean;
 }
 
 export class ControlPlaneOrchestrator {
+  /**
+   * Resolves conversational references and enriches queries using multi-turn chat history.
+   */
+  private static resolveContextualQuery(rawMessage: string, history?: ChatHistoryMessage[]): string {
+    if (!history || history.length === 0) return rawMessage;
+
+    const lower = rawMessage.toLowerCase().trim();
+
+    // Check if query is conversational follow-up or has demonstrative/referential terms
+    const isFollowUp =
+      lower.startsWith("tell me more") ||
+      lower.startsWith("explain more") ||
+      lower.startsWith("what about") ||
+      lower.startsWith("why ") ||
+      lower.startsWith("how ") ||
+      lower.includes("the second") ||
+      lower.includes("the first") ||
+      lower.includes("the third") ||
+      lower.includes("the fourth") ||
+      lower.includes("the fifth") ||
+      lower.includes("that project") ||
+      lower.includes("that role") ||
+      lower.includes("that platform") ||
+      lower.includes("that client") ||
+      lower.includes("that one") ||
+      lower.includes("it use") ||
+      lower.includes("it deploy") ||
+      lower.includes("it work") ||
+      lower.includes("did you") ||
+      lower.includes("did they") ||
+      lower.includes("earlier") ||
+      lower.includes("previously") ||
+      lower.includes("above");
+
+    if (!isFollowUp) return rawMessage;
+
+    // Find the most recent assistant message with rich content
+    const lastAssistantTurn = [...history].reverse().find((h) => h.role === "assistant");
+    if (!lastAssistantTurn) return rawMessage;
+
+    const lastText = lastAssistantTurn.content;
+    const lastTextLower = lastText.toLowerCase();
+
+    // 1. Ordinal resolution (e.g., "tell me more about the second one")
+    let referencedSubject = "";
+    if (lower.includes("first")) {
+      const match = lastText.match(/(?:1\.\s*\*?|•\s*\*\*?|Source 1:\s*)([A-Za-z0-9\s—]+?)(?:\*\*|:|\n|\])/);
+      if (match) referencedSubject = match[1].trim();
+    } else if (lower.includes("second")) {
+      const match = lastText.match(/(?:2\.\s*\*?|•\s*\*\*?|Source 2:\s*)([A-Za-z0-9\s—]+?)(?:\*\*|:|\n|\])/);
+      if (match) referencedSubject = match[1].trim();
+    } else if (lower.includes("third")) {
+      const match = lastText.match(/(?:3\.\s*\*?|•\s*\*\*?|Source 3:\s*)([A-Za-z0-9\s—]+?)(?:\*\*|:|\n|\])/);
+      if (match) referencedSubject = match[1].trim();
+    } else if (lower.includes("fourth")) {
+      const match = lastText.match(/(?:4\.\s*\*?|•\s*\*\*?|Source 4:\s*)([A-Za-z0-9\s—]+?)(?:\*\*|:|\n|\])/);
+      if (match) referencedSubject = match[1].trim();
+    }
+
+    // 2. Named entity matching if no ordinal or ordinal didn't match
+    if (!referencedSubject) {
+      const candidateSubjects = [
+        { name: "EarCodeX InsurTech Platform", patterns: ["earcodex"] },
+        { name: "Supabets Regulated High-Traffic Platform", patterns: ["supabets"] },
+        { name: "NICO Life InsurTech Platform", patterns: ["nico life", "nico"] },
+        { name: "Socinga Smart Mining Platform", patterns: ["socinga"] },
+        { name: "SAMF Archival Platform", patterns: ["samf"] },
+        { name: "AWS Terraform Infrastructure", patterns: ["terraform", "aws blueprints"] },
+        { name: "Enterprise AI Gateways", patterns: ["litellm", "cloudflare ai gateway"] },
+        { name: "IQbusiness AI Solutions Architect", patterns: ["iqbusiness"] },
+      ];
+
+      for (const subj of candidateSubjects) {
+        if (subj.patterns.some((p) => lastTextLower.includes(p))) {
+          referencedSubject = subj.name;
+          break;
+        }
+      }
+    }
+
+    if (referencedSubject) {
+      return `${rawMessage} (in reference to ${referencedSubject})`;
+    }
+
+    // 3. Last user turn reference
+    const lastUserTurn = [...history].reverse().find((h) => h.role === "user" && h.content !== rawMessage);
+    if (lastUserTurn && lastUserTurn.content.length > 5 && lastUserTurn.content.length < 100) {
+      return `${rawMessage} (regarding: ${lastUserTurn.content})`;
+    }
+
+    return rawMessage;
+  }
+
   /**
    * Main entrypoint for processing user messages in the Control Plane.
    */
@@ -40,8 +135,11 @@ export class ControlPlaneOrchestrator {
     const rawMessage = options.message.trim();
     const auditId = `audit-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
-    // 1. Intent Classification
-    const classification = IntentClassifier.classify(rawMessage);
+    // Resolve context from multi-turn history if provided
+    const contextualMessage = this.resolveContextualQuery(rawMessage, options.history);
+
+    // 1. Intent Classification using contextual message
+    const classification = IntentClassifier.classify(contextualMessage);
     const intent = classification.intent;
 
     // Record Prometheus intent telemetry
@@ -64,9 +162,19 @@ export class ControlPlaneOrchestrator {
       controlChatRequestsTotal.inc({ intent, runtime_status: runtimeStatus });
       controlChatDurationSeconds.observe({ intent }, durationSec);
 
+      let reply =
+        "Hello Whitemore. I am the ApplyWise AI control plane. I can coordinate your job-search agents, inspect current system state, analyse eligible opportunities, manage application workflows, query your evidence base, and report on AI/infrastructure operations. What would you like me to do?";
+
+      const lower = rawMessage.toLowerCase();
+      if (/^(thanks|thank you|cheers)/i.test(lower)) {
+        reply =
+          "You are most welcome, Whitemore. Let me know if you would like to inspect your pipeline, verify CV integrity, search opportunities, or prepare an application.";
+      } else if (/^(great|awesome|cool|ok|okay)/i.test(lower)) {
+        reply = "Understood. Ready for your next command or inquiry whenever you are.";
+      }
+
       return {
-        message:
-          "Hello Whitemore. I am the ApplyWise AI control plane. I can coordinate your job-search agents, inspect current system state, analyse eligible opportunities, manage application workflows, query your evidence base, and report on AI/infrastructure operations. What would you like me to do?",
+        message: reply,
         intent: "CONVERSATION",
         groundingCategory: "MODEL_REASONING",
         runtimeStatus,
@@ -358,7 +466,7 @@ export class ControlPlaneOrchestrator {
       case "RAG_QUERY": {
         plan = "Retrieve verified candidate technical evidence and architectural case studies from pgvector.";
         const ragRecord = await ToolRegistry.executeTool("query_rag", {
-          question: rawMessage,
+          question: contextualMessage,
           modelOverride: activeModel,
         });
         toolCalls.push(ragRecord);
@@ -637,7 +745,7 @@ export class ControlPlaneOrchestrator {
       }
 
       default: {
-        const lowerPrompt = rawMessage.toLowerCase();
+        const lowerPrompt = contextualMessage.toLowerCase();
         const hasTechnicalOrCareerIntent =
           lowerPrompt.includes("architect") ||
           lowerPrompt.includes("system") ||
@@ -661,7 +769,7 @@ export class ControlPlaneOrchestrator {
         if (hasTechnicalOrCareerIntent) {
           plan = "Recognized candidate technical/architectural inquiry in fallback path; routing deterministically to query_rag.";
           const ragRecord = await ToolRegistry.executeTool("query_rag", {
-            question: rawMessage,
+            question: contextualMessage,
             modelOverride: activeModel,
           });
           toolCalls.push(ragRecord);

@@ -136,4 +136,40 @@ describe("Control Plane 10-Step Acceptance Test Sequence (Section 44)", () => {
     expect(res.message).toContain("EarCodeX");
     expect(res.message).toContain("Supabets");
   });
+
+  // TEST 12: Multi-turn Follow-Up with Conversational History
+  it("TEST 12: Multi-turn Follow-Up -> resolves context from prior assistant message to answer grounded technical follow-up", async () => {
+    const history = [
+      {
+        role: "user" as const,
+        content: "What do you know about my professional systems architecture background?",
+      },
+      {
+        role: "assistant" as const,
+        content:
+          "1. EarCodeX InsurTech Platform: AWS claims administration\n" +
+          "2. Supabets Regulated High-Traffic Platform: High throughput 12,000 req/sec payment architecture\n" +
+          "3. NICO Life InsurTech Platform",
+      },
+    ];
+
+    const res = await ControlPlaneOrchestrator.processMessage({
+      message: "Tell me more about the second one",
+      history,
+    });
+
+    expect(res.intent).toBe("RAG_QUERY");
+    expect(res.toolCalls.some((t) => t.toolName === "query_rag")).toBe(true);
+    expect(res.message.toLowerCase()).toContain("supabets");
+  });
+
+  // TEST 13: Conversational pleasantry
+  it("TEST 13: Conversational pleasantry -> responds courteously without triggering heavy tools", async () => {
+    const res = await ControlPlaneOrchestrator.processMessage({
+      message: "thanks!",
+    });
+    expect(res.intent).toBe("CONVERSATION");
+    expect(res.toolCalls.length).toBe(0);
+    expect(res.message.toLowerCase()).toContain("welcome");
+  });
 });

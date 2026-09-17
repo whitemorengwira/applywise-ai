@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { ControlPlaneOrchestrator } from "@/lib/control/orchestrator";
+import { ControlIntent } from "@/lib/control/types";
 import { withObservability } from "@/lib/observability/http";
 
 async function handlePost(request: Request) {
   try {
     const body = await request.json();
-    const { message, modelOverride, approvedActionId, actionConfirmed } = body;
+    const { message, history, modelOverride, approvedActionId, actionConfirmed } = body;
 
     if (!message && !approvedActionId) {
       return NextResponse.json(
@@ -14,8 +15,18 @@ async function handlePost(request: Request) {
       );
     }
 
+    // Sanitize history to array of ChatHistoryMessage (last 10 items max to respect free-tier budget)
+    const sanitizedHistory = Array.isArray(history)
+      ? history.slice(-10).map((h: { role?: string; content?: unknown; intent?: unknown }) => ({
+          role: (h.role === "assistant" ? "assistant" : "user") as "assistant" | "user",
+          content: typeof h.content === "string" ? h.content : "",
+          intent: typeof h.intent === "string" ? (h.intent as ControlIntent) : undefined,
+        }))
+      : undefined;
+
     const response = await ControlPlaneOrchestrator.processMessage({
       message: message || "",
+      history: sanitizedHistory,
       modelOverride,
       approvedActionId,
       actionConfirmed: !!actionConfirmed,
