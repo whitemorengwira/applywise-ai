@@ -97,6 +97,14 @@ export class CVIntegrityService {
     };
   }
 
+  static verifyIntegrity(): MasterCVMetadata & { valid: boolean } {
+    const meta = this.verifyMasterCV();
+    return {
+      ...meta,
+      valid: meta.status === "verified",
+    };
+  }
+
   static assertCVImmutable(action: string, _payload?: unknown): void {
     if (action.toLowerCase().includes("update") || action.toLowerCase().includes("mutate") || action.toLowerCase().includes("tailor") || action.toLowerCase().includes("rewrite")) {
       throw new CVImmutabilityViolationError(

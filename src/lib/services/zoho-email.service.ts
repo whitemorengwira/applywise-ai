@@ -66,6 +66,13 @@ export class ZohoEmailService {
   public static readonly SECONDARY_SENDER = "hello@nwhite.systems";
 
   /**
+   * Checks if live SMTP transport is configured via environment variables.
+   */
+  public static isLiveTransportEnabled(): boolean {
+    return !!(process.env.ZOHO_MAIL_APP_PASSWORD || process.env.SMTP_PASSWORD);
+  }
+
+  /**
    * Prepares and validates an email job application adhering strictly to Section 10 & 29.
    */
   public static prepareEmailApplication(payload: EmailApplicationPayload): PreparedEmailApplication {

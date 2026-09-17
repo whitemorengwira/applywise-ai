@@ -409,4 +409,26 @@ export class EligibilityService {
       locationDetails: locResult.locationDetails,
     };
   }
+
+  /**
+   * Compatibility alias for evaluateFullEligibility with expanded compatibility fields
+   */
+  static evaluateJob(job: Partial<JobListing>): DetailedEligibilityResult & {
+    compositeScore: number;
+    geographicEligibility: string;
+    workModeEligibility: string;
+    mandatoryPass: boolean;
+    reasons: string[];
+  } {
+    const result = this.evaluateFullEligibility(job);
+    return {
+      ...result,
+      compositeScore: result.score,
+      geographicEligibility: `${result.locationDetails.market} (${result.locationDetails.workMode})`,
+      workModeEligibility: `${result.locationDetails.workMode} (Eligible)`,
+      mandatoryPass: result.decision !== "DO_NOT_APPLY",
+      reasons: [result.reason],
+    };
+  }
 }
+

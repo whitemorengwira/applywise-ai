@@ -137,7 +137,7 @@ export function ModelSwitcher({ collapsed = false }: ModelSwitcherProps) {
     };
   }, [isOpen]);
 
-  const selectModel = (modelId: string) => {
+  const selectModel = async (modelId: string) => {
     setActiveModelId(modelId);
     setIsOpen(false);
     if (typeof window !== "undefined") {
@@ -146,6 +146,15 @@ export function ModelSwitcher({ collapsed = false }: ModelSwitcherProps) {
       window.dispatchEvent(
         new CustomEvent("applywise_model_changed", { detail: modelId })
       );
+      try {
+        await fetch("/api/control/model", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modelId }),
+        });
+      } catch (err) {
+        console.warn("Failed to sync active model to backend:", err);
+      }
     }
   };
 

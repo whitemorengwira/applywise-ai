@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Terminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSwitcher } from "./model-switcher";
@@ -32,6 +33,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Core",
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Control Centre", href: "/control", icon: Terminal, badge: "Orchestrator" },
       { title: "Job Discovery", href: "/jobs", icon: Briefcase, badge: "Live" },
       { title: "Applications", href: "/applications", icon: Layers },
     ],

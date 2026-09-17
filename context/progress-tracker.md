@@ -35,11 +35,13 @@ Official SaaS name `applywise-ai` established across all platforms: Vercel proje
 | **Phase 19** | Live Autonomous Execution (2 Target Verification) | Completed | Executed `run-1789593666896` in `LIVE_PRODUCTION` via `/api/cron/autonomous-cycle`. Submitted 2 highest-fit Tier 1 African vacancies (SA Direct Portal `PROOF-AW-1789593666869-XTUX9`, ZW Zoho Email `PROOF-AW-1789593666893-XU5XO`). Quota updated: 198 remaining towards 200/week target. |
 | **Phase 20** | Core Production Deficiencies & UX Hardening | Completed | Strict RAG grounding guard (< 0.75 threshold declines ungrounded queries); interactive bottom-left model switcher across 5 OpenCode Zen models with localStorage persistence; `/dashboard` route implemented; Kanban board flexbox layout cleanup; Master CV immutability guaranteed; official ApplyWise AI branded SVG favicon deployed. 69/69 tests passed. |
 | **Phase 21** | Final Forensic QC & Autonomous Operations | Completed | Total forensic claims audit (`CLAIM | EVIDENCE | STATUS`); zero OpenRouter references verified; remote Supabase pgvector populated with 13 chunks & candidate profile; deterministic idempotency keys (`CYCLE-YYYY-MM-DD-B{n}`) & lease management on cloud scheduler; Grafana Dashboards 07 & 08 created; controlled acceptance test on real verified vacancy (IQbusiness AI Solutions Architect, Johannesburg, SA); 17 test files, 81/81 tests passed; 0 lint errors, 0 type errors; 27/27 Next.js production routes compiled. |
+| **Phase 22** | Intelligent Control-Plane Chat & Agent Orchestrator | Completed | Dedicated `/control` command centre; 24-intent classifier; 20-tool registry; LangGraph multi-agent coordination; truthful runtime status reporting (`REAL_AI` vs `SIMULATION_HEURISTIC`); strict approval boundaries for mutating operations; Grafana Dashboard 09 (`09-applywise-control-plane.json`); 20 test files, 118/118 tests passed (100%); 0 lint errors; 0 type errors; 31/31 Next.js production routes compiled. |
 
 ---
 
 ## Production Endpoints & Platforms (Verified)
 - **Official Vercel Root**: `https://applywise-ai-app.vercel.app/` → HTTP 200
+- **Official Control Centre**: `https://applywise-ai-app.vercel.app/control` → HTTP 200 (Intelligent Control Plane)
 - **Official Dashboard**: `https://applywise-ai-app.vercel.app/dashboard` → HTTP 200
 - **Alternative SaaS Alias**: `https://applywise-ai-saas.vercel.app/` → HTTP 200
 - **Synthetic Uptime API**: `https://applywise-ai-app.vercel.app/api/health/synthetic` → HTTP 200 (13 Probes Active)

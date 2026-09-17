@@ -317,6 +317,45 @@ export const syntheticProbeRunsTotal = new Counter({
 });
 
 // -----------------------------------------------------------------------------
+// 10. Control-Plane Chat & Agent Orchestrator Metrics
+// -----------------------------------------------------------------------------
+export const controlChatRequestsTotal = new Counter({
+  name: 'applywise_control_chat_requests_total',
+  help: 'Total count of requests handled by the ApplyWise Control-Plane Chat',
+  labelNames: ['intent', 'runtime_status'] as const,
+  registers: [registry],
+});
+
+export const controlChatDurationSeconds = new Histogram({
+  name: 'applywise_control_chat_request_duration_seconds',
+  help: 'End-to-end execution duration of control plane operations in seconds',
+  labelNames: ['intent'] as const,
+  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+  registers: [registry],
+});
+
+export const controlChatToolCallsTotal = new Counter({
+  name: 'applywise_control_chat_tool_calls_total',
+  help: 'Total tool calls executed by the Control Plane',
+  labelNames: ['tool_name', 'status'] as const,
+  registers: [registry],
+});
+
+export const controlChatIntentTotal = new Counter({
+  name: 'applywise_control_chat_intent_total',
+  help: 'Distribution of detected intents in the Control Plane',
+  labelNames: ['intent'] as const,
+  registers: [registry],
+});
+
+export const controlChatApprovalsTotal = new Counter({
+  name: 'applywise_control_chat_approvals_total',
+  help: 'Count of action approval requests and decisions',
+  labelNames: ['action_type', 'decision'] as const,
+  registers: [registry],
+});
+
+// -----------------------------------------------------------------------------
 // Initialize Default Process & Node.js Metrics Once
 // -----------------------------------------------------------------------------
 if (!globalForMetrics.metricsInitialized) {
