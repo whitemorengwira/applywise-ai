@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-17T14:50:00+02:00
+2026-09-17T18:45:00+02:00
 
 ## Current Phase
-**PHASE 24 COMPLETE & PRODUCTION VERIFIED: CONTROL CHAT INTELLIGENCE & GROUNDED CITATION SYNTHESIS**
-Eliminated control chat generic conversational fallback and ungrounded behavior. Upgraded intent classifier with domain keyword greeting protection, multi-regex matching, and broad technical catch-all. Enhanced SemanticReRanker with empirical architectural keywords and candidate entity boosts. Enforced mandatory RAG grounding and explicit citation tags (`[Source 1: Master CV]`, `[Source 2: N.White Systems]`, etc.) citing EarCodeX, Supabets, NICO Life, Socinga, SAMF, and AWS Terraform. Truthfully report `AI_RUNTIME_UNAVAILABLE` with diagnostic details under zero-simulation governance. Built lightweight, zero-dependency `ChatMarkdownRenderer` parsing tables, code blocks, and emerald citation badges. Real-time dynamic tool execution progress states and responsive right-hand domain tool activity panel. 100% test pass (21 test files, 125/125 tests). 0 lint errors, 0 type errors, clean Next.js build. Live production verified on `https://applywise-ai-app.vercel.app`.
+**PHASE 25 COMPLETE & PRODUCTION VERIFIED: MULTI-TURN CONVERSATIONAL MEMORY & ENTERPRISE CHAT EXPERIENCE**
+Implemented multi-turn conversational memory, context resolution (`resolveContextualQuery`), and enterprise chat features for ApplyWise AI Control Centre at `/control`. Enables fluid follow-up inquiries (e.g., *"Tell me more about the second one"*, *"What AWS services did it use?"*) with automatic entity context resolution against prior turns. Handled conversational pleasantries (*"thanks"*, *"great"*, *"awesome"*, *"got it"*) without redundant tool invocations. Added one-click message copy to clipboard with emerald visual confirmation, full Markdown transcript export (`applywise-transcript-[date].md`), clear conversation reset, interactive inline model selector across all 5 OpenCode Zen models, and auto-expanding multiline textarea with desktop keyboard shortcuts (`Enter` to send, `Shift+Enter` for newline). 100% test pass (21 test files, 127/127 tests). 0 lint errors, 0 type errors, clean Next.js Turbopack build. Pushed to `master` (`a6b2328`).
 
 ---
 
@@ -38,6 +38,7 @@ Eliminated control chat generic conversational fallback and ungrounded behavior.
 | **Phase 22** | Intelligent Control-Plane Chat & Agent Orchestrator | Completed | Dedicated `/control` command centre; 24-intent classifier; 20-tool registry; LangGraph multi-agent coordination; truthful runtime status reporting (`REAL_AI` vs `SIMULATION_HEURISTIC`); strict approval boundaries for mutating operations; Grafana Dashboard 09 (`09-applywise-control-plane.json`); 20 test files, 118/118 tests passed (100%); 0 lint errors; 0 type errors; 31/31 Next.js production routes compiled. |
 | **Phase 23** | Real AI Runtime & Blocker Remediation | Completed | Permanently eliminated `SIMULATION_HEURISTIC` from production (`SIMULATION_REACHABLE_FROM_PRODUCTION = false`). Connected canonical OpenCode Zen API (`https://opencode.ai/zen/v1`). Enforced Section 15 Provider Failure contract (zero fake AI). Verified model switcher backend routing. 21 test files, 120/120 tests passed (100%). 10/10 Live Acceptance Matrix passed on production. |
 | **Phase 24** | Control Chat Intelligence & Grounded Citation Engine | Completed | Eliminated generic fallback text. Upgraded IntentClassifier with greeting protection and broad technical catch-all. Enforced deterministic tool binding (`query_rag`, `search_jobs`, `prepare_application`, `get_master_cv_integrity`, `get_ai_model_status`, `get_scheduler_status`, `get_observability_status`). RAG grounded synthesis with explicit `[Source N: Title]` citation badges. Built `ChatMarkdownRenderer` and real-time execution progress indicator. 21 test files, 125/125 tests passed (100%). Live production verified. |
+| **Phase 25** | Multi-Turn Conversational Memory & Enterprise Chat Experience | Completed | Full multi-turn conversation memory (`history`), context resolution (`resolveContextualQuery`), conversational pleasantries, one-click copy message with visual confirmation, Markdown transcript export, clear conversation, interactive inline model selector, and multiline auto-resizing textarea with keyboard shortcuts. 21 test files, 127/127 tests passed (100%). 0 lint errors, 0 type errors, clean Next.js build. Live production verified. |
 
 ---
 
