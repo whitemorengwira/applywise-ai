@@ -19,6 +19,9 @@ import {
   TrendingUp,
   Layers,
   PenTool,
+  Key,
+  AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 
 interface ModelStatus {
@@ -112,6 +115,32 @@ export default function SettingsPage() {
   });
   const [enableFallback, setEnableFallback] = React.useState(true);
 
+  const [aiProvider, setAiProvider] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("applywise_ai_provider") || "gemini";
+    }
+    return "gemini";
+  });
+  const [apiKey, setApiKey] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("applywise_api_key") || "";
+    }
+    return "";
+  });
+  const [customBaseUrl, setCustomBaseUrl] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("applywise_custom_base_url") || "";
+    }
+    return "";
+  });
+  const [showKey, setShowKey] = React.useState(false);
+  const [testingConnection, setTestingConnection] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState<{
+    tested: boolean;
+    success: boolean;
+    message: string;
+  }>({ tested: false, success: false, message: "" });
+
   // Live model testing state
   const [testingAll, setTestingAll] = React.useState(false);
   const [testingModelId, setTestingModelId] = React.useState<string | null>(null);
@@ -123,9 +152,60 @@ export default function SettingsPage() {
       localStorage.setItem("applywise_reasoning_model", reasoningModel);
       localStorage.setItem("applywise_fast_model", fastModel);
       localStorage.setItem("applywise_temperature", temperature.toString());
+      localStorage.setItem("applywise_ai_provider", aiProvider);
+      localStorage.setItem("applywise_api_key", apiKey);
+      if (customBaseUrl) {
+        localStorage.setItem("applywise_custom_base_url", customBaseUrl);
+      }
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleTestProviderConnection = async () => {
+    setTestingConnection(true);
+    setConnectionStatus({ tested: false, success: false, message: "" });
+    try {
+      const res = await fetch("/api/ai/models", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelId:
+            aiProvider === "gemini"
+              ? "gemini-1.5-flash"
+              : aiProvider === "groq"
+              ? "llama-3.3-70b-versatile"
+              : reasoningModel,
+          apiKey: apiKey || undefined,
+          provider: aiProvider,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.result?.status === "operational") {
+        setConnectionStatus({
+          tested: true,
+          success: true,
+          message: `Connection Verified! Model: ${data.result.modelName} (Latency: ${data.result.latencyMs}ms)`,
+        });
+      } else {
+        setConnectionStatus({
+          tested: true,
+          success: false,
+          message:
+            data.result?.sampleOutput ||
+            data.error ||
+            "Inference check failed. Verify your API key or provider endpoint.",
+        });
+      }
+    } catch (err) {
+      setConnectionStatus({
+        tested: true,
+        success: false,
+        message: err instanceof Error ? err.message : "Network error testing provider connection.",
+      });
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   const handleTestSingle = async (modelId: string) => {
@@ -134,7 +214,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/ai/models", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelId }),
+        body: JSON.stringify({ modelId, apiKey: apiKey || undefined, provider: aiProvider }),
       });
       const data = await res.json();
       if (data.success && data.result) {
@@ -153,7 +233,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/ai/models", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ apiKey: apiKey || undefined, provider: aiProvider }),
       });
       const data = await res.json();
       if (data.success && data.results) {
@@ -173,6 +253,208 @@ export default function SettingsPage() {
   return (
     <AppShell pageTitle="Settings & AI Gateway Configuration">
       <form onSubmit={handleSave} className="space-y-6 max-w-5xl">
+        {/* Active AI Provider & Free-Tier Key Configuration */}
+        <Card className="border-border/80 bg-card/85 p-6 space-y-5 border-l-4 border-l-primary shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <Key className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-foreground">
+                    Active AI Inference Provider & Credentials
+                  </h3>
+                  <Badge variant="success" className="text-[10px] font-mono gap-1">
+                    <ShieldCheck className="h-3 w-3" />
+                    100% ZERO-COST GOVERNANCE
+                  </Badge>
+                </div>
+                <p className="text-xs text-foreground-muted">
+                  Select your preferred 100% free-tier AI inference engine for real, intelligent conversational responses in the Control Plane chat.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTestProviderConnection}
+              disabled={testingConnection}
+              className="gap-2 text-xs border-primary/40 hover:bg-primary/10 self-start sm:self-auto"
+            >
+              {testingConnection ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <PlayCircle className="h-3.5 w-3.5 text-primary" />
+              )}
+              {testingConnection ? "Verifying..." : "Test Connection"}
+            </Button>
+          </div>
+
+          {/* Provider Selection Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              {
+                id: "gemini",
+                title: "Google Gemini Free",
+                tier: "15 RPM Free Tier",
+                desc: "100% free, fast multimodal & reasoning via Google AI Studio.",
+                badge: "Recommended",
+                link: "https://aistudio.google.com",
+              },
+              {
+                id: "groq",
+                title: "Groq Cloud Free",
+                tier: "LPU Ultra-Fast Free",
+                desc: "Sub-second Llama 3.3 70B inference on specialized LPUs.",
+                badge: "High Speed",
+                link: "https://console.groq.com",
+              },
+              {
+                id: "opencode",
+                title: "OpenCode Zen Suite",
+                tier: "5 Free Models",
+                desc: "Flagship Nemotron 3 & Ling 3 suite via OpenCode desktop.",
+                badge: "Default Suite",
+                link: "https://opencode.ai",
+              },
+              {
+                id: "ollama",
+                title: "Local Ollama",
+                tier: "Localhost 11434",
+                desc: "Zero network latency, 100% private inference on local machine.",
+                badge: "Local",
+                link: "https://ollama.com",
+              },
+            ].map((p) => {
+              const isSelected = aiProvider === p.id;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setAiProvider(p.id)}
+                  className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? "bg-primary/15 border-primary shadow-sm ring-1 ring-primary/40"
+                      : "bg-secondary/30 border-border/60 hover:bg-secondary/50 hover:border-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-foreground">{p.title}</span>
+                    <Badge variant={isSelected ? "success" : "secondary"} className="text-[9px]">
+                      {p.badge}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-foreground-muted mb-2 leading-relaxed">{p.desc}</p>
+                  <span className="text-[10px] font-mono text-primary block">{p.tier}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* API Key / Base URL Inputs */}
+          <div className="p-4 rounded-xl bg-secondary/20 border border-border/50 space-y-3">
+            {aiProvider !== "ollama" ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Key className="h-3.5 w-3.5 text-primary" />
+                    {aiProvider === "gemini"
+                      ? "Google Gemini API Key"
+                      : aiProvider === "groq"
+                      ? "Groq Cloud API Key"
+                      : "OpenCode Zen / AI API Key"}
+                  </label>
+                  {aiProvider === "gemini" && (
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                    >
+                      Get Free Gemini Key <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                  {aiProvider === "groq" && (
+                    <a
+                      href="https://console.groq.com/keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                    >
+                      Get Free Groq Key <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type={showKey ? "text" : "password"}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={
+                      aiProvider === "gemini"
+                        ? "Enter your Gemini API key (e.g. AIzaSy...)"
+                        : aiProvider === "groq"
+                        ? "Enter your Groq API key (e.g. gsk_...)"
+                        : "Enter token or leave blank for desktop app"
+                    }
+                    className="w-full bg-background/80 border border-border/70 rounded-lg px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-primary pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-foreground-muted hover:text-foreground px-1.5 py-0.5 rounded bg-secondary/50"
+                  >
+                    {showKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <p className="text-[10px] text-foreground-subtle">
+                  Key is saved securely in your browser session/localStorage and forwarded automatically to the Control Plane copilot.
+                </p>
+                {aiProvider === "opencode" && (
+                  <div className="pt-2">
+                    <label className="text-[11px] text-foreground-muted block mb-1">
+                      Custom Endpoint Base URL (Optional, defaults to https://opencode.ai/zen/v1)
+                    </label>
+                    <input
+                      type="text"
+                      value={customBaseUrl}
+                      onChange={(e) => setCustomBaseUrl(e.target.value)}
+                      placeholder="https://opencode.ai/zen/v1"
+                      className="w-full bg-background/80 border border-border/70 rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-secondary/40 border border-border/40 text-xs text-foreground-muted">
+                <strong>Ollama Connection:</strong> Make sure Ollama is running on your system with{" "}
+                <code className="px-1 py-0.5 bg-background rounded text-primary">ollama run llama3.2</code>. ApplyWise will connect to{" "}
+                <code className="px-1 py-0.5 bg-background rounded text-primary">http://127.0.0.1:11434</code> automatically with zero API key required.
+              </div>
+            )}
+
+            {/* Status notification */}
+            {connectionStatus.tested && (
+              <div
+                className={`p-3 rounded-lg border text-xs flex items-center gap-2 ${
+                  connectionStatus.success
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                }`}
+              >
+                {connectionStatus.success ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                )}
+                <span>{connectionStatus.message}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+
         {/* OpenCode Zen Model Suite Card */}
         <Card className="border-border/80 bg-card/85 p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">

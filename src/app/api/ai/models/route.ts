@@ -23,16 +23,18 @@ async function handlePost(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const modelId = body?.modelId;
+    const apiKey = body?.apiKey;
+    const provider = body?.provider;
 
     if (modelId) {
       // Test single model
-      const result = await AIGateway.testModel(modelId);
+      const result = await AIGateway.testModel(modelId, apiKey, provider);
       return NextResponse.json({ success: true, result });
     }
 
     // Test all 5 models in the suite in parallel
     const results = await Promise.all(
-      OPENCODE_ZEN_MODELS.map((model) => AIGateway.testModel(model.id))
+      OPENCODE_ZEN_MODELS.map((model) => AIGateway.testModel(model.id, apiKey, provider))
     );
 
     return NextResponse.json({

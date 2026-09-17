@@ -19,6 +19,37 @@ import { logger } from "@/lib/observability/logger";
 export class ToolRegistry {
   private static tools: Map<string, ControlTool> = new Map();
 
+  public static getAllJobs() {
+    const verifiedIQBusinessJob = {
+      id: "job-sa-real-iqbusiness",
+      title: "AI Solutions Architect",
+      company: "IQbusiness",
+      location: "Johannesburg, South Africa",
+      workMode: "Hybrid",
+      remoteType: "Hybrid" as const,
+      market: "South Africa",
+      roleTier: "Tier 1: AI / Agentic Systems",
+      postedDaysAgo: 2,
+      applicationRoute: "DIRECT_PORTAL",
+      mandatorySkills: ["AWS", "Bedrock", "Generative AI", "Agentic AI", "Solutions Architecture"],
+      description: "Leading enterprise AI architectures, agentic pipelines, and cloud governance in Johannesburg."
+    };
+    return [verifiedIQBusinessJob, ...SEED_JOBS];
+  }
+
+  public static findJob(queryOrId?: string) {
+    const jobs = this.getAllJobs();
+    if (!queryOrId) return jobs[0];
+    const q = queryOrId.toLowerCase().trim();
+    const exact = jobs.find(j => j.id.toLowerCase() === q);
+    if (exact) return exact;
+    const byCompanyOrTitle = jobs.find(j => 
+      j.company.toLowerCase().includes(q) || 
+      j.title.toLowerCase().includes(q)
+    );
+    return byCompanyOrTitle || jobs[0];
+  }
+
   static initialize() {
     if (this.tools.size > 0) return;
 
@@ -147,26 +178,24 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const verifiedIQBusinessJob = {
-          id: "job-sa-real-iqbusiness",
-          title: "AI Solutions Architect",
-          company: "IQbusiness",
-          location: "Johannesburg, South Africa",
-          workMode: "Hybrid",
-          remoteType: "Hybrid",
-          market: "South Africa",
-          roleTier: "Tier 1: AI / Agentic Systems",
-          postedDaysAgo: 2,
-          applicationRoute: "DIRECT_PORTAL",
-          mandatorySkills: ["AWS", "Bedrock", "Generative AI", "Agentic AI", "Solutions Architecture"],
-          description: "Leading enterprise AI architectures, agentic pipelines, and cloud governance in Johannesburg."
-        };
-
         const locationFilter = (params.location as string) || "";
-        const allJobs = [verifiedIQBusinessJob, ...SEED_JOBS];
-        const filtered = locationFilter
-          ? allJobs.filter(j => j.location.toLowerCase().includes(locationFilter.toLowerCase()))
-          : allJobs;
+        const queryFilter = (params.query as string) || "";
+        const allJobs = ToolRegistry.getAllJobs();
+        let filtered = allJobs;
+        if (locationFilter) {
+          filtered = filtered.filter(j => j.location.toLowerCase().includes(locationFilter.toLowerCase()));
+        }
+        if (queryFilter) {
+          const q = queryFilter.toLowerCase();
+          const queryMatches = filtered.filter(j =>
+            j.title.toLowerCase().includes(q) ||
+            j.company.toLowerCase().includes(q) ||
+            j.description.toLowerCase().includes(q)
+          );
+          if (queryMatches.length > 0) {
+            filtered = queryMatches;
+          }
+        }
 
         return {
           success: true,
@@ -205,8 +234,8 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const jobId = (params.jobId as string) || "job-sa-real-iqbusiness";
-        const job = SEED_JOBS.find(j => j.id === jobId) || SEED_JOBS[0];
+        const target = (params.jobId as string) || (params.query as string) || "job-sa-real-iqbusiness";
+        const job = ToolRegistry.findJob(target);
         const evaluation = EligibilityService.evaluateJob(job);
 
         return {
@@ -234,8 +263,8 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const jobId = (params.jobId as string) || "job-sa-real-iqbusiness";
-        const job = SEED_JOBS.find(j => j.id === jobId) || SEED_JOBS[0];
+        const target = (params.jobId as string) || (params.query as string) || "job-sa-real-iqbusiness";
+        const job = ToolRegistry.findJob(target);
         const evaluation = EligibilityService.evaluateJob(job);
 
         return {
@@ -253,7 +282,7 @@ export class ToolRegistry {
               "Supabets (High-traffic low-latency system design)"
             ],
             eligibilityVerdict: evaluation.decision,
-            recommendation: "Strongest high-fit vacancy in South Africa (Hybrid). Immediate application preparation recommended."
+            recommendation: `High-fit role matching candidate systems architecture background. Immediate preparation recommended.`
           }
         };
       }
@@ -266,7 +295,9 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const company = (params.company as string) || "IQbusiness";
+        const target = (params.company as string) || (params.jobId as string) || "IQbusiness";
+        const job = ToolRegistry.findJob(target);
+        const company = job?.company || target;
         return {
           success: true,
           provenance: "Company Intelligence & Tech Stack Analyzer",
@@ -290,8 +321,8 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const jobId = (params.jobId as string) || "job-sa-real-iqbusiness";
-        const job = SEED_JOBS.find(j => j.id === jobId) || SEED_JOBS[0];
+        const target = (params.jobId as string) || (params.query as string) || "job-sa-real-iqbusiness";
+        const job = ToolRegistry.findJob(target);
         
         return {
           success: true,
@@ -360,8 +391,8 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async (params) => {
-        const jobId = (params.jobId as string) || "job-sa-real-iqbusiness";
-        const job = SEED_JOBS.find(j => j.id === jobId) || SEED_JOBS[0];
+        const target = (params.jobId as string) || (params.query as string) || "job-sa-real-iqbusiness";
+        const job = ToolRegistry.findJob(target);
         const state = await applicationGraph.invoke({
           job,
           dryRun: true
@@ -393,8 +424,8 @@ export class ToolRegistry {
       isMutating: true,
       requiresApproval: true,
       execute: async (params) => {
-        const jobId = (params.jobId as string) || "job-sa-real-iqbusiness";
-        const job = SEED_JOBS.find(j => j.id === jobId) || SEED_JOBS[0];
+        const target = (params.jobId as string) || (params.query as string) || "job-sa-real-iqbusiness";
+        const job = ToolRegistry.findJob(target);
         const route = ((job as unknown as Record<string, unknown>).applicationRoute as string) || "DIRECT_PORTAL";
         
         return {
@@ -483,8 +514,13 @@ export class ToolRegistry {
       isMutating: false,
       requiresApproval: false,
       execute: async () => {
-        const hasValidKey = !!env.OPENCODE_ZEN_API_KEY && !env.OPENCODE_ZEN_API_KEY.includes("free_tier") && !env.OPENCODE_ZEN_API_KEY.includes("public");
+        const hasOpenCode = !!env.OPENCODE_ZEN_API_KEY && !env.OPENCODE_ZEN_API_KEY.includes("free_tier") && !env.OPENCODE_ZEN_API_KEY.includes("public");
+        const hasGemini = !!env.GEMINI_API_KEY;
+        const hasGroq = !!env.GROQ_API_KEY;
+        const hasCustom = !!env.AI_BASE_URL;
+        const hasValidKey = hasOpenCode || hasGemini || hasGroq || hasCustom;
         const runtimeStatus = hasValidKey ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
+        const providerName = hasGemini ? "Google Gemini Free Tier" : hasGroq ? "Groq Cloud Free Tier" : hasCustom ? "Custom OpenAI-Compatible" : "OpenCode Zen 100% Free-Tier Suite";
         const circuitBreakers = AIGateway.getCircuitBreakerStatuses();
         const cbMap: Record<string, string> = {};
         for (const cb of circuitBreakers) {
@@ -498,7 +534,7 @@ export class ToolRegistry {
             runtimeStatus,
             activeReasoningModel: env.OPENCODE_DEFAULT_REASONING_MODEL,
             activeFastModel: env.OPENCODE_FAST_MODEL,
-            provider: "OpenCode Zen 100% Free-Tier Suite",
+            provider: providerName,
             apiBaseUrl: env.OPENCODE_ZEN_BASE_URL,
             freeOnlyMode: env.FREE_ONLY_MODE,
             cloudflareAIGateway: env.CLOUDFLARE_AI_GATEWAY_ENABLED ? "ACTIVE_EDGE_PROXY" : "DIRECT",

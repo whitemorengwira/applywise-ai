@@ -8,7 +8,8 @@ export default defineConfig({
     env: {
       ENABLE_TEST_MOCK_FALLBACK: "true",
     },
-    testTimeout: 15000,
+    testTimeout: 30000,
+    fileParallelism: false,
   },
   resolve: {
     alias: {

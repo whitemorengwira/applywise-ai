@@ -18,6 +18,13 @@ const envSchema = z.object({
   OPENCODE_STRUCTURED_MODEL: z.string().default("mimo-v2.5-free"),
   OPENCODE_CREATIVE_MODEL: z.string().default("muse-spark-1.3-contributor-free"),
 
+  // Multi-Provider Free-Tier & AI Suite Support
+  GEMINI_API_KEY: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
+  AI_BASE_URL: z.string().optional(),
+  AI_API_KEY: z.string().optional(),
+  AI_PROVIDER: z.string().optional().default("auto"),
+
   // Cloudflare AI Gateway (Zero-cost edge proxy & observability)
   CLOUDFLARE_AI_GATEWAY_URL: z.string().optional().default("https://gateway.ai.cloudflare.com/v1/nwhite-systems/applywise-ai"),
   CLOUDFLARE_AI_GATEWAY_ENABLED: z.boolean().default(true),
@@ -46,6 +53,12 @@ export const env = envSchema.parse({
   OPENCODE_LONG_CONTEXT_MODEL: process.env.OPENCODE_LONG_CONTEXT_MODEL || "ling-3.0-flash-fin-free",
   OPENCODE_STRUCTURED_MODEL: process.env.OPENCODE_STRUCTURED_MODEL || "mimo-v2.5-free",
   OPENCODE_CREATIVE_MODEL: process.env.OPENCODE_CREATIVE_MODEL || "muse-spark-1.3-contributor-free",
+
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  AI_BASE_URL: process.env.AI_BASE_URL,
+  AI_API_KEY: process.env.AI_API_KEY,
+  AI_PROVIDER: process.env.AI_PROVIDER || "auto",
 
   CLOUDFLARE_AI_GATEWAY_URL: process.env.CLOUDFLARE_AI_GATEWAY_URL,
   CLOUDFLARE_AI_GATEWAY_ENABLED: process.env.CLOUDFLARE_AI_GATEWAY_ENABLED !== "false",

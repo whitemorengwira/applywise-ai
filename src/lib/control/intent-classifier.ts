@@ -498,7 +498,34 @@ export class IntentClassifier {
       };
     }
 
-    // 20. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
+    // 20. CAREER ADVICE, INTERVIEW PREP & STRATEGY
+    const isCareerOrInterviewQuery =
+      lower.includes("interview") ||
+      lower.includes("advice") ||
+      lower.includes("prepare") ||
+      lower.includes("prep") ||
+      lower.includes("strategy") ||
+      lower.includes("hire") ||
+      lower.includes("hired") ||
+      lower.includes("salary") ||
+      lower.includes("role") ||
+      lower.includes("qualify") ||
+      lower.includes("strengths") ||
+      lower.includes("skills") ||
+      lower.includes("career") ||
+      lower.includes("apply") ||
+      lower.includes("recommend");
+
+    if (isCareerOrInterviewQuery) {
+      return {
+        intent: "CAREER_INTELLIGENCE",
+        confidence: 0.90,
+        extractedEntities: {},
+        reasoning: "Recognized career advisory, interview preparation, or role strategy inquiry.",
+      };
+    }
+
+    // 21. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
     return {
       intent: "UNKNOWN",
       confidence: 0.40,

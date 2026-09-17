@@ -256,6 +256,9 @@ export default function ControlCentrePage() {
     }));
 
     try {
+      const storedApiKey = typeof window !== "undefined" ? localStorage.getItem("applywise_api_key") || undefined : undefined;
+      const storedProvider = typeof window !== "undefined" ? localStorage.getItem("applywise_ai_provider") || undefined : undefined;
+
       const res = await fetch("/api/control/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -263,6 +266,8 @@ export default function ControlCentrePage() {
           message: userText,
           history: historyPayload,
           modelOverride: activeModel,
+          apiKeyOverride: storedApiKey,
+          providerOverride: storedProvider,
           approvedActionId,
           actionConfirmed: !!approvedActionId,
         }),

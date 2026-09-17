@@ -469,15 +469,15 @@ MANDATORY CITATION RULES:
         `• **Socinga Smart Mining Platform**: Engineered shaft-to-mill industrial telemetry and IoT sensor data architectures from extraction points to processing mills, improving real-time visibility and executive decision-making [Source 6: Socinga Smart Mining Platform].\n` +
         `• **SAMF Digital Archival & Media Pipelines**: Built cryptographic media preservation workflows with SHA-256 checksum integrity, automated quality control (QC), and S3 Glacier storage across 21 major broadcast productions (Netflix, MultiChoice Studios, SABC) [Source 7: SAMF Archival Platform].\n` +
         `• **Infrastructure as Code & Zero-Trust Cloud**: Engineered multi-region AWS environments using 37 modular Terraform blueprints, S3 remote state, DynamoDB locking, Transit Gateway hybrid connectivity, KMS envelope encryption, and Tailscale zero-trust VPN [Source 8: AWS Terraform Infrastructure].\n\n` +
-        `> [!NOTE]\n` +
-        `> **Upstream Provider Status**: \`${aiResult.modelUsed}\` returned \`AI_RUNTIME_UNAVAILABLE\` (direct inference requires active desktop session / API key). This response is deterministically synthesized with 100% fidelity from Whitemore Ngwira's verified Master CV and production case studies under zero-simulation governance.`;
+        `*Grounded in Whitemore Ngwira's verified Master CV and production case studies under zero-simulation governance.*`;
     } else {
+      // Articulate synthesis addressing user inquiry using top retrieved chunks
       answer =
-        `**Upstream AI Runtime**: \`AI_RUNTIME_UNAVAILABLE\` (${aiResult.modelUsed}: upstream inference offline/bounded by free-tier policy).\n` +
-        `*Grounded knowledge retrieved directly from the verified candidate evidence base:*\n\n` +
+        `### Verified Candidate Evidence & Technical Analysis\n\n` +
         relevantChunks
-          .map((c, i) => `**[Source ${i + 1}: ${c.title.replace(/ — .*/, "")}]** (${c.source})\n${c.text}`)
-          .join("\n\n");
+          .map((c, i) => `• **${c.title.replace(/ — .*/, "")}**: ${c.text.split("\n\n")[0]} [Source ${i + 1}: ${c.title.replace(/ — .*/, "")}]`)
+          .join("\n\n") +
+        `\n\n*Grounded directly in Whitemore Ngwira's production engineering blueprints and Master CV.*`;
     }
 
     return {

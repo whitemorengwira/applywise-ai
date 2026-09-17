@@ -6,7 +6,7 @@ import { withObservability } from "@/lib/observability/http";
 async function handlePost(request: Request) {
   try {
     const body = await request.json();
-    const { message, history, modelOverride, approvedActionId, actionConfirmed } = body;
+    const { message, history, modelOverride, apiKeyOverride, providerOverride, approvedActionId, actionConfirmed } = body;
 
     if (!message && !approvedActionId) {
       return NextResponse.json(
@@ -28,6 +28,8 @@ async function handlePost(request: Request) {
       message: message || "",
       history: sanitizedHistory,
       modelOverride,
+      apiKeyOverride,
+      providerOverride,
       approvedActionId,
       actionConfirmed: !!actionConfirmed,
     });

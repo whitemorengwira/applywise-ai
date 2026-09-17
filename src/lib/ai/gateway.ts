@@ -18,6 +18,8 @@ export interface AICallOptions {
   temperature?: number;
   maxTokens?: number;
   modelOverride?: string;
+  apiKeyOverride?: string;
+  providerOverride?: string;
 }
 
 export interface AICallResult {
@@ -310,6 +312,88 @@ export class AIGateway {
     return [primary, ...fallbacks.map((f) => this.toCanonicalModelId(f)).filter((m) => m !== primary)];
   }
 
+  static resolveProviderConfig(model: string, options: AICallOptions): {
+    endpoint: string;
+    headers: Record<string, string>;
+    requestModel: string;
+    providerName: string;
+  } {
+    const rawKey = options.apiKeyOverride || "";
+    const provider = options.providerOverride || env.AI_PROVIDER || "auto";
+
+    // 1. Google Gemini Free Tier
+    const geminiKey = (provider === "gemini" ? rawKey : "") || env.GEMINI_API_KEY || (rawKey.startsWith("AIza") ? rawKey : "");
+    if (geminiKey) {
+      return {
+        endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        headers: {
+          Authorization: `Bearer ${geminiKey}`,
+          "Content-Type": "application/json",
+        },
+        requestModel: "gemini-1.5-flash",
+        providerName: "Google Gemini Free",
+      };
+    }
+
+    // 2. Groq Free Tier
+    const groqKey = (provider === "groq" ? rawKey : "") || env.GROQ_API_KEY || (rawKey.startsWith("gsk_") ? rawKey : "");
+    if (groqKey) {
+      return {
+        endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        headers: {
+          Authorization: `Bearer ${groqKey}`,
+          "Content-Type": "application/json",
+        },
+        requestModel: "llama-3.3-70b-versatile",
+        providerName: "Groq Free",
+      };
+    }
+
+    // 3. Local Ollama (if requested or configured)
+    if (provider === "ollama") {
+      return {
+        endpoint: "http://127.0.0.1:11434/v1/chat/completions",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        requestModel: "llama3.2",
+        providerName: "Local Ollama",
+      };
+    }
+
+    // 4. Custom OpenAI Compatible endpoint
+    if (env.AI_BASE_URL) {
+      return {
+        endpoint: `${env.AI_BASE_URL.replace(/\/+$/, "")}/chat/completions`,
+        headers: {
+          ...(env.AI_API_KEY || rawKey ? { Authorization: `Bearer ${env.AI_API_KEY || rawKey}` } : {}),
+          "Content-Type": "application/json",
+        },
+        requestModel: model,
+        providerName: "Custom OpenAI-Compatible",
+      };
+    }
+
+    // 5. Default OpenCode Zen Free Suite
+    const openCodeKey = (provider === "opencode" ? rawKey : "") || env.OPENCODE_ZEN_API_KEY || rawKey;
+    return {
+      endpoint: `${env.OPENCODE_ZEN_BASE_URL}/chat/completions`,
+      headers: {
+        Authorization: `Bearer ${openCodeKey || "public"}`,
+        "Content-Type": "application/json",
+        "User-Agent": "opencode/1.18.29",
+        "x-opencode-client": "desktop",
+        "x-opencode-session": `ses_aw_${Date.now()}`,
+        "x-opencode-request": `req_aw_${Date.now()}`,
+        "x-opencode-project": "applywise-ai",
+        "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
+        "X-Title": "ApplyWise AI",
+      },
+      requestModel: model,
+      providerName: "OpenCode Zen",
+    };
+  }
+
   static async complete(options: AICallOptions): Promise<AICallResult> {
     const startTime = Date.now();
     const primaryModel = this.selectModel(options.taskType, options.modelOverride);
@@ -339,25 +423,15 @@ export class AIGateway {
       }
 
       const boundedModel = this.normalizeModelName(model);
+      const providerConfig = AIGateway.resolveProviderConfig(model, options);
 
       try {
-        const targetEndpoint = `${env.OPENCODE_ZEN_BASE_URL}/chat/completions`;
-
-        const response = await fetch(targetEndpoint, {
+        const response = await fetch(providerConfig.endpoint, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${env.OPENCODE_ZEN_API_KEY || "public"}`,
-            "Content-Type": "application/json",
-            "User-Agent": "opencode/1.18.29",
-            "x-opencode-client": "desktop",
-            "x-opencode-session": `ses_aw_${Date.now()}`,
-            "x-opencode-request": `req_aw_${Date.now()}`,
-            "x-opencode-project": "applywise-ai",
-            "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
-            "X-Title": "ApplyWise AI",
-          },
+          headers: providerConfig.headers,
+          signal: AbortSignal.timeout(5000),
           body: JSON.stringify({
-            model,
+            model: providerConfig.requestModel,
             messages: [
               ...(options.systemPrompt ? [{ role: "system", content: options.systemPrompt }] : []),
               { role: "user", content: options.prompt },
@@ -371,7 +445,7 @@ export class AIGateway {
 
         if (!response.ok) {
           const errText = await response.text().catch(() => "");
-          throw new Error(`OpenCode Zen API returned HTTP ${response.status}: ${errText || response.statusText}`);
+          throw new Error(`${providerConfig.providerName} API returned HTTP ${response.status}: ${errText || response.statusText}`);
         }
 
         const data = await response.json();
@@ -504,7 +578,11 @@ export class AIGateway {
     return OPENCODE_ZEN_MODELS;
   }
 
-  static async testModel(modelId: string): Promise<{
+  static async testModel(
+    modelId: string,
+    apiKeyOverride?: string,
+    providerOverride?: string
+  ): Promise<{
     modelId: string;
     modelName: string;
     status: "operational" | "unavailable";
@@ -536,6 +614,8 @@ export class AIGateway {
       taskType,
       prompt: `Health check benchmark and inference verification for model: ${catalogEntry.name}`,
       modelOverride: modelId,
+      apiKeyOverride,
+      providerOverride,
     });
 
     return {
