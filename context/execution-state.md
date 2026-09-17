@@ -31,19 +31,18 @@
 | **Phase 10** | Infrastructure-as-Code (Terraform) | `[x] COMPLETE` | Terraform modules, dev/prod, `terraform fmt`, `terraform validate` passed |
 | **Phase 11** | Recruiter Live Demonstration & Final Documentation | `[x] COMPLETE` | `docs/observability-demo.md`, `docs/technology-stack.md`, updated `README.md` |
 | **Phase 12** | Production Deployment (Vercel) | `[x] COMPLETE` | Official project `applywise-ai`, live at `https://applywise-ai-app.vercel.app` (HTTP 200) |
-| **Phase 13** | External Platform Config (Supabase + Grafana Cloud) | `[x] COMPLETE` | Dedicated project created, 25 tables migrated, Grafana dashboards imported |
-| **Phase 14** | Candidate Intelligence & Geographic Rule Engine | `[x] COMPLETE` | Master prompt & role catalogue tracked; location rules enforced |
+| **Phase 21** | Final Forensic QC & Autonomous Operations | `[x] COMPLETE` | Forensic claims audit, zero OpenRouter, remote pgvector verified, Grafana Dashboards 07 & 08, 17 test files, 81/81 passed |
+| **Phase 22** | Intelligent Control-Plane Chat & Agent Orchestrator | `[x] COMPLETE` | Dedicated `/control` command centre, 24 intents, 20 tools, LangGraph orchestration, approval boundaries, Grafana Dashboard 09, 20 test files, 118/118 passed, 10/10 live production acceptance |
 
 ---
 
 ## 2. Quality Gate Verification Results
 
-- **`terraform fmt -check -recursive`**: `[x] PASSED (Code 0, 0 violations)`
-- **`terraform validate`**: `[x] PASSED (Success! The configuration is valid.)`
 - **`npm run type-check`**: `[x] PASSED (0 errors, strict mode)`
-- **`npm run lint`**: `[x] PASSED (0 errors, 0 warnings)`
-- **`npm test`**: `[x] PASSED (4 test files, 13/13 tests passed)`
-- **`npm run build`**: `[x] PASSED (All 22 routes compiled cleanly)`
+- **`npm run lint`**: `[x] PASSED (0 errors, strict mode)`
+- **`npm test`**: `[x] PASSED (20 test files, 118/118 tests passed, 100%)`
+- **`npm run build`**: `[x] PASSED (All 31 production routes compiled cleanly)`
+- **`Live Vercel Acceptance Matrix`**: `[x] PASSED (10/10 tests passed against https://applywise-ai-app.vercel.app)`
 
 ---
 
