@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-18T17:25:00+02:00
+2026-09-18T18:15:00+02:00
 
 ## Current Phase
-**PHASE 28 COMPLETE & PRODUCTION READY: UNIVERSAL AI ASSISTANT & COGNITIVE KNOWLEDGE ENGINE**
-Eliminated narrow domain rejections and the robotic canned menu on `/control`. Built the `UniversalKnowledgeEngine` powering universal answers across world geography, 30+ world capitals (including Beijing for China, Pretoria/Cape Town/Bloemfontein for South Africa, Harare for Zimbabwe, Lilongwe for Malawi, Washington D.C., London, Paris, Tokyo, etc.), mathematics & quantitative calculations, science & physics (speed of light, speed of sound, gravity, planets, DNA, photosynthesis), and computer science & networking (TCP vs UDP, DNS resolution, Docker vs VMs, binary search, REST vs GraphQL). Upgraded `IntentClassifier` with `GENERAL_KNOWLEDGE` classification. Suppressed `UNKNOWN` and `GENERAL_KNOWLEDGE` badges from message headers in `/control`. Ensured `Operational Trace & Evidence` accordion strictly renders only when actual backend tools are run (`toolCalls.length > 0`), maintaining clean, executive conversational presentation. Preserved strict candidate evidence grounding for career queries regarding Whitemore Ngwira's credentials and case studies (EarCodeX, Supabets, NICO Life, Socinga, 37 Terraform modules). 100% test pass (22 test files, 141/141 tests), 0 lint errors, 0 type errors, clean Next.js Turbopack build.
+**PHASE 29 COMPLETE & PRODUCTION READY: IMMUTABLE MASTER CV & COVER LETTER TAILORING WORKFLOW**
+Eliminated all user-facing references to tailoring or modifying the Master CV. Replaced "Proceed to Tailor CV", "Tailor CV", and "Tailor Application" with "Proceed to Tailor Cover Letter" and "Tailor Cover Letter" across all views (Job Discovery, Deep Match modal, Dashboard quick actions, Applications Kanban board, and Match Scoring service). Updated model system prompt and post-processing to explicitly preserve the cryptographically immutable Master CV (`whitemore_ngwira_cv_n.white.pdf`, SHA-256 `3994a09c2beb4468dbee8f265d2c9797a2e9fdcbde4aa8fbecdfb2c04ed45bd7`) and route candidate customization strictly through the Executive Cover Letter Studio (`/cover-letters?jobId=...`). Dynamically pre-populates target job context and grounded evidence in Cover Letter Studio. 100% test pass (22 test files, 141/141 tests), 0 lint errors, 0 type errors, clean Next.js Turbopack build, pushed to GitHub (`master` & `main`), and deployed live to production at `https://applywise-ai-app.vercel.app`.
 
 ---
 
@@ -13,6 +13,7 @@ Eliminated narrow domain rejections and the robotic canned menu on `/control`. B
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
+| **Phase 29** | Immutable Master CV & Cover Letter Tailoring | Completed | Modal and action buttons re-routed to `/cover-letters`; Master CV SHA-256 locked; 141/141 tests passed; live production verified |
 | **Phase 0** | Context Architecture & Agent Skills | Completed | 12 context files, 5 skills, ADR-001..ADR-007 |
 | **Phase 1** | Project Setup & Tooling | Completed | Next.js 15, TypeScript, Tailwind, Vitest, ESLint |
 | **Phase 2** | Database Schema & Seed Data | Completed | 35+ tables PostgreSQL schema, pgvector, Whitemore Ngwira verified data |
