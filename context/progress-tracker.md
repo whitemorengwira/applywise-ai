@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-18T18:15:00+02:00
+2026-09-18T18:45:00+02:00
 
 ## Current Phase
-**PHASE 29 COMPLETE & PRODUCTION READY: IMMUTABLE MASTER CV & COVER LETTER TAILORING WORKFLOW**
-Eliminated all user-facing references to tailoring or modifying the Master CV. Replaced "Proceed to Tailor CV", "Tailor CV", and "Tailor Application" with "Proceed to Tailor Cover Letter" and "Tailor Cover Letter" across all views (Job Discovery, Deep Match modal, Dashboard quick actions, Applications Kanban board, and Match Scoring service). Updated model system prompt and post-processing to explicitly preserve the cryptographically immutable Master CV (`whitemore_ngwira_cv_n.white.pdf`, SHA-256 `3994a09c2beb4468dbee8f265d2c9797a2e9fdcbde4aa8fbecdfb2c04ed45bd7`) and route candidate customization strictly through the Executive Cover Letter Studio (`/cover-letters?jobId=...`). Dynamically pre-populates target job context and grounded evidence in Cover Letter Studio. 100% test pass (22 test files, 141/141 tests), 0 lint errors, 0 type errors, clean Next.js Turbopack build, pushed to GitHub (`master` & `main`), and deployed live to production at `https://applywise-ai-app.vercel.app`.
+**PHASE 30 COMPLETE & PRODUCTION READY: LIVE REAL JOB DISCOVERY & AUTHENTIC PORTAL INTEGRATION**
+Completely eliminated hallucinated, mock, or broken job links (`example.com`, non-existent domains). Built `JobDiscoveryService` powering live public feed ingestion from Remotive and Arbeitnow APIs, combined with verified Tier 1 African and global corporate career portals (Synthesia `synthesia.io/careers`, Entelect `culture.entelect.co.za/join-us/`, IQbusiness `iqbusiness.net/careers`, Amazon Web Services `amazon.jobs`, Takealot Group `takealot.com/about/careers`, Econet Wireless `econet.co.zw`). Connected `/api/jobs` to dynamic multi-source feed discovery with in-memory caching and canonical deduplication. Modernized `/jobs` page with live sync button ("Sync Live Jobs"), real-time vacancy counter ("30 Real Vacancies"), domain-grounded direct apply links ("Apply on [domain]"), and custom vacancy ingestion with explicit application URL validation. 100% test pass (23 test files, 145/145 tests), 0 lint errors, 0 type errors, clean Next.js Turbopack build, pushed to GitHub (`master` & `main`), and deployed live to production at `https://applywise-ai-app.vercel.app`.
 
 ---
 
@@ -13,6 +13,7 @@ Eliminated all user-facing references to tailoring or modifying the Master CV. R
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
+| **Phase 30** | Live Real Job Discovery & Authentic Portals | Completed | Zero fake URLs; live feeds + verified African portals; 145/145 tests passed; live production verified |
 | **Phase 29** | Immutable Master CV & Cover Letter Tailoring | Completed | Modal and action buttons re-routed to `/cover-letters`; Master CV SHA-256 locked; 141/141 tests passed; live production verified |
 | **Phase 0** | Context Architecture & Agent Skills | Completed | 12 context files, 5 skills, ADR-001..ADR-007 |
 | **Phase 1** | Project Setup & Tooling | Completed | Next.js 15, TypeScript, Tailwind, Vitest, ESLint |
