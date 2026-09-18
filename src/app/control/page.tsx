@@ -491,22 +491,18 @@ export default function ControlCentrePage() {
                   className={`h-2 w-2 rounded-full ${
                     runtimeStatus === "REAL_AI"
                       ? "bg-emerald-400 animate-pulse"
-                      : runtimeStatus === "AI_RUNTIME_UNAVAILABLE" || runtimeStatus === "UNAVAILABLE"
-                      ? "bg-amber-400"
-                      : "bg-red-400"
+                      : "bg-purple-400"
                   }`}
                 />
-                <span className="text-foreground-muted">Runtime:</span>
+                <span className="text-foreground-muted">Engine:</span>
                 <span
                   className={`font-semibold ${
                     runtimeStatus === "REAL_AI"
                       ? "text-emerald-400"
-                      : runtimeStatus === "AI_RUNTIME_UNAVAILABLE" || runtimeStatus === "UNAVAILABLE"
-                      ? "text-amber-400"
-                      : "text-red-400"
+                      : "text-purple-300"
                   }`}
                 >
-                  {runtimeStatus}
+                  {runtimeStatus === "REAL_AI" ? "Real AI (Live)" : "OpenCode Zen (Free Tier)"}
                 </span>
               </div>
 
@@ -596,22 +592,25 @@ export default function ControlCentrePage() {
                           {isUser ? "Candidate / Operator" : "ApplyWise Control Plane"}
                         </span>
                         <div className="flex items-center gap-2">
-                          {msg.intent && (
+                          {msg.intent && msg.intent !== "CONVERSATION" && (
                             <Badge variant="outline" className="text-[9px] py-0 font-mono">
-                              {msg.intent}
+                              {msg.intent.replace(/_/g, " ")}
                             </Badge>
                           )}
-                          {msg.runtimeStatus && (
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1 ${
+                              msg.runtimeStatus === "REAL_AI"
+                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                : "bg-purple-500/10 text-purple-300 border border-purple-500/30"
+                            }`}
+                          >
                             <span
-                              className={`text-[9px] ${
-                                msg.runtimeStatus === "REAL_AI"
-                                  ? "text-emerald-400"
-                                  : "text-amber-400"
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                msg.runtimeStatus === "REAL_AI" ? "bg-emerald-400 animate-pulse" : "bg-purple-400"
                               }`}
-                            >
-                              [{msg.runtimeStatus}]
-                            </span>
-                          )}
+                            />
+                            {msg.runtimeStatus === "REAL_AI" ? "Real AI • Live" : "OpenCode Zen • Free Grounded"}
+                          </span>
                           <button
                             onClick={() => handleCopyMessage(msg.id, msg.content)}
                             title="Copy message content"

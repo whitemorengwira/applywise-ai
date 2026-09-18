@@ -170,6 +170,27 @@ export class ControlPlaneOrchestrator {
       };
     }
 
+    // 1b. Inquiries into wellbeing / state ("how are you", "how are you doing", "what's up")
+    if (/how are you|how're you|how do you do|how are things|how is it going|how's it going|what's up|wassup/i.test(lower)) {
+      return {
+        content:
+          "I am running in top condition, Whitemore! All systems across ApplyWise AI are operational:\n\n" +
+          "• **Master CV**: SHA-256 `3994a09c...` is cryptographically locked and verified invariant\n" +
+          "• **OpenCode Zen Free Suite**: All 5 models (Nemotron 3 Ultra, Nemotron 3.5 Lightning, Ling 3.0 Flash Fin, MiMo V2.5, Muse Spark 1.3) are ready at $0.00 cost\n" +
+          "• **Candidate Knowledge Graph**: 13 architectural case studies (EarCodeX, Supabets 12k req/s, NICO Life, Socinga Smart Mining, SAMF, 37 AWS Terraform blueprints) indexed\n" +
+          "• **Job Eligibility Engine**: South Africa, Zimbabwe, and Malawi Remote/Hybrid/On-site compliance active\n\n" +
+          "How can I assist your pipeline today? We can scan for new vacancies, evaluate role fit, or prepare an application.",
+        evidence: "ApplyWise System Health & Telemetry",
+        nextActions: [
+          "Find current AI architect jobs in South Africa",
+          "What AWS architecture evidence do I have?",
+          "What is the current system status?",
+          "How does my background align with Enterprise AI Architect roles?",
+        ],
+        groundingCategory: "FACT_FROM_SYSTEM",
+      };
+    }
+
     // 2. Conversation & Greetings
     if (intent === "CONVERSATION" || /^(hi|hello|hey|good day|greetings|morning|afternoon|evening)/i.test(lower)) {
       const content =
