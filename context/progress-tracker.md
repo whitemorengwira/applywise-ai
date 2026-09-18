@@ -1,11 +1,11 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-18T18:45:00+02:00
+2026-09-18T22:05:00+02:00
 
 ## Current Phase
-**PHASE 31 COMPLETE & PRODUCTION READY: REGIONAL CURRENCY NORMALIZATION (ZAR/USD), WHISPER VOICE, GEMINI GEMS, AUTOMATIONS HARNESS, OBSERVABILITY & NEWS THREADS**
-Systematically eliminated all British Pound (`£`) figures across all pages, strictly enforcing South African Rands (`R ... ZAR`) for South African vacancies and US Dollars (`$ ... USD`) for Zimbabwe, Pan-Africa, and Global Remote. Integrated Groq Whisper speech-to-text (`/api/ai/transcribe`) and executive British Text-to-Speech audio interaction in the Control Centre. Deployed Google Gemini-style Gems (6 specialized personas), Chat History drawer, and Add Knowledge modal. Built Claude Code / Codex styled Automations Command Centre (`/automations`) with interactive toggles and streaming logs. Deployed Observability Command Centre (`/observability`) linking 9 Grafana Cloud dashboards (`ardentcosmos829.grafana.net`), 13 synthetic Prometheus probes, and AWS CloudWatch/CloudTrail streams. Launched Industry Intelligence & Tech News threads (`/news`) grounded in Whitemore Ngwira's CV. Codified Zoho Business Mail MCP Server (`src/lib/mcp/zoho-mail-mcp.ts`). All 24 test suites (154/154 unit tests) passing, 0 lint errors, 0 type errors, 36 Next.js production routes compiled, pushed to GitHub (`master` & `main`), deployed live to Vercel production at `https://applywise-ai-app.vercel.app`, and visually verified in browser.
+**PHASE 32 COMPLETE & PRODUCTION READY: ZERO-DOWNLOAD IN-APP APPLICATION VALUE CHAIN, DEDICATED INTERNAL BROWSER, PORTAL MCP CONNECTORS & PERMANENT APPLIED INVENTORY LEDGER**
+Implemented complete in-app application value chain allowing 1-click end-to-end application submission directly within the app without requiring file downloads. Built dedicated OpenAI Codex / Claude Code styled Internal Browser harness (`/browser`) with interactive Omnibox, viewport, DOM inspector, and live console logs. Verified 4 permanently authenticated portal sessions (LinkedIn Easy Apply, PNet South Africa, Indeed Quick Apply, Zoho Business Mail). Codified 4 dedicated portal MCP connectors (`pnet-mcp.ts`, `indeed-mcp.ts`, `linkedin-mcp.ts`, `internal-browser-mcp.ts`). Built permanent Application Inventory Ledger (`/applications`) tracking proof hashes, regional compensation (ZAR/USD), and submission routes. 162/162 unit tests passing across 26 test files, 0 lint errors, 0 type errors, 37 Next.js production routes compiled, pushed to GitHub (`master` & `main`), deployed live to Vercel production at `https://applywise-ai-app.vercel.app`, and visually verified in browser with video recording.
 
 ---
 
@@ -13,6 +13,7 @@ Systematically eliminated all British Pound (`£`) figures across all pages, str
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
+| **Phase 32** | In-App Apply Value Chain, Internal Browser, Portal MCPs & Permanent Ledger | Completed | Zero downloads; 5-stage value chain; Codex-style /browser; 4 permanent sessions (LinkedIn, PNet, Indeed, Zoho); 4 portal MCP connectors; permanent applied ledger on /applications; 162/162 tests passed; live production verified |
 | **Phase 31** | Currency Normalization, Whisper Voice, Gems, Automations, Observability & News | Completed | Zero £ symbols; ZAR for SA, USD for ZW/Global; Whisper + TTS audio chat; Gemini Gems; /automations harness; /observability Grafana/Prometheus; /news threads; Zoho MCP; 154/154 tests passed; live production verified |
 | **Phase 30** | Live Real Job Discovery & Authentic Portals | Completed | Zero fake URLs; live feeds + verified African portals; 145/145 tests passed; live production verified |
 | **Phase 29** | Immutable Master CV & Cover Letter Tailoring | Completed | Modal and action buttons re-routed to `/cover-letters`; Master CV SHA-256 locked; 141/141 tests passed; live production verified |
