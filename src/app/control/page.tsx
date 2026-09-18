@@ -22,6 +22,9 @@ import {
   Check,
   RotateCcw,
   Download,
+  Zap,
+  TrendingUp,
+  PenTool,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
 import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
@@ -36,13 +39,98 @@ function createMessageId(prefix: string): string {
   return `${prefix}-${Date.now()}-${msgSeq}`;
 }
 
-const MODEL_OPTIONS = [
-  { id: "nemotron-3-ultra-free", name: "Nemotron 3 Ultra (Free)" },
-  { id: "nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning (Free)" },
-  { id: "ling-3.0-flash-fin-free", name: "Ling 3.0 Flash Fin (Free)" },
-  { id: "muse-spark-1.3-contributor-free", name: "Muse Spark 1.3 Contributor (Free)" },
-  { id: "deepseek-v3.0-coder-free", name: "DeepSeek v3 Coder (Free)" },
+export interface OpenCodeZenModel {
+  id: string;
+  name: string;
+  subtitle: string;
+  badge: string;
+  iconName: "sparkles" | "zap" | "trending-up" | "layers" | "pen-tool";
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  contextLimit: string;
+  category: "OpenCode Zen";
+}
+
+export const OPENCODE_ZEN_FREE_SUITE: OpenCodeZenModel[] = [
+  {
+    id: "nemotron-3-ultra-free",
+    name: "Nemotron 3 Ultra",
+    subtitle: "Complex Reasoning & Agentic...",
+    badge: "Free",
+    iconName: "sparkles",
+    color: "text-purple-400",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/40",
+    contextLimit: "1,000,000",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "nemotron-3.5-lightning-free",
+    name: "Nemotron 3.5 Lightning",
+    subtitle: "Fast Extraction & Parsing",
+    badge: "Free",
+    iconName: "zap",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/40",
+    contextLimit: "256,000",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "ling-3.0-flash-fin-free",
+    name: "Ling 3.0 Flash Fin",
+    subtitle: "Financial & System Benchmarks",
+    badge: "Free",
+    iconName: "trending-up",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/40",
+    contextLimit: "512,000",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "mimo-v2.5-free",
+    name: "MiMo V2.5",
+    subtitle: "Multimodal Layout Analysis",
+    badge: "Free",
+    iconName: "layers",
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/40",
+    contextLimit: "1,000,000",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "muse-spark-1.3-contributor-free",
+    name: "Muse Spark 1.3",
+    subtitle: "Adaptive Creative Drafting",
+    badge: "Free",
+    iconName: "pen-tool",
+    color: "text-pink-400",
+    bgColor: "bg-pink-500/10",
+    borderColor: "border-pink-500/40",
+    contextLimit: "256,000",
+    category: "OpenCode Zen",
+  },
 ];
+
+function renderModelIcon(iconName: string, colorClass: string) {
+  switch (iconName) {
+    case "sparkles":
+      return <Sparkles className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "zap":
+      return <Zap className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "trending-up":
+      return <TrendingUp className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "layers":
+      return <Layers className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "pen-tool":
+      return <PenTool className={`h-3.5 w-3.5 ${colorClass}`} />;
+    default:
+      return <Sparkles className={`h-3.5 w-3.5 ${colorClass}`} />;
+  }
+}
 
 const INITIAL_MESSAGE: ControlChatMessage = {
   id: "welcome-msg",
@@ -81,6 +169,24 @@ export default function ControlCentrePage() {
   const [pendingApproval, setPendingApproval] = React.useState<PendingApprovalAction | null>(null);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [showModelMenu, setShowModelMenu] = React.useState(false);
+
+  const currentModel =
+    OPENCODE_ZEN_FREE_SUITE.find((m) => m.id === activeModel) || OPENCODE_ZEN_FREE_SUITE[0];
+
+  const totalTokens = React.useMemo(() => {
+    let input = 12450;
+    let output = 3120;
+    let reasoning = 420;
+    for (const msg of messages) {
+      if (msg.role === "user") input += Math.round(msg.content.length * 1.3);
+      if (msg.role === "assistant") {
+        output += Math.round(msg.content.length * 0.9);
+        reasoning += Math.round(msg.content.length * 0.15);
+      }
+    }
+    return { input, output, reasoning, total: input + output + reasoning };
+  }, [messages]);
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -372,9 +478,9 @@ export default function ControlCentrePage() {
                   onChange={(e) => handleModelSelect(e.target.value)}
                   className="bg-transparent font-semibold text-foreground text-xs focus:outline-none cursor-pointer border-none"
                 >
-                  {MODEL_OPTIONS.map((m) => (
+                  {OPENCODE_ZEN_FREE_SUITE.map((m) => (
                     <option key={m.id} value={m.id} className="bg-card text-foreground">
-                      {m.name}
+                      {m.name} (Free)
                     </option>
                   ))}
                 </select>
@@ -707,9 +813,67 @@ export default function ControlCentrePage() {
                     )}
                   </Button>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-foreground-subtle px-1 font-mono">
-                  <span>Press <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Enter ↵</kbd> to send, <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Shift + Enter</kbd> for new line</span>
-                  {inputValue.length > 0 && <span>{inputValue.length} chars</span>}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/40">
+                  {/* OpenCode Zen Model Selector Button directly inside chat input */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowModelMenu(!showModelMenu)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary border border-border/80 text-xs text-foreground font-medium transition-all shadow-sm cursor-pointer"
+                    >
+                      {renderModelIcon(currentModel.iconName, currentModel.color)}
+                      <span className="font-mono text-[11px] font-semibold">{currentModel.name} Free</span>
+                      <ChevronDown className="h-3 w-3 text-foreground-subtle ml-0.5" />
+                    </button>
+
+                    {showModelMenu && (
+                      <div className="absolute bottom-full left-0 mb-2 w-80 rounded-2xl bg-[#0e1726] border border-border/80 shadow-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl">
+                        <div className="flex items-center justify-between px-2.5 py-1.5 mb-1.5 text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider border-b border-border/50">
+                          <span className="text-foreground font-mono">OpenCode Zen</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-bold">100% Free Tier</span>
+                        </div>
+                        <div className="space-y-1">
+                          {OPENCODE_ZEN_FREE_SUITE.map((m) => {
+                            const isSelected = activeModel === m.id;
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => {
+                                  handleModelSelect(m.id);
+                                  setShowModelMenu(false);
+                                }}
+                                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-purple-950/60 border border-purple-500/50 text-foreground shadow-sm"
+                                    : "hover:bg-secondary/60 text-foreground-muted hover:text-foreground border border-transparent"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`p-2 rounded-lg ${m.bgColor} ${m.borderColor} border shrink-0`}>
+                                    {renderModelIcon(m.iconName, m.color)}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
+                                      <span>{m.name}</span>
+                                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-secondary text-foreground-subtle font-mono">Free</span>
+                                    </div>
+                                    <div className="text-[11px] text-foreground-subtle truncate">{m.subtitle}</div>
+                                  </div>
+                                </div>
+                                {isSelected && <Check className="h-4 w-4 text-purple-400 shrink-0 ml-2" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[10px] text-foreground-subtle px-1 font-mono">
+                    <span>Press <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Enter ↵</kbd> to send, <kbd className="px-1 py-0.5 rounded bg-secondary/60 border border-border/40 text-foreground-muted">Shift + Enter</kbd> for new line</span>
+                    {inputValue.length > 0 && <span>• {inputValue.length} chars</span>}
+                  </div>
                 </div>
               </form>
             </div>
@@ -717,6 +881,78 @@ export default function ControlCentrePage() {
 
           {/* Right Activity & Diagnostics Panel (1 col) */}
           <div className="lg:col-span-1 min-w-0 flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md p-4 overflow-y-auto text-xs">
+            {/* OpenCode Zen Session Context Panel (from OpenCode Desktop) */}
+            <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 space-y-2.5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-mono text-xs font-bold text-foreground">Session Context</span>
+                </div>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold">
+                  OpenCode Zen
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-subtle">Session</span>
+                  <span className="font-medium text-foreground truncate max-w-[140px]" title="ApplyWise AI Autonomous Control">Career Engineering</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-subtle">Provider</span>
+                  <span className="font-semibold text-foreground">OpenCode Zen</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-subtle">Model</span>
+                  <span className="font-semibold text-purple-300 truncate max-w-[140px]">{currentModel.name} Free</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-subtle">Context Limit</span>
+                  <span className="font-mono text-foreground">{currentModel.contextLimit}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground-subtle">Total Cost</span>
+                  <span className="font-mono font-bold text-emerald-400">$0.00</span>
+                </div>
+
+                {/* Token Counters */}
+                <div className="grid grid-cols-3 gap-1 pt-1 text-center font-mono">
+                  <div className="p-1 rounded bg-card/60 border border-border/40">
+                    <div className="text-[9px] text-foreground-subtle">Input</div>
+                    <div className="text-[11px] font-bold text-foreground">{totalTokens.input.toLocaleString()}</div>
+                  </div>
+                  <div className="p-1 rounded bg-card/60 border border-border/40">
+                    <div className="text-[9px] text-foreground-subtle">Output</div>
+                    <div className="text-[11px] font-bold text-foreground">{totalTokens.output.toLocaleString()}</div>
+                  </div>
+                  <div className="p-1 rounded bg-card/60 border border-border/40">
+                    <div className="text-[9px] text-foreground-subtle">Reasoning</div>
+                    <div className="text-[11px] font-bold text-purple-300">{totalTokens.reasoning.toLocaleString()}</div>
+                  </div>
+                </div>
+
+                {/* Context Breakdown Meter */}
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center justify-between text-[10px] text-foreground-subtle">
+                    <span>Context Breakdown</span>
+                    <span className="font-mono">{messages.length} msgs</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden flex">
+                    <div className="bg-emerald-400 h-full" style={{ width: "20%" }} title="User Input" />
+                    <div className="bg-purple-400 h-full" style={{ width: "45%" }} title="Assistant Reasoning" />
+                    <div className="bg-cyan-400 h-full" style={{ width: "15%" }} title="Tool Calls" />
+                    <div className="bg-slate-500 h-full" style={{ width: "20%" }} title="Dossier Knowledge" />
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] text-foreground-subtle pt-0.5 font-mono">
+                    <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block"/>User</span>
+                    <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-purple-400 inline-block"/>Assistant</span>
+                    <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-cyan-400 inline-block"/>Tools</span>
+                    <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-slate-500 inline-block"/>Dossier</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <h3 className="text-xs font-bold text-foreground font-mono uppercase tracking-wider flex items-center gap-2 mb-2">
                 <Layers className="h-3.5 w-3.5 text-primary" />
