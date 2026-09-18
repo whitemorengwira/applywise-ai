@@ -27,6 +27,7 @@ export type ControlIntent =
   | "RECOVERY"
   | "REPORTING"
   | "MARKETING"
+  | "GENERAL_KNOWLEDGE"
   | "UNKNOWN";
 
 export type GroundingCategory =

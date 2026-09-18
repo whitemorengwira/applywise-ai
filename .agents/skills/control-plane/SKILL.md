@@ -44,11 +44,16 @@ graph TD
    - `get_ai_model_status`: Truthful OpenCode Zen provider verification.
    - `get_scheduler_status`: Cloud cron lease lock telemetry.
    - `get_observability_status`: Prometheus & 9 Grafana Cloud dashboards.
-4. **Safety & Approval Boundary**:
+4. **Universal AI Copilot & Cognitive Knowledge Engine**:
+   - Responds accurately and articulately to universal questions (geography, world capitals, science, mathematics, computer science, programming, system design, and concepts) without canned rejections or robotic menus.
+   - Built-in `UniversalKnowledgeEngine` with comprehensive world geography, capital cities, quantitative calculations, and foundational science facts.
+   - Preserves strict candidate evidence grounding for queries specifically addressing Whitemore Ngwira's credentials, case studies (EarCodeX, Supabets, NICO Life, Socinga), AWS Terraform blueprints, or job applications.
+5. **Clean Conversational Presentation**:
+   - Universal questions and general conversation do not display operational badges (`UNKNOWN` or `GENERAL_KNOWLEDGE`).
+   - The `Operational Trace & Evidence` accordion is strictly reserved for operational tool dispatches (`toolCalls.length > 0`), ensuring universal responses remain clean and executive.
+6. **Safety & Approval Boundary**:
    - Mutating dispatches (`APPLICATION_SUBMISSION`) strictly require candidate confirmation via UI banner before execution.
-5. **Zero Hallucination Policy**:
-   - Off-topic or ungrounded queries return a structured **Factual Boundary Notice** outlining valid system operations rather than apologetic or fake claims.
-6. **Executive Chat UI**:
+7. **Executive Chat UI**:
    - Zero-dependency markdown rendering (`ChatMarkdownRenderer`) with code blocks, tables, and styled emerald badge chips (`[Source N: Title]`).
    - One-click copy message with visual confirmation.
    - One-click export of chat transcript as Markdown (`.md`).

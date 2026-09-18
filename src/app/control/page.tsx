@@ -592,7 +592,7 @@ export default function ControlCentrePage() {
                           {isUser ? "Candidate / Operator" : "ApplyWise Control Plane"}
                         </span>
                         <div className="flex items-center gap-2">
-                          {!isUser && msg.intent && msg.intent !== "CONVERSATION" && (
+                          {!isUser && msg.intent && !["CONVERSATION", "GENERAL_KNOWLEDGE", "UNKNOWN"].includes(msg.intent) && (
                             <Badge variant="outline" className="text-[9px] py-0 font-mono">
                               {msg.intent.replace(/_/g, " ")}
                             </Badge>
@@ -639,7 +639,10 @@ export default function ControlCentrePage() {
                       )}
 
                       {/* Structured Operation Details (PLAN / EXECUTION / RESULT / EVIDENCE) */}
-                      {msg.intent !== "CONVERSATION" && (msg.plan || msg.execution || msg.result || msg.evidence) && (
+                      {!isUser &&
+                        !["CONVERSATION", "GENERAL_KNOWLEDGE", "UNKNOWN"].includes(msg.intent || "") &&
+                        (msg.toolCalls?.length || 0) > 0 &&
+                        (msg.plan || msg.execution || msg.result || msg.evidence) && (
                         <div className="pt-2 border-t border-border/50">
                           <button
                             onClick={() => toggleExpand(msg.id)}

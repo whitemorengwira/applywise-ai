@@ -31,6 +31,7 @@ import {
 } from "@/lib/observability/metrics";
 import { logger } from "@/lib/observability/logger";
 import { KNOWLEDGE_CHUNKS, SemanticReRanker } from "@/lib/services/rag.service";
+import { UniversalKnowledgeEngine } from "./universal-knowledge";
 
 export interface OrchestratorOptions {
   message: string;
@@ -65,7 +66,8 @@ export class ControlPlaneOrchestrator {
       "9. Master CV Lock: SHA-256 hash 3994a09c2beb4468dbee8f265d2c9797a2e9fdcbde4aa8fbecdfb2c04ed45bd7 (strictly immutable).",
       "",
       "Your Behavior & Style:",
-      "- Communicate like a world-class AI pair-programmer and executive advisor: articulate, thoughtful, direct, deeply competent, and warm.",
+      "- You are a Universal AI Assistant and Principal Systems Architecture Copilot. You are freely capable of answering ANY world knowledge, science, mathematics, computer science, software engineering, geography, philosophy, or general problem-solving questions.",
+      "- For universal questions (e.g. 'what is the capital city of China'), answer immediately, articulately, and directly without refusing or providing canned job search menus.",
       "- For greetings, pleasantries, or casual conversation (e.g. 'hi', 'how are you', 'thanks'), respond naturally, warmly, and concisely as an AI partner. Do NOT dump architectural case studies, system hashes, or resume summaries unless explicitly asked.",
       "- Only provide deep candidate evidence and architectural case studies when answering technical questions about Whitemore's background, cloud systems, platforms, or roles.",
       "- Provide detailed, strategic, and technically rigorous answers when addressing systems, architecture, or role fit.",
@@ -325,26 +327,13 @@ export class ControlPlaneOrchestrator {
       };
     }
 
-    // 5. Default General Inquiry Synthesis
-    const general =
-      `I understand you're inquiring about: "${prompt}".\n\n` +
-      `As your ApplyWise AI Control Plane Copilot, I'm here to assist across your autonomous job search, technical case studies, and application workflows. You can ask me to:\n\n` +
-      `• **Search Vacancies**: Discover real-time roles across South Africa, Zimbabwe, and regional Africa.\n` +
-      `• **Examine Architecture**: Review verified case studies (EarCodeX, Supabets, NICO Life, Socinga, AWS Terraform).\n` +
-      `• **Check System Health**: Inspect AI runtime models, cloud scheduler status, and cryptographic CV integrity.\n` +
-      `• **Prepare Applications**: Generate grounded British English cover letters and LangGraph application packages.\n\n` +
-      `How would you like to direct the system next?`;
-
+    // 5. Universal Knowledge & Cognitive Reasoning Engine (Geography, Science, Math, CS, Concepts)
+    const universal = UniversalKnowledgeEngine.synthesizeUniversalResponse(prompt);
     return {
-      content: general,
-      evidence: "ApplyWise Orchestrator",
-      nextActions: [
-        "What can you do?",
-        "Check current system health",
-        "Find eligible AI architect jobs in South Africa",
-        "What AWS architecture evidence do I have?",
-      ],
-      groundingCategory: "MODEL_REASONING",
+      content: universal.content,
+      evidence: "Universal Knowledge & Cognitive Reasoning Engine",
+      nextActions: universal.nextActions,
+      groundingCategory: universal.groundingCategory,
     };
   }
 
@@ -491,8 +480,8 @@ export class ControlPlaneOrchestrator {
       return this.handleActionApproval(options.approvedActionId, auditId, runtimeStatus, activeModel, provider, startTime);
     }
 
-    // 3. Handle GREETINGS & CASUAL CONVERSATION
-    if (intent === "CONVERSATION") {
+    // 3. Handle GREETINGS, CASUAL CONVERSATION & UNIVERSAL GENERAL KNOWLEDGE
+    if (intent === "CONVERSATION" || intent === "GENERAL_KNOWLEDGE") {
       const durationSec = (Date.now() - startTime) / 1000;
       controlChatRequestsTotal.inc({ intent, runtime_status: runtimeStatus });
       controlChatDurationSeconds.observe({ intent }, durationSec);
@@ -509,7 +498,7 @@ export class ControlPlaneOrchestrator {
       if (liveResult.isLive) {
         return {
           message: liveResult.content,
-          intent: "CONVERSATION",
+          intent,
           groundingCategory: "MODEL_REASONING",
           runtimeStatus: "REAL_AI",
           activeModel: liveResult.modelUsed,
@@ -535,11 +524,11 @@ export class ControlPlaneOrchestrator {
         };
       }
 
-      // In-process Cognitive Copilot synthesis fallback
-      const synth = this.synthesizeCognitiveResponse(rawMessage, options.history, "CONVERSATION");
+      // In-process Universal Cognitive Copilot synthesis fallback
+      const synth = this.synthesizeCognitiveResponse(rawMessage, options.history, intent);
       return {
         message: synth.content,
-        intent: "CONVERSATION",
+        intent,
         groundingCategory: synth.groundingCategory,
         runtimeStatus: "AI_RUNTIME_UNAVAILABLE",
         activeModel,
@@ -1163,7 +1152,6 @@ export class ControlPlaneOrchestrator {
       }
 
       default: {
-        plan = "Contextual conversational reasoning and candidate knowledge synthesis.";
         const liveResult = await this.callLiveCopilot(
           contextualMessage,
           options.history,
@@ -1174,9 +1162,6 @@ export class ControlPlaneOrchestrator {
 
         if (liveResult.isLive) {
           runtimeStatus = "REAL_AI";
-          execution = `Executed live LLM reasoning (${Date.now() - startTime}ms, model: ${liveResult.modelUsed}).`;
-          result = "Natural conversational response generated by live model.";
-          evidence = "Live AI Copilot";
           groundingCategory = "MODEL_REASONING";
           message = liveResult.content;
           nextActions = [
@@ -1187,8 +1172,6 @@ export class ControlPlaneOrchestrator {
           ];
         } else {
           const synth = this.synthesizeCognitiveResponse(contextualMessage, options.history, intent);
-          execution = `Synthesized cognitive reasoning via candidate evidence graph (${Date.now() - startTime}ms).`;
-          result = "Cognitive reasoning synthesized from candidate knowledge base.";
           evidence = synth.evidence;
           groundingCategory = synth.groundingCategory;
           message = synth.content;

@@ -485,7 +485,77 @@ export class IntentClassifier {
       };
     }
 
-    // 21. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
+    // 21. GENERAL KNOWLEDGE, SCIENCE, GEOGRAPHY, MATH & CONCEPTS
+    const isCapitalOrGeography =
+      lower.includes("capital") ||
+      lower.includes("country") ||
+      lower.includes("continent") ||
+      lower.includes("population of") ||
+      lower.includes("currency of");
+
+    const isScienceOrNature =
+      lower.includes("speed of light") ||
+      lower.includes("speed of sound") ||
+      lower.includes("gravity") ||
+      lower.includes("planets") ||
+      lower.includes("solar system") ||
+      lower.includes("photosynthesis") ||
+      lower.includes("dna") ||
+      lower.includes("periodic table");
+
+    const isMathOrCalculation =
+      /(?:what is|calculate|solve|compute)?\s*\(?-?\d+(?:\.\d+)?\s*[\+\-\*\/x×÷\^%]\s*-?\d+/i.test(lower) ||
+      lower.includes("square root") ||
+      lower.includes("sqrt") ||
+      lower.includes("value of pi") ||
+      lower === "what is pi" ||
+      lower === "pi";
+
+    const isComputerScienceConcept =
+      (lower.includes("tcp") && lower.includes("udp")) ||
+      lower.includes("how dns works") ||
+      lower.includes("what is dns") ||
+      (lower.includes("docker") && (lower.includes("vm") || lower.includes("container") || lower.includes("virtual machine"))) ||
+      (lower.includes("rest") && lower.includes("graphql")) ||
+      lower.includes("binary search") ||
+      lower.includes("big o") ||
+      lower.includes("sorting algorithm") ||
+      lower.includes("linked list") ||
+      lower.includes("hash map") ||
+      lower.includes("binary tree");
+
+    const isGeneralQuestion =
+      lower.startsWith("what is the capital") ||
+      lower.startsWith("capital of") ||
+      lower.startsWith("what is the ") ||
+      lower.startsWith("what is a ") ||
+      lower.startsWith("what are ") ||
+      lower.startsWith("how does ") ||
+      lower.startsWith("how do ") ||
+      lower.startsWith("why is ") ||
+      lower.startsWith("why does ") ||
+      lower.startsWith("explain ") ||
+      lower.startsWith("tell me about ") ||
+      lower.startsWith("difference between ") ||
+      lower.startsWith("who is ") ||
+      lower.startsWith("who was ");
+
+    if (
+      isCapitalOrGeography ||
+      isScienceOrNature ||
+      isMathOrCalculation ||
+      isComputerScienceConcept ||
+      isGeneralQuestion
+    ) {
+      return {
+        intent: "GENERAL_KNOWLEDGE",
+        confidence: 0.95,
+        extractedEntities: {},
+        reasoning: "Universal general knowledge, geography, science, mathematics, or conceptual inquiry.",
+      };
+    }
+
+    // 22. UNKNOWN INTENT (Safely ask clarification without hallucinating or running destructive tasks)
     return {
       intent: "UNKNOWN",
       confidence: 0.40,
