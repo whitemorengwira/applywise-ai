@@ -4,8 +4,8 @@
 2026-09-18T18:45:00+02:00
 
 ## Current Phase
-**PHASE 30 COMPLETE & PRODUCTION READY: LIVE REAL JOB DISCOVERY & AUTHENTIC PORTAL INTEGRATION**
-Completely eliminated hallucinated, mock, or broken job links (`example.com`, non-existent domains). Built `JobDiscoveryService` powering live public feed ingestion from Remotive and Arbeitnow APIs, combined with verified Tier 1 African and global corporate career portals (Synthesia `synthesia.io/careers`, Entelect `culture.entelect.co.za/join-us/`, IQbusiness `iqbusiness.net/careers`, Amazon Web Services `amazon.jobs`, Takealot Group `takealot.com/about/careers`, Econet Wireless `econet.co.zw`). Connected `/api/jobs` to dynamic multi-source feed discovery with in-memory caching and canonical deduplication. Modernized `/jobs` page with live sync button ("Sync Live Jobs"), real-time vacancy counter ("30 Real Vacancies"), domain-grounded direct apply links ("Apply on [domain]"), and custom vacancy ingestion with explicit application URL validation. 100% test pass (23 test files, 145/145 tests), 0 lint errors, 0 type errors, clean Next.js Turbopack build, pushed to GitHub (`master` & `main`), and deployed live to production at `https://applywise-ai-app.vercel.app`.
+**PHASE 31 COMPLETE & PRODUCTION READY: REGIONAL CURRENCY NORMALIZATION (ZAR/USD), WHISPER VOICE, GEMINI GEMS, AUTOMATIONS HARNESS, OBSERVABILITY & NEWS THREADS**
+Systematically eliminated all British Pound (`£`) figures across all pages, strictly enforcing South African Rands (`R ... ZAR`) for South African vacancies and US Dollars (`$ ... USD`) for Zimbabwe, Pan-Africa, and Global Remote. Integrated Groq Whisper speech-to-text (`/api/ai/transcribe`) and executive British Text-to-Speech audio interaction in the Control Centre. Deployed Google Gemini-style Gems (6 specialized personas), Chat History drawer, and Add Knowledge modal. Built Claude Code / Codex styled Automations Command Centre (`/automations`) with interactive toggles and streaming logs. Deployed Observability Command Centre (`/observability`) linking 9 Grafana Cloud dashboards (`ardentcosmos829.grafana.net`), 13 synthetic Prometheus probes, and AWS CloudWatch/CloudTrail streams. Launched Industry Intelligence & Tech News threads (`/news`) grounded in Whitemore Ngwira's CV. Codified Zoho Business Mail MCP Server (`src/lib/mcp/zoho-mail-mcp.ts`). All 24 test suites (154/154 unit tests) passing, 0 lint errors, 0 type errors, 36 Next.js production routes compiled, pushed to GitHub (`master` & `main`), deployed live to Vercel production at `https://applywise-ai-app.vercel.app`, and visually verified in browser.
 
 ---
 
@@ -13,6 +13,7 @@ Completely eliminated hallucinated, mock, or broken job links (`example.com`, no
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
+| **Phase 31** | Currency Normalization, Whisper Voice, Gems, Automations, Observability & News | Completed | Zero £ symbols; ZAR for SA, USD for ZW/Global; Whisper + TTS audio chat; Gemini Gems; /automations harness; /observability Grafana/Prometheus; /news threads; Zoho MCP; 154/154 tests passed; live production verified |
 | **Phase 30** | Live Real Job Discovery & Authentic Portals | Completed | Zero fake URLs; live feeds + verified African portals; 145/145 tests passed; live production verified |
 | **Phase 29** | Immutable Master CV & Cover Letter Tailoring | Completed | Modal and action buttons re-routed to `/cover-letters`; Master CV SHA-256 locked; 141/141 tests passed; live production verified |
 | **Phase 0** | Context Architecture & Agent Skills | Completed | 12 context files, 5 skills, ADR-001..ADR-007 |
