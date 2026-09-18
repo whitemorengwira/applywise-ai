@@ -110,7 +110,7 @@ export default function ProfilePage() {
               Target Compensation
             </span>
             <p className="text-xs text-emerald-400 font-mono mt-1 font-semibold">
-              £{profile.targetSalaryMin?.toLocaleString()} - £{profile.targetSalaryMax?.toLocaleString()} GBP
+              $130,000 - $180,000 USD / R 1,500,000 - R 2,200,000 ZAR
             </p>
           </div>
         </div>

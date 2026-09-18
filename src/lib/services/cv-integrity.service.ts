@@ -105,6 +105,7 @@ export class CVIntegrityService {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static assertCVImmutable(action: string, _payload?: unknown): void {
     if (action.toLowerCase().includes("update") || action.toLowerCase().includes("mutate") || action.toLowerCase().includes("tailor") || action.toLowerCase().includes("rewrite")) {
       throw new CVImmutabilityViolationError(

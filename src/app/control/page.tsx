@@ -25,9 +25,29 @@ import {
   Zap,
   TrendingUp,
   PenTool,
+  BookOpen,
+  Plus,
+  History,
+  X,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
 import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
+import { VoiceRecorder } from "@/components/voice/voice-recorder";
+import { VoiceSpeaker } from "@/components/voice/voice-speaker";
+import { SYSTEM_GEMS, GemPersona } from "@/lib/control/gems-config";
+import { KnowledgeService, CustomKnowledgeDoc } from "@/lib/services/knowledge.service";
+
+function extractImageUrl(data: unknown): string | null {
+  if (
+    data &&
+    typeof data === "object" &&
+    "imageUrl" in data &&
+    typeof (data as { imageUrl?: unknown }).imageUrl === "string"
+  ) {
+    return (data as { imageUrl: string }).imageUrl;
+  }
+  return null;
+}
 
 function getTimestamp(): string {
   return new Date().toISOString();
@@ -142,18 +162,6 @@ const INITIAL_MESSAGE: ControlChatMessage = {
   runtimeStatus: "REAL_AI",
 };
 
-const SUGGESTED_ACTIONS = [
-  "hi",
-  "What can you do?",
-  "What is the current system status?",
-  "What AI model is currently running?",
-  "Find current AI architect jobs in South Africa",
-  "Explain why the top result is eligible",
-  "What AWS architecture evidence do I have?",
-  "When did the last autonomous cycle run?",
-  "How many applications did you submit this week?",
-];
-
 export default function ControlCentrePage() {
   const [messages, setMessages] = React.useState<ControlChatMessage[]>([INITIAL_MESSAGE]);
   const [inputValue, setInputValue] = React.useState("");
@@ -170,6 +178,44 @@ export default function ControlCentrePage() {
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [showModelMenu, setShowModelMenu] = React.useState(false);
+
+  // Gemini-style Gems & Knowledge state
+  const [activeGem, setActiveGem] = React.useState<GemPersona>(SYSTEM_GEMS[0]);
+  const [showHistory, setShowHistory] = React.useState(false);
+  const [showKnowledgeModal, setShowKnowledgeModal] = React.useState(false);
+  const [knowledgeTitle, setKnowledgeTitle] = React.useState("");
+  const [knowledgeContent, setKnowledgeContent] = React.useState("");
+  const [knowledgeTags, setKnowledgeTags] = React.useState("");
+  const [knowledgeDocs, setKnowledgeDocs] = React.useState<CustomKnowledgeDoc[]>(() =>
+    KnowledgeService.getKnowledgeDocs()
+  );
+  const [chatHistoryList] = React.useState<
+    Array<{ id: string; title: string; timestamp: string; messageCount: number }>
+  >(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("applywise_chat_sessions_v1");
+        if (raw) return JSON.parse(raw);
+      } catch {}
+    }
+    return [];
+  });
+
+  const handleAddKnowledge = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!knowledgeTitle.trim() || !knowledgeContent.trim()) return;
+    KnowledgeService.addKnowledgeDoc({
+      title: knowledgeTitle.trim(),
+      category: "PROJECT_CASE_STUDY",
+      content: knowledgeContent.trim(),
+      tags: knowledgeTags.split(",").map((t) => t.trim()).filter(Boolean),
+    });
+    setKnowledgeDocs(KnowledgeService.getKnowledgeDocs());
+    setKnowledgeTitle("");
+    setKnowledgeContent("");
+    setKnowledgeTags("");
+    setShowKnowledgeModal(false);
+  };
 
   const currentModel =
     OPENCODE_ZEN_FREE_SUITE.find((m) => m.id === activeModel) || OPENCODE_ZEN_FREE_SUITE[0];
@@ -524,9 +570,34 @@ export default function ControlCentrePage() {
                 <span className="font-semibold text-emerald-400">3994A09C</span>
               </div>
 
-              {/* Action Buttons: Export & Clear */}
-              <div className="flex items-center gap-1 ml-1">
+              {/* Action Buttons: Knowledge, History, Export & Clear */}
+              <div className="flex items-center gap-1.5 ml-1 flex-wrap">
                 <button
+                  type="button"
+                  onClick={() => setShowKnowledgeModal(true)}
+                  title="Add project dossiers, certifications, and case studies into RAG memory"
+                  className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/50 text-foreground-muted hover:text-foreground hover:bg-secondary/90 border border-border/60 transition-colors cursor-pointer"
+                >
+                  <BookOpen className="h-3 w-3 text-cyan-400" />
+                  <span>Knowledge ({knowledgeDocs.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowHistory(!showHistory)}
+                  title="Toggle Chat History Sessions"
+                  className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    showHistory
+                      ? "bg-primary/20 text-primary border-primary/50"
+                      : "bg-secondary/50 text-foreground-muted hover:text-foreground hover:bg-secondary/90 border-border/60"
+                  }`}
+                >
+                  <History className="h-3 w-3 text-primary" />
+                  <span>History</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleExportTranscript}
                   title="Export conversation transcript as Markdown"
                   className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-secondary/40 text-foreground-muted hover:text-foreground hover:bg-secondary/80 border border-border/40 transition-colors cursor-pointer"
@@ -534,7 +605,9 @@ export default function ControlCentrePage() {
                   <Download className="h-3 w-3" />
                   <span>Export</span>
                 </button>
+
                 <button
+                  type="button"
                   onClick={handleClearChat}
                   title="Clear conversation"
                   className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-secondary/40 text-foreground-muted hover:text-rose-400 hover:bg-rose-500/10 border border-border/40 transition-colors cursor-pointer"
@@ -546,14 +619,42 @@ export default function ControlCentrePage() {
             </div>
           </div>
 
-          {/* Quick Action Suggestion Chips */}
-          <div className="mt-3 pt-3 border-t border-border/60 flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider mr-1">
-              Quick Inquiries:
+          {/* Google Gemini-Style Executive Gems Selector Bar */}
+          <div className="mt-3 pt-3 border-t border-border/60 flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-[11px] font-mono text-foreground-subtle flex items-center gap-1 uppercase font-semibold shrink-0 mr-1">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Gems:
             </span>
-            {SUGGESTED_ACTIONS.map((action, i) => (
+            {SYSTEM_GEMS.map((gem) => {
+              const isSelected = activeGem.id === gem.id;
+              return (
+                <button
+                  key={gem.id}
+                  type="button"
+                  onClick={() => setActiveGem(gem)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all shrink-0 cursor-pointer ${
+                    isSelected
+                      ? "bg-primary/20 text-primary border-primary/50 shadow-sm"
+                      : "bg-secondary/40 text-foreground-muted border-border/70 hover:bg-secondary hover:text-foreground"
+                  }`}
+                  title={gem.description}
+                >
+                  <span>{gem.emoji}</span>
+                  <span>{gem.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Action Suggestion Chips (Dynamic to Active Gem) */}
+          <div className="mt-2 pt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider mr-1">
+              {activeGem.name} Inquiries:
+            </span>
+            {activeGem.suggestedPrompts.map((action, i) => (
               <button
                 key={i}
+                type="button"
                 onClick={() => handleSendMessage(action)}
                 disabled={isLoading}
                 className="text-[11px] px-2.5 py-1 rounded-md bg-secondary/40 text-foreground-muted hover:text-foreground hover:bg-secondary/80 border border-border/40 transition-colors cursor-pointer"
@@ -613,6 +714,7 @@ export default function ControlCentrePage() {
                               {msg.runtimeStatus === "REAL_AI" ? "Real AI • Live" : "OpenCode Zen • Free Grounded"}
                             </span>
                           )}
+                          {!isUser && <VoiceSpeaker text={msg.content} />}
                           <button
                             onClick={() => handleCopyMessage(msg.id, msg.content)}
                             title="Copy message content"
@@ -636,6 +738,39 @@ export default function ControlCentrePage() {
                         </div>
                       ) : (
                         <ChatMarkdownRenderer content={msg.content} />
+                      )}
+
+                      {/* Render generated architecture blueprint image if available */}
+                      {msg.toolCalls?.some((tc) => extractImageUrl(tc.data)) && (
+                        <div className="mt-3 rounded-xl overflow-hidden border border-primary/40 bg-black/80 p-3 space-y-2">
+                          {msg.toolCalls
+                            .map((tc) => ({ tc, imgUrl: extractImageUrl(tc.data) }))
+                            .filter((item): item is { tc: typeof item.tc; imgUrl: string } => Boolean(item.imgUrl))
+                            .map(({ imgUrl }, idx) => (
+                              <div key={idx} className="space-y-2">
+                                <div className="flex items-center justify-between text-xs font-mono text-primary">
+                                  <span className="flex items-center gap-1.5 font-bold">
+                                    <Sparkles className="h-4 w-4" />
+                                    AI Architectural Blueprint (Flux Engine)
+                                  </span>
+                                  <a
+                                    href={imgUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1"
+                                  >
+                                    View Full-Res ↗
+                                  </a>
+                                </div>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={imgUrl}
+                                  alt="Generated Architecture Diagram"
+                                  className="w-full rounded-lg object-contain max-h-96 border border-border/70"
+                                />
+                              </div>
+                            ))}
+                        </div>
                       )}
 
                       {/* Structured Operation Details (PLAN / EXECUTION / RESULT / EVIDENCE) */}
@@ -800,6 +935,12 @@ export default function ControlCentrePage() {
                     placeholder="Ask a question, inspect system state, or request an operational agent workflow..."
                     disabled={isLoading}
                     className="flex-1 max-h-44 min-h-[44px] resize-none rounded-xl bg-secondary/50 border border-border/80 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+                  />
+                  <VoiceRecorder
+                    onTranscript={(text) =>
+                      setInputValue((prev) => (prev ? `${prev} ${text}` : text))
+                    }
+                    disabled={isLoading}
                   />
                   <Button
                     type="submit"
@@ -1036,6 +1177,149 @@ export default function ControlCentrePage() {
           </div>
         </div>
       </div>
+
+      {/* Chat History Drawer */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-sm h-full bg-[#090d1a] border-r border-border/80 p-5 flex flex-col space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Conversation History</h3>
+              </div>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-1 rounded text-foreground-subtle hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <Button
+              variant="glow"
+              size="sm"
+              onClick={() => {
+                handleClearChat();
+                setShowHistory(false);
+              }}
+              className="w-full gap-2 text-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Start Fresh Conversation
+            </Button>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {chatHistoryList.length === 0 ? (
+                <p className="text-xs text-foreground-subtle text-center py-6">
+                  No previous sessions saved yet.
+                </p>
+              ) : (
+                chatHistoryList.map((session) => (
+                  <div
+                    key={session.id}
+                    className="p-3 rounded-xl border border-border/60 bg-secondary/30 hover:bg-secondary/60 transition-all space-y-1"
+                  >
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {session.title}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-foreground-subtle font-mono">
+                      <span>{session.timestamp}</span>
+                      <span>{session.messageCount} turns</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <p className="text-[11px] text-foreground-subtle text-center pt-2 border-t border-border/40 font-mono">
+              Persisted in local browser storage.
+            </p>
+          </div>
+          <div className="flex-1" onClick={() => setShowHistory(false)} />
+        </div>
+      )}
+
+      {/* Add Knowledge Modal (Custom Dossier / Project Case Studies) */}
+      {showKnowledgeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-[#0a0f1e] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-cyan-400" />
+                <h3 className="font-bold text-base text-foreground">Add Custom Knowledge Dossier</h3>
+              </div>
+              <button
+                onClick={() => setShowKnowledgeModal(false)}
+                className="p-1 rounded text-foreground-subtle hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-foreground-muted">
+              Add new project case studies, client deliveries, or certifications to ground the assistant and RAG vector store.
+            </p>
+
+            <form onSubmit={handleAddKnowledge} className="space-y-3">
+              <div>
+                <label className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+                  Document / Project Title
+                </label>
+                <input
+                  type="text"
+                  value={knowledgeTitle}
+                  onChange={(e) => setKnowledgeTitle(e.target.value)}
+                  placeholder="e.g., Pan-African Telecommunications Cloud Blueprints"
+                  required
+                  className="w-full h-9 rounded-xl border border-border/80 bg-secondary/50 px-3 text-xs text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={knowledgeTags}
+                  onChange={(e) => setKnowledgeTags(e.target.value)}
+                  placeholder="e.g., AWS, Terraform, Microservices, FinTech"
+                  className="w-full h-9 rounded-xl border border-border/80 bg-secondary/50 px-3 text-xs text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+                  Knowledge Details / Case Study Content
+                </label>
+                <textarea
+                  rows={5}
+                  value={knowledgeContent}
+                  onChange={(e) => setKnowledgeContent(e.target.value)}
+                  placeholder="Detail the architectural challenges, technical solutions, and business outcomes..."
+                  required
+                  className="w-full rounded-xl border border-border/80 bg-secondary/50 p-3 text-xs text-foreground placeholder:text-foreground-subtle focus:border-primary focus:outline-none resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowKnowledgeModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="glow" size="sm" className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Save to Knowledge Bank
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

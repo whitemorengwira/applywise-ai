@@ -9,6 +9,7 @@ import { JobListing } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { logger } from "@/lib/observability/logger";
 import { FreshnessService } from "@/lib/services/freshness.service";
+import { CurrencyService } from "@/lib/services/currency.service";
 
 interface CacheEntry {
   jobs: JobListing[];
@@ -77,7 +78,7 @@ export class JobDiscoveryService {
           remoteType: "Remote",
           salaryMin: 120000,
           salaryMax: 165000,
-          currency: "GBP",
+          currency: CurrencyService.resolveCurrency(undefined, String(j.candidate_required_location || "")),
           description: cleanDesc.slice(0, 380) + (cleanDesc.length > 380 ? "..." : ""),
           requirements: [
             "Senior full-stack / systems engineering leadership",
@@ -146,7 +147,7 @@ export class JobDiscoveryService {
           remoteType: j.remote ? "Remote" : "Hybrid",
           salaryMin: 115000,
           salaryMax: 155000,
-          currency: "GBP",
+          currency: CurrencyService.resolveCurrency(undefined, String(j.location || "")),
           description: cleanDesc.slice(0, 380) + (cleanDesc.length > 380 ? "..." : ""),
           requirements: [
             "Proven software development & architectural experience",

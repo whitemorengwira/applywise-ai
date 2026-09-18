@@ -710,7 +710,7 @@ export class AIGateway {
           locationType: "remote",
           salaryMin: 130000,
           salaryMax: 170000,
-          currency: "GBP",
+          currency: "USD",
           seniority: "Principal / Lead",
         });
 

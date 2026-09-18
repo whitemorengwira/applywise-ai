@@ -51,6 +51,7 @@ export type ApplicationWorkflowState = typeof ApplicationStateAnnotation.State;
 /**
  * Node 1: LOAD_CANDIDATE_CONTEXT
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function loadCandidateContextNode(_state: ApplicationWorkflowState): Promise<Partial<ApplicationWorkflowState>> {
   const step = "LOAD_CANDIDATE_CONTEXT";
   logger.info("langgraph_node_start", `Executing ${step}`, { metadata: { candidate: SEED_PROFILE.fullName } });
@@ -193,6 +194,7 @@ Company Context: ${state.companyInsights}`,
 /**
  * Node 8: VERIFY_CV_HASH & GROUNDING
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function verifyCVHashNode(_state: ApplicationWorkflowState): Promise<Partial<ApplicationWorkflowState>> {
   const step = "VERIFY_CV_HASH";
   

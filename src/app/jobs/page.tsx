@@ -22,6 +22,7 @@ import {
 import { JobListing, MatchAnalysis } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { FreshnessService } from "@/lib/services/freshness.service";
+import { CurrencyService } from "@/lib/services/currency.service";
 
 function getCleanDomain(url: string): string {
   try {
@@ -132,7 +133,7 @@ export default function JobsPage() {
       remoteType: newLocation.toLowerCase().includes("remote") ? "Remote" : "Hybrid",
       salaryMin: 130000,
       salaryMax: 160000,
-      currency: "GBP",
+      currency: CurrencyService.resolveCurrency(undefined, newLocation),
       description: newDescription || "Ingested custom target role for agentic matching.",
       requirements: ["Senior architecture leadership", "Proven production systems"],
       responsibilities: ["Lead engineering roadmap", "Deliver scalable platforms"],
@@ -263,7 +264,7 @@ export default function JobsPage() {
                     </span>
                     <span className="text-foreground-subtle">•</span>
                     <span className="font-mono text-emerald-400 font-semibold">
-                      £{job.salaryMin?.toLocaleString()} - £{job.salaryMax?.toLocaleString()} GBP
+                      {CurrencyService.formatSalary(job.salaryMin, job.salaryMax, job.currency, job.location)}
                     </span>
                     <span className="text-foreground-subtle">•</span>
                     <span className="flex items-center gap-1 font-mono text-[11px] text-cyan-400">

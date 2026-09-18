@@ -17,6 +17,9 @@ import {
   ChevronRight,
   Zap,
   Terminal,
+  Cpu,
+  Activity,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSwitcher } from "./model-switcher";
@@ -34,6 +37,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { title: "Control Centre", href: "/control", icon: Terminal, badge: "Orchestrator" },
+      { title: "Automations", href: "/automations", icon: Cpu, badge: "Harness" },
       { title: "Job Discovery", href: "/jobs", icon: Briefcase, badge: "Live" },
       { title: "Applications", href: "/applications", icon: Layers },
     ],
@@ -50,6 +54,8 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Insights & Config",
     items: [
+      { title: "Observability", href: "/observability", icon: Activity, badge: "Grafana" },
+      { title: "Industry News", href: "/news", icon: Newspaper, badge: "Live" },
       { title: "Analytics", href: "/analytics", icon: BarChart3 },
       { title: "Settings", href: "/settings", icon: Settings },
     ],
