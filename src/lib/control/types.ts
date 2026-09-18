@@ -108,6 +108,12 @@ export interface ControlChatMessage {
   nextActions?: string[];
   toolCalls?: ToolExecutionRecord[];
   pendingAction?: PendingApprovalAction;
+  attachments?: Array<{
+    id: string;
+    name: string;
+    type: "image" | "file" | "library" | "sketch";
+    dataUrl?: string;
+  }>;
 }
 
 export interface ChatHistoryMessage {

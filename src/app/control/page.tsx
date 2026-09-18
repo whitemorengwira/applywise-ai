@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Terminal,
-  Send,
   Loader2,
   ShieldCheck,
   CheckCircle2,
@@ -29,6 +28,11 @@ import {
   Plus,
   History,
   X,
+  Brain,
+  Paperclip,
+  Globe,
+  Search as SearchIcon,
+  ArrowUp,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
 import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
@@ -36,6 +40,12 @@ import { VoiceRecorder } from "@/components/voice/voice-recorder";
 import { VoiceSpeaker } from "@/components/voice/voice-speaker";
 import { SYSTEM_GEMS, GemPersona } from "@/lib/control/gems-config";
 import { KnowledgeService, CustomKnowledgeDoc } from "@/lib/services/knowledge.service";
+import { CodexActionMenu } from "@/components/control/codex-action-menu";
+import { SketchModal } from "@/components/control/sketch-modal";
+import { LibraryModal, LibraryDocument } from "@/components/control/library-modal";
+import { CalendarModal } from "@/components/control/calendar-modal";
+import { GithubModal } from "@/components/control/github-modal";
+import { CodexSidebar } from "@/components/control/codex-sidebar";
 
 function extractImageUrl(data: unknown): string | null {
   if (
@@ -178,6 +188,87 @@ export default function ControlCentrePage() {
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [showModelMenu, setShowModelMenu] = React.useState(false);
+
+  // Codex Experience & Plus Action Menu State
+  const [isCodexSidebarOpen, setIsCodexSidebarOpen] = React.useState(true);
+  const [isActionMenuOpen, setIsActionMenuOpen] = React.useState(false);
+  const [isSketchModalOpen, setIsSketchModalOpen] = React.useState(false);
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = React.useState(false);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = React.useState(false);
+  const [isGithubModalOpen, setIsGithubModalOpen] = React.useState(false);
+
+  // Modes & Attachments
+  const [isThinkModeActive, setIsThinkModeActive] = React.useState(false);
+  const [isWebSearchActive, setIsWebSearchActive] = React.useState(false);
+  const [isDeepResearchActive, setIsDeepResearchActive] = React.useState(false);
+  const [attachedFiles, setAttachedFiles] = React.useState<
+    Array<{ id: string; name: string; type: "image" | "file"; dataUrl: string }>
+  >([]);
+  const [attachedLibraryDocs, setAttachedLibraryDocs] = React.useState<LibraryDocument[]>([]);
+  const [attachedSketch, setAttachedSketch] = React.useState<string | null>(null);
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const plusButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        const isImg = file.type.startsWith("image/");
+        setAttachedFiles((prev) => [
+          ...prev,
+          {
+            id: createMessageId("file"),
+            name: file.name,
+            type: isImg ? "image" : "file",
+            dataUrl,
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = "";
+  };
+
+  const handleActionMenuSelect = (actionId: string) => {
+    switch (actionId) {
+      case "add_files":
+        fileInputRef.current?.click();
+        break;
+      case "add_library":
+        setIsLibraryModalOpen(true);
+        break;
+      case "create_image":
+        setInputValue("Generate technical architecture blueprint diagram for ");
+        textareaRef.current?.focus();
+        break;
+      case "sketch":
+        setIsSketchModalOpen(true);
+        break;
+      case "web_search":
+        setIsWebSearchActive((prev) => !prev);
+        break;
+      case "deep_research":
+        setIsDeepResearchActive((prev) => !prev);
+        break;
+      case "google_calendar":
+        setIsCalendarModalOpen(true);
+        break;
+      case "github":
+        setIsGithubModalOpen(true);
+        break;
+      case "figma":
+        setInputValue("Review design system tokens and component specs for ApplyWise UI");
+        textareaRef.current?.focus();
+        break;
+      default:
+        break;
+    }
+  };
 
   // Gemini-style Gems & Knowledge state
   const [activeGem, setActiveGem] = React.useState<GemPersona>(SYSTEM_GEMS[0]);
@@ -349,26 +440,64 @@ export default function ControlCentrePage() {
   };
 
   const handleSendMessage = async (textToSend: string, approvedActionId?: string) => {
-    if (!textToSend.trim() && !approvedActionId) return;
+    const rawText = (textToSend || "").trim();
+    const hasAttachments = attachedFiles.length > 0 || attachedLibraryDocs.length > 0 || !!attachedSketch;
+    if (!rawText && !approvedActionId && !hasAttachments) return;
     if (isLoading) return;
 
-    const userText = textToSend.trim();
-    if (userText) {
-      const userMsg: ControlChatMessage = {
-        id: createMessageId("user"),
-        role: "user",
-        content: userText,
-        timestamp: getTimestamp(),
-      };
-      setMessages((prev) => [...prev, userMsg]);
+    const msgAttachments: ControlChatMessage["attachments"] = [];
+    for (const f of attachedFiles) {
+      msgAttachments.push({ id: f.id, name: f.name, type: f.type, dataUrl: f.dataUrl });
+    }
+    for (const d of attachedLibraryDocs) {
+      msgAttachments.push({ id: d.id, name: d.title, type: "library" });
+    }
+    if (attachedSketch) {
+      msgAttachments.push({ id: createMessageId("sketch"), name: "Architecture Sketch", type: "sketch", dataUrl: attachedSketch });
+    }
+
+    const displayContent = rawText || (msgAttachments.length > 0 ? `[Submitted ${msgAttachments.length} attachment(s)]` : "");
+
+    const userMsg: ControlChatMessage = {
+      id: createMessageId("user"),
+      role: "user",
+      content: displayContent,
+      timestamp: getTimestamp(),
+      attachments: msgAttachments.length > 0 ? msgAttachments : undefined,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    let enrichedPayload = rawText;
+    if (attachedLibraryDocs.length > 0) {
+      const docsText = attachedLibraryDocs
+        .map((d) => `[LIBRARY DOC: ${d.title} (${d.filename})]: ${d.contentSnippet}`)
+        .join("\n");
+      enrichedPayload = `${docsText}\n\n${enrichedPayload}`;
+    }
+    if (isThinkModeActive) {
+      enrichedPayload = `[THINK_MODE: EXTENDED_REASONING_CHAIN]\n${enrichedPayload}`;
+    }
+    if (isWebSearchActive) {
+      enrichedPayload = `[WEB_SEARCH_ACTIVE]\n${enrichedPayload}`;
+    }
+    if (isDeepResearchActive) {
+      enrichedPayload = `[DEEP_RESEARCH_ACTIVE]\n${enrichedPayload}`;
+    }
+    if (attachedSketch) {
+      enrichedPayload = `[ATTACHED_SKETCH: Architecture diagram provided]\n${enrichedPayload}`;
     }
 
     setInputValue("");
+    setAttachedFiles([]);
+    setAttachedLibraryDocs([]);
+    setAttachedSketch(null);
+
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
     setIsLoading(true);
 
+    const userText = enrichedPayload;
     const lowerText = userText.toLowerCase();
     let initialProgress = "Evaluating intent & coordinating domain agents...";
     if (lowerText.includes("cv") || lowerText.includes("hash") || lowerText.includes("sha")) {
@@ -492,9 +621,23 @@ export default function ControlCentrePage() {
 
   return (
     <AppShell pageTitle="ApplyWise AI Control Centre">
-      <div className="flex flex-col h-[calc(100vh-5rem)] space-y-4">
-        {/* Top Control Plane Status Bar */}
-        <div className="rounded-2xl border border-border/80 bg-card/80 p-4 backdrop-blur-md shadow-sm">
+      <div className="flex h-[calc(100vh-5rem)] gap-3 overflow-hidden">
+        {/* Codex Sidebar matching Desktop screengrabs */}
+        <CodexSidebar
+          isCollapsed={!isCodexSidebarOpen}
+          onToggleCollapse={() => setIsCodexSidebarOpen((prev) => !prev)}
+          onNewChat={handleClearChat}
+          onSelectPinnedThread={(thread) => {
+            setInputValue(thread.query);
+            textareaRef.current?.focus();
+          }}
+          onOpenAction={(actionId) => handleActionMenuSelect(actionId)}
+        />
+
+        {/* Center & Right Control Workspace */}
+        <div className="flex-1 flex flex-col min-w-0 space-y-3 overflow-hidden">
+          {/* Top Control Plane Status Bar */}
+          <div className="rounded-2xl border border-border/80 bg-card/80 p-3.5 backdrop-blur-md shadow-sm shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.3)]">
@@ -671,6 +814,18 @@ export default function ControlCentrePage() {
           <div className="lg:col-span-3 min-w-0 flex flex-col rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md overflow-hidden">
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Agenda Hero Header matching screengrab */}
+              {messages.length <= 1 && (
+                <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center select-none animate-in fade-in duration-300">
+                  <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white mb-2 font-sans">
+                    What&apos;s on the agenda today?
+                  </h1>
+                  <p className="text-xs sm:text-sm text-foreground-subtle max-w-md">
+                    Autonomous career orchestrator, candidate RAG, and execution control plane
+                  </p>
+                </div>
+              )}
+
               {messages.map((msg) => {
                 const isUser = msg.role === "user";
                 const isExpanded = expandedSections[msg.id];
@@ -738,6 +893,31 @@ export default function ControlCentrePage() {
                         </div>
                       ) : (
                         <ChatMarkdownRenderer content={msg.content} />
+                      )}
+
+                      {/* Attached items (files, sketch, library docs) */}
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {msg.attachments.map((att, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/40 border border-border/60 text-xs font-mono"
+                            >
+                              {att.type === "image" && att.dataUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={att.dataUrl} alt={att.name} className="h-6 w-6 rounded object-cover" />
+                              ) : att.type === "sketch" && att.dataUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={att.dataUrl} alt="Sketch" className="h-6 w-6 rounded object-cover border border-primary/50" />
+                              ) : att.type === "library" ? (
+                                <BookOpen className="h-3.5 w-3.5 text-amber-400" />
+                              ) : (
+                                <Paperclip className="h-3.5 w-3.5 text-slate-300" />
+                              )}
+                              <span className="truncate max-w-[160px] text-foreground">{att.name}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
 
                       {/* Render generated architecture blueprint image if available */}
@@ -907,8 +1087,112 @@ export default function ControlCentrePage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input Bar */}
-            <div className="p-3 border-t border-border/80 bg-card/80">
+            {/* Attachment preview bar (appears above input if files, library docs, sketch, or modes are active) */}
+            {(attachedFiles.length > 0 ||
+              attachedLibraryDocs.length > 0 ||
+              attachedSketch ||
+              isThinkModeActive ||
+              isWebSearchActive ||
+              isDeepResearchActive) && (
+              <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-border/60 bg-[#161b26]/90 backdrop-blur-md">
+                {isThinkModeActive && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                    <Brain className="h-3 w-3" />
+                    Think Active
+                    <button
+                      type="button"
+                      onClick={() => setIsThinkModeActive(false)}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {isWebSearchActive && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                    <Globe className="h-3 w-3" />
+                    Web Search
+                    <button
+                      type="button"
+                      onClick={() => setIsWebSearchActive(false)}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {isDeepResearchActive && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    <SearchIcon className="h-3 w-3" />
+                    Deep Research
+                    <button
+                      type="button"
+                      onClick={() => setIsDeepResearchActive(false)}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {attachedSketch && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-mono bg-orange-500/20 text-orange-300 border border-orange-500/40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={attachedSketch} alt="Sketch" className="h-4 w-4 rounded object-cover" />
+                    Sketch Attached
+                    <button
+                      type="button"
+                      onClick={() => setAttachedSketch(null)}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {attachedLibraryDocs.map((doc) => (
+                  <span
+                    key={doc.id}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                  >
+                    <BookOpen className="h-3 w-3 text-amber-400" />
+                    <span className="truncate max-w-[140px]">{doc.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedLibraryDocs((prev) => prev.filter((d) => d.id !== doc.id))}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                {attachedFiles.map((file) => (
+                  <span
+                    key={file.id}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-mono bg-slate-500/20 text-slate-200 border border-slate-500/40"
+                  >
+                    <Paperclip className="h-3 w-3 text-slate-400" />
+                    <span className="truncate max-w-[140px]">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id))}
+                      className="hover:text-white ml-1 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Chat Input Bar with ChatGPT / Codex Prompt Pill */}
+            <div className="p-3 border-t border-border/80 bg-card/80 relative">
+              {/* The Codex Floating Action Menu Popover anchored to the + button */}
+              <CodexActionMenu
+                isOpen={isActionMenuOpen}
+                onClose={() => setIsActionMenuOpen(false)}
+                onSelectAction={handleActionMenuSelect}
+                anchorRef={plusButtonRef}
+              />
+
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -916,48 +1200,92 @@ export default function ControlCentrePage() {
                 }}
                 className="flex flex-col gap-1.5"
               >
-                <div className="flex items-end gap-2">
-                  <textarea
-                    ref={textareaRef}
-                    rows={1}
-                    value={inputValue}
-                    onChange={(e) => {
-                      setInputValue(e.target.value);
-                      e.target.style.height = "auto";
-                      e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage(inputValue);
-                      }
-                    }}
-                    placeholder="Ask a question, inspect system state, or request an operational agent workflow..."
-                    disabled={isLoading}
-                    className="flex-1 max-h-44 min-h-[44px] resize-none rounded-xl bg-secondary/50 border border-border/80 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
-                  />
-                  <VoiceRecorder
-                    onTranscript={(text) =>
-                      setInputValue((prev) => (prev ? `${prev} ${text}` : text))
-                    }
-                    disabled={isLoading}
-                  />
-                  <Button
-                    type="submit"
-                    variant="default"
-                    disabled={isLoading || !inputValue.trim()}
-                    className="rounded-xl px-4 py-2.5 gap-2 shrink-0 h-[44px]"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Send</span>
-                        <Send className="h-3.5 w-3.5" />
-                      </>
-                    )}
-                  </Button>
+                <div className="relative rounded-3xl border border-border/80 bg-[#1e1e1e]/90 shadow-2xl p-2 sm:p-2.5 backdrop-blur-xl transition-all focus-within:border-primary/60">
+                  <div className="flex items-end gap-2">
+                    {/* Plus Action Button */}
+                    <button
+                      ref={plusButtonRef}
+                      type="button"
+                      onClick={() => setIsActionMenuOpen((prev) => !prev)}
+                      title="Add photos & files, library docs, sketch, web search, or calendar"
+                      className={`h-9 w-9 rounded-full flex items-center justify-center transition-all shrink-0 cursor-pointer ${
+                        isActionMenuOpen
+                          ? "bg-primary text-primary-foreground rotate-45"
+                          : "bg-[#2f2f2f] hover:bg-[#3d3d3d] text-foreground-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Plus className="h-5 w-5 transition-transform duration-200" />
+                    </button>
+
+                    {/* Auto-expanding prompt input */}
+                    <textarea
+                      ref={textareaRef}
+                      rows={1}
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        e.target.style.height = "auto";
+                        e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(inputValue);
+                        }
+                      }}
+                      placeholder="Ask anything"
+                      disabled={isLoading}
+                      className="flex-1 max-h-44 min-h-[36px] resize-none bg-transparent border-none px-2 py-1.5 text-sm text-foreground placeholder:text-neutral-400 focus:outline-none leading-relaxed"
+                    />
+
+                    {/* Right action controls: Think, VoiceRecorder, Send */}
+                    <div className="flex items-center gap-1.5 shrink-0 pb-0.5">
+                      {/* Think mode toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setIsThinkModeActive((prev) => !prev)}
+                        title="Extended Reasoning Chain (Deep Reasoning)"
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                          isThinkModeActive
+                            ? "bg-purple-600/30 text-purple-300 border border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.35)]"
+                            : "text-foreground-muted hover:text-foreground hover:bg-[#2f2f2f]"
+                        }`}
+                      >
+                        <Brain className="h-3.5 w-3.5" />
+                        <span>Think</span>
+                      </button>
+
+                      {/* Voice Recorder microphone */}
+                      <VoiceRecorder
+                        onTranscript={(text) =>
+                          setInputValue((prev) => (prev ? `${prev} ${text}` : text))
+                        }
+                        disabled={isLoading}
+                      />
+
+                      {/* Send button with ArrowUp icon */}
+                      <button
+                        type="submit"
+                        disabled={
+                          isLoading ||
+                          (!inputValue.trim() &&
+                            attachedFiles.length === 0 &&
+                            attachedLibraryDocs.length === 0 &&
+                            !attachedSketch)
+                        }
+                        className="h-8 w-8 rounded-full bg-white text-black hover:bg-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                        title="Send prompt"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-black" />
+                        ) : (
+                          <ArrowUp className="h-4 w-4 stroke-[2.5]" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/40">
                   {/* OpenCode Zen Model Selector Button directly inside chat input */}
                   <div className="relative">
@@ -1177,6 +1505,7 @@ export default function ControlCentrePage() {
           </div>
         </div>
       </div>
+    </div>
 
       {/* Chat History Drawer */}
       {showHistory && (
@@ -1320,6 +1649,56 @@ export default function ControlCentrePage() {
           </div>
         </div>
       )}
+
+      {/* Hidden file upload input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileUpload}
+        className="hidden"
+        accept="image/*,.pdf,.doc,.docx,.txt,.md,.json"
+      />
+
+      {/* Sketch Whiteboard Canvas Modal */}
+      <SketchModal
+        isOpen={isSketchModalOpen}
+        onClose={() => setIsSketchModalOpen(false)}
+        onAttachSketch={(dataUrl) => {
+          setAttachedSketch(dataUrl);
+          setIsSketchModalOpen(false);
+        }}
+      />
+
+      {/* Candidate Document Library Modal */}
+      <LibraryModal
+        isOpen={isLibraryModalOpen}
+        onClose={() => setIsLibraryModalOpen(false)}
+        onAttachDocument={(doc) => {
+          setAttachedLibraryDocs((prev) => [...prev, doc]);
+          setIsLibraryModalOpen(false);
+        }}
+      />
+
+      {/* Google Calendar Interview Coordination Modal */}
+      <CalendarModal
+        isOpen={isCalendarModalOpen}
+        onClose={() => setIsCalendarModalOpen(false)}
+        onSelectEventToDiscuss={(evt) => {
+          setInputValue(`Prepare discussion talking points and system architecture preparation for ${evt.title} with ${evt.company} on ${evt.date}.`);
+          setIsCalendarModalOpen(false);
+        }}
+      />
+
+      {/* GitHub Repository Showcase Modal */}
+      <GithubModal
+        isOpen={isGithubModalOpen}
+        onClose={() => setIsGithubModalOpen(false)}
+        onInsertRepoContext={(ctx) => {
+          setInputValue((prev) => (prev ? `${prev} [${ctx}]` : `Review repository status: ${ctx}`));
+          setIsGithubModalOpen(false);
+        }}
+      />
     </AppShell>
   );
 }
