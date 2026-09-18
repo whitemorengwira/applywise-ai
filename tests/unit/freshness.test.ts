@@ -87,4 +87,41 @@ describe("Job Freshness & Provenance Evaluation (Section 5)", () => {
     expect(fp1).toBe(fp2);
     expect(fp1).toBe("principalaiarchitect__cognitivescaleenterprise__johannesburgsouthafrica");
   });
+
+  describe("Automated Staleness Filter & Posting Date Formatter", () => {
+    it("isStale returns true for dates older than 30 days and false for recent dates", () => {
+      const freshDate = "2026-09-15T12:00:00Z";
+      const staleDate = "2026-08-01T12:00:00Z";
+      const invalidDate = "invalid-date-format";
+
+      expect(FreshnessService.isStale(freshDate, refDate)).toBe(false);
+      expect(FreshnessService.isStale(staleDate, refDate)).toBe(true);
+      expect(FreshnessService.isStale(invalidDate, refDate)).toBe(true);
+      expect(FreshnessService.isStale(undefined, refDate)).toBe(true);
+    });
+
+    it("filterFreshJobs unconditionally strips out stale postings older than 30 days", () => {
+      const testList = [
+        { id: "fresh-1", title: "Job 1", postedAt: "2026-09-15T10:00:00Z" },
+        { id: "fresh-2", title: "Job 2", postedAt: "2026-09-10T10:00:00Z" },
+        { id: "stale-1", title: "Job 3", postedAt: "2026-07-01T10:00:00Z" },
+        { id: "stale-2", title: "Job 4", postedAt: "invalid" },
+      ];
+
+      const filtered = FreshnessService.filterFreshJobs(testList, refDate);
+      expect(filtered.length).toBe(2);
+      expect(filtered.map((j) => j.id)).toEqual(["fresh-1", "fresh-2"]);
+    });
+
+    it("formatPostingAge produces accurate human-readable relative ages", () => {
+      expect(FreshnessService.formatPostingAge("2026-09-16T10:00:00Z", refDate)).toBe("Posted today");
+      expect(FreshnessService.formatPostingAge("2026-09-15T10:00:00Z", refDate)).toBe("Posted 1 day ago");
+      expect(FreshnessService.formatPostingAge("2026-09-14T10:00:00Z", refDate)).toBe("Posted 2 days ago");
+      expect(FreshnessService.formatPostingAge("2026-09-09T10:00:00Z", refDate)).toBe("Posted 7 days ago");
+      expect(FreshnessService.formatPostingAge("2026-09-02T10:00:00Z", refDate)).toBe("Posted 1 week ago");
+      expect(FreshnessService.formatPostingAge("2026-08-26T10:00:00Z", refDate)).toBe("Posted 3 weeks ago");
+      expect(FreshnessService.formatPostingAge("not-a-date", refDate)).toBe("Recently posted");
+    });
+  });
 });
+

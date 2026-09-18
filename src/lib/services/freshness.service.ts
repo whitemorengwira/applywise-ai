@@ -108,6 +108,40 @@ export class FreshnessService {
   }
 
   /**
+   * Checks whether a job is considered stale (> 30 days or invalid date).
+   */
+  public static isStale(postedAt?: string | null, referenceDate?: Date, maxAgeDays = 30): boolean {
+    const evaluation = this.evaluateFreshness(postedAt, referenceDate);
+    return evaluation.tier === "REJECTED" || evaluation.ageDays > maxAgeDays;
+  }
+
+  /**
+   * Filters a list of jobs, removing any stale vacancies older than maxAgeDays (default 30).
+   */
+  public static filterFreshJobs<T extends { postedAt?: string }>(
+    jobs: T[],
+    referenceDate?: Date,
+    maxAgeDays = 30
+  ): T[] {
+    return jobs.filter((job) => !this.isStale(job.postedAt, referenceDate, maxAgeDays));
+  }
+
+  /**
+   * Formats posting age into a clean, human-readable relative label with calendar date context.
+   */
+  public static formatPostingAge(postedAt?: string | null, referenceDate?: Date): string {
+    if (!postedAt) return "Recently posted";
+    const evaluation = this.evaluateFreshness(postedAt, referenceDate);
+    if (evaluation.ageDays < 0) return "Recently posted";
+    if (evaluation.ageDays === 0) return "Posted today";
+    if (evaluation.ageDays === 1) return "Posted 1 day ago";
+    if (evaluation.ageDays <= 7) return `Posted ${evaluation.ageDays} days ago`;
+    if (evaluation.ageDays <= 14) return "Posted 1 week ago";
+    if (evaluation.ageDays <= 30) return `Posted ${Math.floor(evaluation.ageDays / 7)} weeks ago`;
+    return `Posted ${evaluation.ageDays} days ago (Stale)`;
+  }
+
+  /**
    * Generates a canonical fingerprint to prevent applying twice to duplicate listings.
    */
   public static generateCanonicalFingerprint(title: string, company: string, location: string): string {

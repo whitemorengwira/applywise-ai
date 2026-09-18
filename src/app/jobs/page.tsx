@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 import { JobListing, MatchAnalysis } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
+import { FreshnessService } from "@/lib/services/freshness.service";
 
 function getCleanDomain(url: string): string {
   try {
@@ -80,17 +82,19 @@ export default function JobsPage() {
     };
   }, []);
 
-  const filteredJobs = jobs.filter((job) => {
-    if (remoteOnly && job.remoteType !== "Remote") return false;
-    if (searchQuery.trim() === "") return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      job.title.toLowerCase().includes(q) ||
-      job.company.toLowerCase().includes(q) ||
-      job.location.toLowerCase().includes(q) ||
-      job.skills.some((s) => s.toLowerCase().includes(q))
-    );
-  });
+  const filteredJobs = jobs
+    .filter((job) => !FreshnessService.isStale(job.postedAt))
+    .filter((job) => {
+      if (remoteOnly && job.remoteType !== "Remote") return false;
+      if (searchQuery.trim() === "") return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        job.title.toLowerCase().includes(q) ||
+        job.company.toLowerCase().includes(q) ||
+        job.location.toLowerCase().includes(q) ||
+        job.skills.some((s) => s.toLowerCase().includes(q))
+      );
+    });
 
   const runDeepMatch = async (jobId: string) => {
     setEvaluatingJobId(jobId);
@@ -194,7 +198,7 @@ export default function JobsPage() {
         <div className="flex items-center gap-3 shrink-0">
           <Badge variant="outline" className="text-[11px] font-mono border-border/80 text-foreground-muted hidden sm:inline-flex gap-1.5 py-1.5 px-3">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {filteredJobs.length} Real Vacancies
+            {filteredJobs.length} Active Real Vacancies (Zero Stale)
           </Badge>
 
           <Button variant="glow" onClick={() => setShowIngestModal(true)} className="gap-2 shrink-0">
@@ -244,6 +248,10 @@ export default function JobsPage() {
                     <Badge variant={job.remoteType === "Remote" ? "success" : "secondary"} className="text-[10px]">
                       {job.remoteType}
                     </Badge>
+                    <Badge variant="outline" className="text-[10px] text-cyan-400 border-cyan-500/30 gap-1 font-mono bg-cyan-500/10">
+                      <Clock className="h-2.5 w-2.5 inline" />
+                      {FreshnessService.formatPostingAge(job.postedAt)}
+                    </Badge>
                   </div>
 
                   <p className="text-xs md:text-sm text-foreground-muted flex items-center gap-2 flex-wrap">
@@ -256,6 +264,11 @@ export default function JobsPage() {
                     <span className="text-foreground-subtle">•</span>
                     <span className="font-mono text-emerald-400 font-semibold">
                       £{job.salaryMin?.toLocaleString()} - £{job.salaryMax?.toLocaleString()} GBP
+                    </span>
+                    <span className="text-foreground-subtle">•</span>
+                    <span className="flex items-center gap-1 font-mono text-[11px] text-cyan-400">
+                      <Clock className="h-3 w-3 inline text-cyan-400" />
+                      {FreshnessService.formatPostingAge(job.postedAt)}
                     </span>
                   </p>
                 </div>

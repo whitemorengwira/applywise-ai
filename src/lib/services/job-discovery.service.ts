@@ -8,6 +8,7 @@
 import { JobListing } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { logger } from "@/lib/observability/logger";
+import { FreshnessService } from "@/lib/services/freshness.service";
 
 interface CacheEntry {
   jobs: JobListing[];
@@ -211,22 +212,27 @@ export class JobDiscoveryService {
       }
     }
 
+    // Filter out stale vacancies older than 30 days (per Section 5 Directive)
+    const freshJobs = FreshnessService.filterFreshJobs(combined);
+
     // Update cache
     jobsCache = {
-      jobs: combined,
+      jobs: freshJobs,
       timestamp: now,
     };
 
     logger.info("job_discovery_completed", "Job discovery completed", {
       metadata: {
         totalDiscovered: combined.length,
+        freshCount: freshJobs.length,
+        staleRemoved: combined.length - freshJobs.length,
         verifiedCount: SEED_JOBS.length,
         liveRemotiveCount: remotiveJobs.length,
         liveArbeitnowCount: arbeitnowJobs.length,
       },
     });
 
-    return this.filterJobs(combined, options?.query, options?.remoteOnly);
+    return this.filterJobs(freshJobs, options?.query, options?.remoteOnly);
   }
 
   private static filterJobs(

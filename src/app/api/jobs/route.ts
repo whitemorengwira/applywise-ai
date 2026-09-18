@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { JobDiscoveryService } from "@/lib/services/job-discovery.service";
+import { FreshnessService } from "@/lib/services/freshness.service";
 import { withObservability } from "@/lib/observability/http";
 
 async function handleGet(request: Request) {
@@ -31,10 +32,14 @@ async function handleGet(request: Request) {
       return true;
     });
 
+    // Enforce Section 5 Staleness Filter: automatically remove stale vacancies (> 30 days)
+    const freshJobs = FreshnessService.filterFreshJobs(deduplicated);
+
     return NextResponse.json({
       success: true,
-      jobs: deduplicated,
-      total: deduplicated.length,
+      jobs: freshJobs,
+      total: freshJobs.length,
+      staleRemoved: deduplicated.length - freshJobs.length,
       timestamp: new Date().toISOString(),
     });
   } catch {

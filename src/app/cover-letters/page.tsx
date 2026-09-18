@@ -13,8 +13,10 @@ import {
   Loader2,
   Download,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 import { SEED_JOBS, SEED_PROFILE } from "@/lib/db/seed-data";
+import { FreshnessService } from "@/lib/services/freshness.service";
 
 function buildDefaultLetter(job: typeof SEED_JOBS[0]): string {
   return `Dear Hiring Team at ${job.company},
@@ -33,26 +35,28 @@ Principal Technology Architect & AI Systems Engineer`;
 }
 
 export default function CoverLettersPage() {
+  const freshJobs = React.useMemo(() => FreshnessService.filterFreshJobs(SEED_JOBS), []);
+
   const [selectedJobId, setSelectedJobId] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
       try {
         const params = new URLSearchParams(window.location.search);
         const jId = params.get("jobId");
-        if (jId && SEED_JOBS.some((j) => j.id === jId)) {
+        if (jId && freshJobs.some((j) => j.id === jId)) {
           return jId;
         }
       } catch {
         // Safe SSR fallback
       }
     }
-    return SEED_JOBS[0].id;
+    return freshJobs[0]?.id || SEED_JOBS[0].id;
   });
 
   const [customLetters, setCustomLetters] = React.useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
 
-  const selectedJob = SEED_JOBS.find((j) => j.id === selectedJobId) || SEED_JOBS[0];
+  const selectedJob = freshJobs.find((j) => j.id === selectedJobId) || freshJobs[0] || SEED_JOBS[0];
   const letterContent = customLetters[selectedJob.id] ?? buildDefaultLetter(selectedJob);
 
   const handleGenerate = async () => {
@@ -100,8 +104,15 @@ export default function CoverLettersPage() {
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
               Cover Letter: <span className="text-primary">{selectedJob.company}</span>
             </h2>
-            <p className="text-xs text-foreground-muted">
-              Target Role: <span className="font-semibold text-foreground">{selectedJob.title}</span> • Location: {selectedJob.location}
+            <p className="text-xs text-foreground-muted flex items-center gap-2 flex-wrap">
+              <span>Target Role: <span className="font-semibold text-foreground">{selectedJob.title}</span></span>
+              <span className="text-foreground-subtle">•</span>
+              <span>Location: {selectedJob.location}</span>
+              <span className="text-foreground-subtle">•</span>
+              <span className="inline-flex items-center gap-1 font-mono text-cyan-400">
+                <Clock className="h-3 w-3 inline text-cyan-400" />
+                {FreshnessService.formatPostingAge(selectedJob.postedAt)}
+              </span>
             </p>
           </div>
 
@@ -111,9 +122,9 @@ export default function CoverLettersPage() {
               onChange={(e) => setSelectedJobId(e.target.value)}
               className="h-10 rounded-xl border border-border bg-secondary/40 px-3 text-xs text-foreground focus:border-primary focus:outline-none max-w-full truncate flex-1 sm:flex-none"
             >
-              {SEED_JOBS.map((j) => (
+              {freshJobs.map((j) => (
                 <option key={j.id} value={j.id} className="bg-[#0a0f1d] text-foreground">
-                  {j.company} — {j.title}
+                  {j.company} — {j.title} ({FreshnessService.formatPostingAge(j.postedAt)})
                 </option>
               ))}
             </select>

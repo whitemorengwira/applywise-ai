@@ -14,7 +14,9 @@ import {
   Cpu,
   Layers,
   Search,
+  Clock,
 } from "lucide-react";
+import { FreshnessService } from "@/lib/services/freshness.service";
 
 export default function Home() {
   const kpiStats = [
@@ -52,12 +54,12 @@ export default function Home() {
     },
   ];
 
-  const highMatchJobs = [
+  const curatedCandidateJobs = [
     {
-      id: "job-1",
-      title: "Lead AI & Full-Stack Platform Engineer",
-      company: "CognitiveScale Enterprise",
-      location: "Remote (Global / EMEA)",
+      id: "job-101",
+      title: "Lead Solutions Architect (AI & Cloud Platforms)",
+      company: "Entelect",
+      location: "Johannesburg, South Africa (Hybrid / Remote Option)",
       salary: "£135,000 - £160,000",
       score: 97,
       tier: "highMatch" as const,
@@ -65,34 +67,54 @@ export default function Home() {
       criticalGap: "None",
       applied: true,
       stage: "Technical Architecture Interview",
+      postedAt: "2026-09-17T09:00:00Z",
     },
     {
-      id: "job-2",
-      title: "Principal Agentic Systems Architect",
-      company: "Synthesia AI Labs",
-      location: "Hybrid / London",
-      salary: "£145,000 - £175,000",
-      score: 94,
+      id: "job-sa-201",
+      title: "Principal Agentic AI Systems Architect",
+      company: "Synthesia",
+      location: "Johannesburg, South Africa / Remote",
+      salary: "£130,000 - £165,000",
+      score: 95,
       tier: "highMatch" as const,
-      matchedTags: ["Multi-Agent RAG", "Python / Node.js", "System Design", "Cloud Infrastructure"],
+      matchedTags: ["Multi-Agent RAG", "Python / TypeScript", "System Design", "Cloud Infrastructure"],
       criticalGap: "Kubernetes (Minor)",
       applied: true,
       stage: "CV Screen Passed",
+      postedAt: "2026-09-16T14:30:00Z",
     },
     {
-      id: "job-3",
-      title: "Head of AI Application Engineering",
-      company: "VentureScale Systems",
-      location: "Remote (UK/EU)",
-      salary: "£150,000 - £180,000",
-      score: 89,
+      id: "job-102",
+      title: "AI Solutions Architect",
+      company: "IQbusiness",
+      location: "Johannesburg, South Africa (Hybrid)",
+      salary: "£145,000 - £175,000",
+      score: 94,
       tier: "highMatch" as const,
-      matchedTags: ["Executive Leadership", "Production LLM Routing", "Supabase", "Cost Optimization"],
-      criticalGap: "FinTech Compliance",
+      matchedTags: ["AWS Bedrock", "Generative AI", "Agentic Pipelines", "Solutions Architecture"],
+      criticalGap: "None",
       applied: false,
       stage: "Ready to Tailor",
+      postedAt: "2026-09-16T11:00:00Z",
+    },
+    {
+      id: "job-zw-202",
+      title: "Lead Cloud & AI Solutions Architect",
+      company: "Econet Wireless",
+      location: "Harare, Zimbabwe / Remote",
+      salary: "£120,000 - £155,000",
+      score: 92,
+      tier: "highMatch" as const,
+      matchedTags: ["AWS Cloud", "LiteLLM Routing", "Terraform", "PostgreSQL", "Zero-Trust"],
+      criticalGap: "None",
+      applied: false,
+      stage: "Ready to Tailor",
+      postedAt: "2026-09-15T12:00:00Z",
     },
   ];
+
+  // Enforce Section 5 Staleness Filter: Automatically eliminate stale jobs older than 30 days
+  const highMatchJobs = FreshnessService.filterFreshJobs(curatedCandidateJobs);
 
   return (
     <AppShell pageTitle="Executive Dashboard">
@@ -202,9 +224,17 @@ export default function Home() {
                         {job.score}% MATCH
                       </Badge>
                     </div>
-                    <p className="text-xs text-foreground-muted">
-                      {job.company} • <span className="text-foreground-subtle">{job.location}</span> •{" "}
+                    <p className="text-xs text-foreground-muted flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">{job.company}</span>
+                      <span className="text-foreground-subtle">•</span>
+                      <span className="text-foreground-subtle">{job.location}</span>
+                      <span className="text-foreground-subtle">•</span>
                       <span className="font-mono text-emerald-400 font-semibold">{job.salary}</span>
+                      <span className="text-foreground-subtle">•</span>
+                      <span className="flex items-center gap-1 font-mono text-[11px] text-cyan-400">
+                        <Clock className="h-3 w-3 inline text-cyan-400" />
+                        {FreshnessService.formatPostingAge(job.postedAt)}
+                      </span>
                     </p>
                   </div>
 
