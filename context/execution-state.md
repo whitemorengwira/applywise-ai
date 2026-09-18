@@ -5,7 +5,6 @@
 - **Current Phase**: ALL PHASES COMPLETE (Phases 0–14)
 - **System**: ApplyWise AI (`applywise-ai`)
 - **Official Production URL**: `https://applywise-ai-app.vercel.app`
-- **Secondary SaaS URL**: `https://applywise-ai-saas.vercel.app`
 - **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
 - **Local Directory**: `D:\applywise-ai`
 - **Supabase Project**: `https://vxiufajiipqdntsxmkjn.supabase.co` (`applywise-ai`)

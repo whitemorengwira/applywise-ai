@@ -66,7 +66,9 @@ export class ControlPlaneOrchestrator {
       "",
       "Your Behavior & Style:",
       "- Communicate like a world-class AI pair-programmer and executive advisor: articulate, thoughtful, direct, deeply competent, and warm.",
-      "- Provide detailed, strategic, and technically rigorous answers.",
+      "- For greetings, pleasantries, or casual conversation (e.g. 'hi', 'how are you', 'thanks'), respond naturally, warmly, and concisely as an AI partner. Do NOT dump architectural case studies, system hashes, or resume summaries unless explicitly asked.",
+      "- Only provide deep candidate evidence and architectural case studies when answering technical questions about Whitemore's background, cloud systems, platforms, or roles.",
+      "- Provide detailed, strategic, and technically rigorous answers when addressing systems, architecture, or role fit.",
       "- Ground all assertions in Whitemore's real background and systems. Never hallucinate fictional companies, credentials, or metrics.",
       "- Format responses with clean Markdown, bullet points, and code/architecture blocks where appropriate.",
       "- Use British English conventions (e.g. operationalise, analyse, catalogue).",
@@ -156,11 +158,11 @@ export class ControlPlaneOrchestrator {
     const topChunks = ranked.slice(0, 3).map((r) => r.chunk);
 
     // 1. Appreciation & Acknowledgments
-    if (/^(thanks|thank you|cheers|much appreciated|excellent|great job|awesome|ok|okay)/i.test(lower)) {
+    if (/^(thanks|thank you|cheers|much appreciated|excellent|great job|awesome|cool|perfect|ok|okay|got it|noted)/i.test(lower)) {
       return {
         content:
           "You're very welcome, Whitemore! Let me know whenever you'd like to inspect new roles, review your architectural case studies, or prepare an application.",
-        evidence: "ApplyWise Autonomous Pipeline",
+        evidence: "ApplyWise Copilot",
         nextActions: [
           "Find current AI architect jobs in South Africa",
           "What AWS architecture evidence do I have?",
@@ -180,16 +182,19 @@ export class ControlPlaneOrchestrator {
           "Find current AI architect jobs in South Africa",
           "What AWS architecture evidence do I have?",
           "What is the current system status?",
-          "How does my background align with Enterprise AI Architect roles?",
+          "Explain why the top result is eligible",
         ],
         groundingCategory: "MODEL_REASONING",
       };
     }
 
     // 2. Conversation & Greetings ("hi", "hello", "good morning")
-    if (intent === "CONVERSATION" || /^(hi|hello|hey|good day|greetings|morning|afternoon|evening)/i.test(lower)) {
+    if (
+      intent === "CONVERSATION" ||
+      /^(hi|hello|hey|heya|howdy|greetings|good\s+(morning|afternoon|evening|day)|yo)/i.test(lower)
+    ) {
       const content =
-        "Hello Whitemore! Good to connect with you. How can I help you today? We can explore fresh job opportunities, review your architectural case studies, or prepare an application package.";
+        "Hello Whitemore! Welcome to your ApplyWise AI control plane. How can I help you today? We can explore fresh job opportunities, review your architectural case studies, or prepare an application package.";
 
       return {
         content,
@@ -204,8 +209,26 @@ export class ControlPlaneOrchestrator {
       };
     }
 
-    // 3. Technical, Architectural & Case Study Queries
-    if (topChunks.length > 0 && ranked[0].precisionScore > 0.25) {
+    // 3. Technical, Architectural & Case Study Queries (Strict domain guard to avoid false grounding)
+    const hasSpecificDomainKeyword =
+      lower.includes("earcodex") ||
+      lower.includes("supabets") ||
+      lower.includes("nico") ||
+      lower.includes("socinga") ||
+      lower.includes("samf") ||
+      lower.includes("terraform") ||
+      lower.includes("aws") ||
+      lower.includes("ai gateway") ||
+      lower.includes("litellm") ||
+      lower.includes("langgraph") ||
+      lower.includes("architecture") ||
+      lower.includes("case stud") ||
+      lower.includes("infrastructure") ||
+      lower.includes("devops") ||
+      lower.includes("systems engineer") ||
+      lower.includes("candidate evidence");
+
+    if (topChunks.length > 0 && hasSpecificDomainKeyword && ranked[0].precisionScore >= 0.50) {
       const primaryChunk = topChunks[0];
       const evidenceTitles = topChunks.map((c, i) => `[Source ${i + 1}: ${c.title}]`).join(" ");
 
@@ -305,15 +328,16 @@ export class ControlPlaneOrchestrator {
     // 5. Default General Inquiry Synthesis
     const general =
       `I understand you're inquiring about: "${prompt}".\n\n` +
-      `As your ApplyWise AI Control Plane Copilot, I have full operational visibility across your career assets, active applications, and architectural evidence base:\n\n` +
-      `• **Candidate Profile**: Whitemore Ngwira (14+ years Principal Systems Architect & AI Engineer)\n` +
-      `• **Core Competencies**: Agentic AI (LangGraph, Cloudflare AI Gateway), AWS Cloud Infrastructure (37 Terraform blueprints), High-Throughput Distributed Systems (Supabets, EarCodeX, NICO Life)\n` +
-      `• **Active Command Tools**: I can search authentic vacancies across African markets, evaluate geographic and work arrangement eligibility, execute three-way job matching, generate grounded British English cover letters, verify cryptographic CV immutability, and trigger autonomous pipeline cycles.\n\n` +
+      `As your ApplyWise AI Control Plane Copilot, I'm here to assist across your autonomous job search, technical case studies, and application workflows. You can ask me to:\n\n` +
+      `• **Search Vacancies**: Discover real-time roles across South Africa, Zimbabwe, and regional Africa.\n` +
+      `• **Examine Architecture**: Review verified case studies (EarCodeX, Supabets, NICO Life, Socinga, AWS Terraform).\n` +
+      `• **Check System Health**: Inspect AI runtime models, cloud scheduler status, and cryptographic CV integrity.\n` +
+      `• **Prepare Applications**: Generate grounded British English cover letters and LangGraph application packages.\n\n` +
       `How would you like to direct the system next?`;
 
     return {
       content: general,
-      evidence: "ApplyWise Orchestrator & Candidate Knowledge Base",
+      evidence: "ApplyWise Orchestrator",
       nextActions: [
         "What can you do?",
         "Check current system health",
@@ -332,13 +356,22 @@ export class ControlPlaneOrchestrator {
 
     const lower = rawMessage.toLowerCase().trim();
 
+    // Never treat greetings, pleasantries, or standalone inquiries as contextual follow-ups
+    const isGreetingOrCasual =
+      /^(hi|hello|hey|heya|howdy|greetings|good\s+(morning|afternoon|evening|day)|how\s+are\s+you|how're\s+you|how\s+are\s+things|how\s+is\s+it\s+going|how's\s+it\s+going|what'?s\s+up|wassup|who\s+are\s+you|what\s+can\s+you\s+do|help|\?)/i.test(lower);
+    if (isGreetingOrCasual) return rawMessage;
+
     // Check if query is conversational follow-up or has demonstrative/referential terms
     const isFollowUp =
       lower.startsWith("tell me more") ||
       lower.startsWith("explain more") ||
       lower.startsWith("what about") ||
       lower.startsWith("why ") ||
-      lower.startsWith("how ") ||
+      lower.startsWith("how did ") ||
+      lower.startsWith("how was ") ||
+      lower.startsWith("how does ") ||
+      lower.startsWith("how do they ") ||
+      lower.startsWith("how is that ") ||
       lower.includes("the second") ||
       lower.includes("the first") ||
       lower.includes("the third") ||
@@ -508,7 +541,7 @@ export class ControlPlaneOrchestrator {
         message: synth.content,
         intent: "CONVERSATION",
         groundingCategory: synth.groundingCategory,
-        runtimeStatus,
+        runtimeStatus: "AI_RUNTIME_UNAVAILABLE",
         activeModel,
         provider,
         toolCalls: [],
@@ -518,10 +551,10 @@ export class ControlPlaneOrchestrator {
         metadata: {
           provider,
           model: activeModel,
-          runtime: runtimeStatus,
+          runtime: "AI_RUNTIME_UNAVAILABLE",
           requestId: auditId,
           latencyMs: Math.max(1, Date.now() - startTime),
-          fallback: false,
+          fallback: true,
         },
         nextActions: synth.nextActions,
       };

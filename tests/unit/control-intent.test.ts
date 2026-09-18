@@ -12,8 +12,16 @@ describe("Control Plane Intent Classifier (Sections 6, 7, 18)", () => {
     expect(IntentClassifier.classify("hello").intent).toBe("CONVERSATION");
     expect(IntentClassifier.classify("hey!").intent).toBe("CONVERSATION");
     expect(IntentClassifier.classify("Good morning").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("good afternoon").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("hi there").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("how are you").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("how are you doing").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("how's it going").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("how are things").intent).toBe("CONVERSATION");
     expect(IntentClassifier.classify("thank you").intent).toBe("CONVERSATION");
     expect(IntentClassifier.classify("thanks").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("awesome").intent).toBe("CONVERSATION");
+    expect(IntentClassifier.classify("ok").intent).toBe("CONVERSATION");
   });
 
   it("classifies capability inquiries as SYSTEM_STATUS", () => {

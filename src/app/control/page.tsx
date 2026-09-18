@@ -637,7 +637,7 @@ export default function ControlCentrePage() {
                       )}
 
                       {/* Structured Operation Details (PLAN / EXECUTION / RESULT / EVIDENCE) */}
-                      {(msg.plan || msg.execution || msg.result || msg.evidence) && (
+                      {msg.intent !== "CONVERSATION" && (msg.plan || msg.execution || msg.result || msg.evidence) && (
                         <div className="pt-2 border-t border-border/50">
                           <button
                             onClick={() => toggleExpand(msg.id)}

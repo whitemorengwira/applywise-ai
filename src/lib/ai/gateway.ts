@@ -352,11 +352,11 @@ export class AIGateway {
       };
     }
 
-    // 3. OpenAI API
+    // 3. OpenAI API (Only when explicitly selected or key starts with sk-)
     const openAIKey =
-      (provider === "openai" ? rawKey : "") ||
-      env.OPENAI_API_KEY ||
-      (rawKey.startsWith("sk-") ? rawKey : "");
+      (provider === "openai" ? rawKey || env.OPENAI_API_KEY : "") ||
+      (rawKey.startsWith("sk-") ? rawKey : "") ||
+      (model.startsWith("gpt-") ? env.OPENAI_API_KEY : "");
     if (openAIKey) {
       return {
         endpoint: "https://api.openai.com/v1/chat/completions",

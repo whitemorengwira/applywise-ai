@@ -28,63 +28,23 @@ export class IntentClassifier {
     const lower = text.toLowerCase();
 
     // 1. GREETINGS & CASUAL CONVERSATION (Section 6 & 18 Mandatory Requirement)
-    // Simple conversational messages MUST remain conversational and not trigger operational agents or hallucinations.
-    // Domain inquiries (architecture, systems, AWS, case studies, jobs, CV, etc.) MUST NEVER be misclassified as greetings.
-    const hasDomainInquiryKeywords =
-      lower.includes("architect") ||
-      lower.includes("system") ||
-      lower.includes("cloud") ||
-      lower.includes("aws") ||
-      lower.includes("terraform") ||
-      lower.includes("project") ||
-      lower.includes("case stud") ||
-      lower.includes("cv") ||
-      lower.includes("job") ||
-      lower.includes("application") ||
-      lower.includes("model") ||
-      lower.includes("scheduler") ||
-      lower.includes("background") ||
-      lower.includes("experience") ||
-      lower.includes("earcodex") ||
-      lower.includes("supabets") ||
-      lower.includes("nico") ||
-      lower.includes("socinga") ||
-      lower.includes("samf") ||
-      lower.includes("evidence") ||
-      lower.includes("rag");
+    // Simple conversational messages MUST remain conversational and not trigger operational agents, case studies, or hallucinations.
+    const isPureGreeting =
+      /^(hi|hello|hey|heya|howdy|greetings|good\s+(morning|afternoon|evening|day)|yo)(\s+(there|friend|copilot|assistant|applywise|team|all|everyone))?[\s!.,?]*$/i.test(lower);
+    const isStateInquiry =
+      /^(how\s+(are\s+you|are\s+things|is\s+it\s+going|are\s+you\s+doing)|how're\s+you|how's\s+it\s+going|how\s+do\s+you\s+do|what'?s\s+up|wassup)(\s+(today|with\s+you|doing))?[\s!.,?]*$/i.test(lower);
+    const isGreetingAndState =
+      /^(hi|hello|hey)[\s,!]+(how\s+are\s+you|how're\s+you|how\s+are\s+you\s+doing|how\s+is\s+it\s+going|how's\s+it\s+going|what'?s\s+up)[\s!.,?]*$/i.test(lower);
+    const isPleasantry =
+      /^(thanks|thank\s+you|cheers|much\s+appreciated|great|awesome|cool|perfect|excellent|ok|okay|got\s+it|noted|understood)[\s!.,]*$/i.test(lower);
 
-    if (!hasDomainInquiryKeywords) {
-      const greetingPatterns = [
-        /^hi[\s!.,?]*$/i,
-        /^hello[\s!.,?]*$/i,
-        /^hey[\s!.,?]*$/i,
-        /^greetings[\s!.,?]*$/i,
-        /^good (morning|afternoon|evening|day)[\s!.,?]*$/i,
-        /^how are you[\s!.,?]*$/i,
-        /^what'?s up[\s!.,?]*$/i,
-        /^yo[\s!.,?]*$/i,
-      ];
-
-      for (const pattern of greetingPatterns) {
-        if (pattern.test(text)) {
-          return {
-            intent: "CONVERSATION",
-            confidence: 1.0,
-            extractedEntities: {},
-            reasoning: "Exact match for conversational greeting. Handled courteously without operational tool execution.",
-          };
-        }
-      }
-
-      // Gratitude and conversational pleasantries
-      if (/^(thanks|thank you|cheers|great|awesome|cool|ok|okay)[\s!.,]*$/i.test(text)) {
-        return {
-          intent: "CONVERSATION",
-          confidence: 0.95,
-          extractedEntities: {},
-          reasoning: "Conversational acknowledgment or pleasantry.",
-        };
-      }
+    if (isPureGreeting || isStateInquiry || isGreetingAndState || isPleasantry) {
+      return {
+        intent: "CONVERSATION",
+        confidence: 1.0,
+        extractedEntities: {},
+        reasoning: "Conversational greeting or pleasantry. Handled courteously without operational tool execution or case study dumps.",
+      };
     }
 
     // 2. CAPABILITIES & IDENTITY ("What can you do?", "Who are you?", "Help")

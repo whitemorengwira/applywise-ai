@@ -4,10 +4,8 @@
 **Author:** ApplyWise AI Engineering Agent (Antigravity IDE / JSM Workflow)  
 **Candidate & Principal Owner:** Whitemore Ngwira (N. White) — Principal Technology Architect & AI Systems Engineer (14+ Years Leadership)  
 **Official SaaS Name:** ApplyWise AI (`applywise-ai`)  
-**Production URLs:**
-- Primary: [https://applywise-ai-app.vercel.app](https://applywise-ai-app.vercel.app)
-- SaaS Alias: [https://applywise-ai-saas.vercel.app](https://applywise-ai-saas.vercel.app)
-- Maintained Legacy: [https://nwhitejobapplicationsapp2027.vercel.app](https://nwhitejobapplicationsapp2027.vercel.app)
+**Production URL:**
+- Canonical: [https://applywise-ai-app.vercel.app](https://applywise-ai-app.vercel.app)
 
 **Primary Remote Git Repository:** [https://github.com/whitemorengwira/applywise-ai](https://github.com/whitemorengwira/applywise-ai) (`master` branch)  
 **Synchronized Workspaces:**
@@ -136,7 +134,7 @@ PLAN → CONTEXT → ARCHITECT → IMPLEMENT → TEST → REVIEW → REMEMBER �
 
 ### Phase 12: Production Deployment on Vercel
 - Established official Vercel project `applywise-ai` linked to GitHub repo `whitemorengwira/applywise-ai`.
-- Assigned production aliases: `applywise-ai-app.vercel.app` and `applywise-ai-saas.vercel.app`.
+- Assigned canonical production domain: `applywise-ai-app.vercel.app`.
 - Verified live HTTP 200 responses across all public pages and API endpoints.
 
 ### Phase 13: External Platform Configuration
@@ -410,8 +408,6 @@ Pass Rate   100%
 | Resource / Endpoint | Production URL | HTTP Status | Verified Output / State |
 |---|---|---|---|
 | **Production Web Application** | [https://applywise-ai-app.vercel.app](https://applywise-ai-app.vercel.app) | `200 OK` | Next.js 15 App Router landing view active |
-| **SaaS Alias Domain** | [https://applywise-ai-saas.vercel.app](https://applywise-ai-saas.vercel.app) | `200 OK` | Production alias domain active |
-| **Maintained Legacy Domain** | [https://nwhitejobapplicationsapp2027.vercel.app](https://nwhitejobapplicationsapp2027.vercel.app) | `200 OK` | Legacy deployment route maintained |
 | **CV Integrity Probe** | [https://applywise-ai-app.vercel.app/api/cv-integrity](https://applywise-ai-app.vercel.app/api/cv-integrity) | `200 OK` | Returns `actualHash: 3994a09c...`, `immutable: true` |
 | **System Health Probe** | [https://applywise-ai-app.vercel.app/api/health](https://applywise-ai-app.vercel.app/api/health) | `200 OK` | Returns `appVersion: 2.0.0`, OpenCode Zen models, `freeOnlyMode: enforced` |
 | **Kubernetes Readiness Probe** | [https://applywise-ai-app.vercel.app/api/ready](https://applywise-ai-app.vercel.app/api/ready) | `200 OK` | Returns `status: ready`, memory consumption nominal |
