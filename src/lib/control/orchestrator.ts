@@ -159,12 +159,12 @@ export class ControlPlaneOrchestrator {
     if (/^(thanks|thank you|cheers|much appreciated|excellent|great job|awesome|ok|okay)/i.test(lower)) {
       return {
         content:
-          "You are most welcome, Whitemore. I am continuously monitoring your pipeline and opportunity stream. Let me know whenever you would like to inspect fresh vacancies, prepare another application, or drill into system architecture details.",
+          "You're very welcome, Whitemore! Let me know whenever you'd like to inspect new roles, review your architectural case studies, or prepare an application.",
         evidence: "ApplyWise Autonomous Pipeline",
         nextActions: [
           "Find current AI architect jobs in South Africa",
-          "What is my master CV SHA-256 hash?",
-          "Prepare the application for IQbusiness",
+          "What AWS architecture evidence do I have?",
+          "Prepare an application package",
         ],
         groundingCategory: "MODEL_REASONING",
       };
@@ -174,45 +174,33 @@ export class ControlPlaneOrchestrator {
     if (/how are you|how're you|how do you do|how are things|how is it going|how's it going|what's up|wassup/i.test(lower)) {
       return {
         content:
-          "I am running in top condition, Whitemore! All systems across ApplyWise AI are operational:\n\n" +
-          "• **Master CV**: SHA-256 `3994a09c...` is cryptographically locked and verified invariant\n" +
-          "• **OpenCode Zen Free Suite**: All 5 models (Nemotron 3 Ultra, Nemotron 3.5 Lightning, Ling 3.0 Flash Fin, MiMo V2.5, Muse Spark 1.3) are ready at $0.00 cost\n" +
-          "• **Candidate Knowledge Graph**: 13 architectural case studies (EarCodeX, Supabets 12k req/s, NICO Life, Socinga Smart Mining, SAMF, 37 AWS Terraform blueprints) indexed\n" +
-          "• **Job Eligibility Engine**: South Africa, Zimbabwe, and Malawi Remote/Hybrid/On-site compliance active\n\n" +
-          "How can I assist your pipeline today? We can scan for new vacancies, evaluate role fit, or prepare an application.",
-        evidence: "ApplyWise System Health & Telemetry",
+          "I'm doing great, thanks for asking! Ready to help you review high-fit roles, tailor applications, or dive into any of your cloud architecture work. How are things going with you today?",
+        evidence: "ApplyWise Copilot",
         nextActions: [
           "Find current AI architect jobs in South Africa",
           "What AWS architecture evidence do I have?",
           "What is the current system status?",
           "How does my background align with Enterprise AI Architect roles?",
         ],
-        groundingCategory: "FACT_FROM_SYSTEM",
+        groundingCategory: "MODEL_REASONING",
       };
     }
 
-    // 2. Conversation & Greetings
+    // 2. Conversation & Greetings ("hi", "hello", "good morning")
     if (intent === "CONVERSATION" || /^(hi|hello|hey|good day|greetings|morning|afternoon|evening)/i.test(lower)) {
       const content =
-        "Hello Whitemore. I am your ApplyWise AI control plane copilot — your intelligent career orchestrator and systems architecture partner.\n\n" +
-        "Here is the current operational state of your command centre:\n\n" +
-        "• **Master CV Integrity**: SHA-256 `3994a09c...` (cryptographically locked & verified untampered)\n" +
-        "• **Candidate Knowledge Base**: 13 verified architectural case studies and credentials indexed in pgvector\n" +
-        "• **Geographic Eligibility**: SA, ZW, MW authorization active for Remote, Hybrid, and On-site opportunities\n" +
-        "• **AI Routing & Gateway**: Multi-model suite ready with edge caching and zero-cost governance\n" +
-        "• **Autonomous Cloud Scheduler**: Laptop-independent Vercel daily cron active towards your 200 applications/week target\n\n" +
-        "How can I assist you right now? We can explore high-match vacancies, evaluate architectural alignment for a role, prepare an application, or review technical evidence for an upcoming interview.";
+        "Hello Whitemore! Good to connect with you. How can I help you today? We can explore fresh job opportunities, review your architectural case studies, or prepare an application package.";
 
       return {
         content,
-        evidence: "ApplyWise System Health & Candidate Dossier",
+        evidence: "ApplyWise Copilot",
         nextActions: [
-          "Find eligible AI architect jobs in South Africa",
+          "Find current AI architect jobs in South Africa",
           "What AWS architecture evidence do I have?",
           "What is the current system status?",
-          "How does my background align with Enterprise AI Architect roles?",
+          "Explain why the top result is eligible",
         ],
-        groundingCategory: "FACT_FROM_SYSTEM",
+        groundingCategory: "MODEL_REASONING",
       };
     }
 
@@ -455,17 +443,14 @@ export class ControlPlaneOrchestrator {
       !env.OPENCODE_ZEN_API_KEY.includes("public");
     const hasGemini = !!env.GEMINI_API_KEY;
     const hasGroq = !!env.GROQ_API_KEY;
+    const hasOpenAI = !!env.OPENAI_API_KEY;
     const hasCustom = !!env.AI_BASE_URL;
-    const hasActiveKey = hasOpenCode || hasGemini || hasGroq || hasCustom || !!options.apiKeyOverride;
+    const hasActiveKey = hasOpenCode || hasGemini || hasGroq || hasOpenAI || hasCustom || !!options.apiKeyOverride;
     let runtimeStatus: ControlRuntimeStatus = hasActiveKey ? "REAL_AI" : "AI_RUNTIME_UNAVAILABLE";
     const provider =
       options.providerOverride ||
-      (hasGemini
-        ? "Google Gemini Free Tier"
-        : hasGroq
-        ? "Groq Cloud Free Tier"
-        : hasCustom
-        ? "Custom OpenAI-Compatible"
+      (options.modelOverride?.startsWith("gpt-") || options.providerOverride === "openai"
+        ? "OpenAI"
         : "opencode-zen");
 
     // 2. Handle Pending Action Approval Confirmation

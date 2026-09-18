@@ -23,6 +23,7 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().optional(),
   AI_BASE_URL: z.string().optional(),
   AI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
   AI_PROVIDER: z.string().optional().default("auto"),
 
   // Cloudflare AI Gateway (Zero-cost edge proxy & observability)
@@ -58,6 +59,7 @@ export const env = envSchema.parse({
   GROQ_API_KEY: process.env.GROQ_API_KEY,
   AI_BASE_URL: process.env.AI_BASE_URL,
   AI_API_KEY: process.env.AI_API_KEY,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   AI_PROVIDER: process.env.AI_PROVIDER || "auto",
 
   CLOUDFLARE_AI_GATEWAY_URL: process.env.CLOUDFLARE_AI_GATEWAY_URL,

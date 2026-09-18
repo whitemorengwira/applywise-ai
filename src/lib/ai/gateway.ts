@@ -281,7 +281,10 @@ export class AIGateway {
     return (
       OPENCODE_ZEN_MODELS.some((m) => m.id === canonical || m.id === model) ||
       canonical.endsWith("-free") ||
-      model.endsWith(":free")
+      model.endsWith(":free") ||
+      model === "gpt-4o-mini" ||
+      model === "gemini-1.5-flash" ||
+      model === "llama-3.3-70b-versatile"
     );
   }
 
@@ -349,7 +352,24 @@ export class AIGateway {
       };
     }
 
-    // 3. Local Ollama (if requested or configured)
+    // 3. OpenAI API
+    const openAIKey =
+      (provider === "openai" ? rawKey : "") ||
+      env.OPENAI_API_KEY ||
+      (rawKey.startsWith("sk-") ? rawKey : "");
+    if (openAIKey) {
+      return {
+        endpoint: "https://api.openai.com/v1/chat/completions",
+        headers: {
+          Authorization: `Bearer ${openAIKey}`,
+          "Content-Type": "application/json",
+        },
+        requestModel: "gpt-4o-mini",
+        providerName: "OpenAI",
+      };
+    }
+
+    // 4. Local Ollama (if requested or configured)
     if (provider === "ollama") {
       return {
         endpoint: "http://127.0.0.1:11434/v1/chat/completions",
