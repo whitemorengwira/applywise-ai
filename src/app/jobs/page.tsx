@@ -18,11 +18,14 @@ import {
   AlertCircle,
   RefreshCw,
   Clock,
+  Send,
+  Globe,
 } from "lucide-react";
 import { JobListing, MatchAnalysis } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { FreshnessService } from "@/lib/services/freshness.service";
 import { CurrencyService } from "@/lib/services/currency.service";
+import { InAppApplyModal } from "@/components/applications/in-app-apply-modal";
 
 function getCleanDomain(url: string): string {
   try {
@@ -41,6 +44,8 @@ export default function JobsPage() {
   const [activeAnalysis, setActiveAnalysis] = React.useState<MatchAnalysis | null>(null);
   const [showIngestModal, setShowIngestModal] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [selectedApplyJob, setSelectedApplyJob] = React.useState<JobListing | null>(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = React.useState(false);
 
   // New role form state
   const [newTitle, setNewTitle] = React.useState("");
@@ -274,26 +279,51 @@ export default function JobsPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="glow"
+                    onClick={() => {
+                      setSelectedApplyJob(job);
+                      setIsApplyModalOpen(true);
+                    }}
+                    className="gap-1.5 font-bold text-xs bg-emerald-500 hover:bg-emerald-600 text-black border-emerald-400/40 shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    1-Click Apply (In-App)
+                  </Button>
+
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => runDeepMatch(job.id)}
                     disabled={isEvaluating}
-                    className="gap-1.5"
+                    className="gap-1.5 text-xs"
                   >
                     {isEvaluating ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
                     ) : (
                       <Target className="h-3.5 w-3.5 text-primary" />
                     )}
-                    Run Deep Match
+                    Deep Match
                   </Button>
 
-                  <Button size="sm" variant="glow" asChild>
+                  <Button size="sm" variant="outline" asChild className="text-xs">
                     <Link href={`/cover-letters?jobId=${job.id}`} className="gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Tailor Cover Letter
+                      Tailor Letter
+                    </Link>
+                  </Button>
+
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    asChild
+                    className="h-8 w-8 text-foreground-muted hover:text-cyan-400"
+                    title="Open in Internal Browser Harness"
+                  >
+                    <Link href={`/browser?url=${encodeURIComponent(job.applyUrl || "")}`}>
+                      <Globe className="h-3.5 w-3.5" />
                     </Link>
                   </Button>
                 </div>
@@ -552,6 +582,14 @@ export default function JobsPage() {
           </form>
         </div>
       )}
+
+      {/* 1-Click In-App Application Value Chain Modal */}
+      <InAppApplyModal
+        key={selectedApplyJob?.id ?? "closed"}
+        job={selectedApplyJob}
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+      />
     </AppShell>
   );
 }

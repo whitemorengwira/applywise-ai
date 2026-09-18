@@ -20,6 +20,9 @@ export const SEED_PROFILE: UserProfile = {
   targetSalaryMax: 180000,
   yearsExperience: 14,
   seniorityLevel: "Principal",
+  linkedinUrl: "https://www.linkedin.com/in/whitemore-ngwira",
+  websiteUrl: "https://nwhite.systems",
+  phone: "+27 82 000 0000",
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: new Date().toISOString(),
 };

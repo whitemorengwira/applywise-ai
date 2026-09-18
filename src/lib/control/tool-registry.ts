@@ -15,6 +15,11 @@ import { applicationGraph } from "@/lib/agents/application-graph";
 import { ZohoEmailService } from "@/lib/services/zoho-email.service";
 import { ZohoMailMCPBridge } from "@/lib/mcp/zoho-mail-mcp";
 import { AutomationsService } from "@/lib/services/automations.service";
+import { PNetMCPConnector } from "@/lib/mcp/pnet-mcp";
+import { IndeedMCPConnector } from "@/lib/mcp/indeed-mcp";
+import { LinkedInMCPConnector } from "@/lib/mcp/linkedin-mcp";
+import { InternalBrowserService } from "@/lib/services/internal-browser.service";
+import { ApplicationInventoryService } from "@/lib/services/application-inventory.service";
 import { controlChatToolCallsTotal } from "@/lib/observability/metrics";
 import { logger } from "@/lib/observability/logger";
 
@@ -819,6 +824,118 @@ export class ToolRegistry {
               "Enterprise AI adoption requiring cryptographic SHA-256 immutability and zero-hallucination RAG grounding."
             ]
           }
+        };
+      }
+    });
+
+    // 25. PNet South Africa MCP Connector
+    this.registerTool({
+      name: "pnet_portal_apply",
+      description: "Submits or verifies an application via PNet South Africa MCP connector with ZAR salary and verified Master CV.",
+      isMutating: true,
+      requiresApproval: true,
+      execute: async (params) => {
+        const jobId = (params.jobId as string) || "job-101";
+        const job = ToolRegistry.findJob(jobId);
+        const result = await PNetMCPConnector.submitApplication({
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          expectedSalaryZAR: ("salaryMin" in job && typeof job.salaryMin === "number" ? job.salaryMin : 1650000),
+          coverLetterText: (params.coverLetter as string) || "Executive application submitted via PNet connector.",
+        });
+        return {
+          success: result.success,
+          provenance: "PNet South Africa MCP Connector",
+          data: result,
+        };
+      }
+    });
+
+    // 26. Indeed Quick Apply MCP Connector
+    this.registerTool({
+      name: "indeed_portal_apply",
+      description: "Submits an application via Indeed Quick Apply MCP connector with candidate profile and verified Master CV.",
+      isMutating: true,
+      requiresApproval: true,
+      execute: async (params) => {
+        const jobId = (params.jobId as string) || "job-103";
+        const job = ToolRegistry.findJob(jobId);
+        const result = await IndeedMCPConnector.submitApplication({
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          location: job.location,
+          coverLetterText: (params.coverLetter as string) || "Executive application submitted via Indeed connector.",
+        });
+        return {
+          success: result.success,
+          provenance: "Indeed Quick Apply MCP Connector",
+          data: result,
+        };
+      }
+    });
+
+    // 27. LinkedIn Easy Apply MCP Connector
+    this.registerTool({
+      name: "linkedin_portal_apply",
+      description: "Submits an application via LinkedIn Easy Apply MCP connector with professional credentials and verified Master CV.",
+      isMutating: true,
+      requiresApproval: true,
+      execute: async (params) => {
+        const jobId = (params.jobId as string) || "job-sa-201";
+        const job = ToolRegistry.findJob(jobId);
+        const result = await LinkedInMCPConnector.submitApplication({
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          coverLetterText: (params.coverLetter as string) || "Executive application submitted via LinkedIn Easy Apply.",
+        });
+        return {
+          success: result.success,
+          provenance: "LinkedIn Easy Apply MCP Connector",
+          data: result,
+        };
+      }
+    });
+
+    // 28. Internal Browser Automation Harness
+    this.registerTool({
+      name: "internal_browser_harness",
+      description: "Inspects and autofills portal application forms within the dedicated internal browser harness.",
+      isMutating: false,
+      requiresApproval: false,
+      execute: async (params) => {
+        const url = (params.url as string) || "https://culture.entelect.co.za/join-us/";
+        const dom = InternalBrowserService.inspectUrl(url, (params.jobTitle as string) || "Lead Solutions Architect", (params.company as string) || "Entelect");
+        const autofill = InternalBrowserService.autofill("Standard executive cover letter.");
+        return {
+          success: true,
+          provenance: "ApplyWise Internal Browser Harness",
+          data: {
+            dom,
+            autofill,
+            permanentSessionsActive: InternalBrowserService.getPermanentSessions().length,
+          },
+        };
+      }
+    });
+
+    // 29. Get Applied Jobs Inventory
+    this.registerTool({
+      name: "get_applied_jobs_inventory",
+      description: "Retrieves the permanent ledger of all submitted job applications with proof hashes and status.",
+      isMutating: false,
+      requiresApproval: false,
+      execute: async () => {
+        const inventory = ApplicationInventoryService.getInventory();
+        return {
+          success: true,
+          provenance: "Application Inventory Ledger",
+          data: {
+            totalApplied: inventory.length,
+            inventory,
+          },
         };
       }
     });

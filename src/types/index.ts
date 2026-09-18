@@ -19,6 +19,8 @@ export interface UserProfile {
   seniorityLevel: "Junior" | "Mid" | "Senior" | "Lead" | "Principal" | "Staff" | "Executive";
   linkedinUrl?: string;
   portfolioUrl?: string;
+  websiteUrl?: string;
+  phone?: string;
   createdAt: string;
   updatedAt: string;
 }

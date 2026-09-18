@@ -1,18 +1,14 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import * as path from "path";
+import {
+  MASTER_CV_FILENAME,
+  MASTER_CV_SHA256,
+  CVImmutabilityViolationError,
+  assertCVImmutable as baseAssertCVImmutable,
+} from "./cv-integrity-constants";
 
-export const MASTER_CV_FILENAME = "whitemore_ngwira_cv_n.white.pdf";
-export const MASTER_CV_SHA256 = "3994a09c76cb5922f41f6a212aa99e1392d0a06dbecf650cb307756d5ef2423f";
-export const MASTER_COVER_LETTER_FILENAME = "whitemore_ngwira_cover_n.white.pdf";
-export const MASTER_COVER_LETTER_SHA256 = "a8ec57d01e1437b79aed01e72c822f0c59ade05907763ac476cea2caac7db2b7";
-
-export class CVImmutabilityViolationError extends Error {
-  constructor(message: string) {
-    super(`[CV_IMMUTABILITY_VIOLATION] ${message}`);
-    this.name = "CVImmutabilityViolationError";
-  }
-}
+export * from "./cv-integrity-constants";
 
 export interface MasterCVMetadata {
   filename: string;
@@ -107,10 +103,6 @@ export class CVIntegrityService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static assertCVImmutable(action: string, _payload?: unknown): void {
-    if (action.toLowerCase().includes("update") || action.toLowerCase().includes("mutate") || action.toLowerCase().includes("tailor") || action.toLowerCase().includes("rewrite")) {
-      throw new CVImmutabilityViolationError(
-        `Rejected attempt to execute '${action}' on immutable master CV. Master CV cannot be rewritten or modified. Only cover letters are adaptive.`
-      );
-    }
+    baseAssertCVImmutable(action);
   }
 }
