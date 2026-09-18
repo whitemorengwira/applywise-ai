@@ -123,9 +123,9 @@ export default function Home() {
               </Link>
             </Button>
             <Button variant="outline" className="gap-2" asChild>
-              <Link href="/cv-studio">
+              <Link href="/cover-letters">
                 <Sparkles className="h-4 w-4 text-primary" />
-                CV Tailor Studio
+                Cover Letter Studio
               </Link>
             </Button>
           </div>
@@ -215,7 +215,7 @@ export default function Home() {
                       </Badge>
                     ) : (
                       <Button size="sm" variant="glow" asChild>
-                        <Link href={`/cv-studio?jobId=${job.id}`}>Tailor CV</Link>
+                        <Link href={`/cover-letters?jobId=${job.id}`}>Tailor Cover Letter</Link>
                       </Button>
                     )}
                   </div>

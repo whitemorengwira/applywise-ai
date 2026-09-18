@@ -15,7 +15,7 @@ import { SEED_APPLICATIONS } from "@/lib/db/seed-data";
 
 const COLUMNS: { id: ApplicationStatus; label: string; color: string }[] = [
   { id: "saved", label: "Saved Roles", color: "border-slate-500/30" },
-  { id: "tailoring", label: "Tailoring CV", color: "border-blue-500/30" },
+  { id: "tailoring", label: "Tailoring Cover Letter", color: "border-blue-500/30" },
   { id: "ready", label: "Ready to Apply", color: "border-amber-500/30" },
   { id: "applied", label: "Applied / In Review", color: "border-purple-500/30" },
   { id: "interviewing", label: "Interviewing", color: "border-emerald-500/30" },

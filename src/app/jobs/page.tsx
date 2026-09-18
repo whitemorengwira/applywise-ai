@@ -185,9 +185,9 @@ export default function JobsPage() {
                   </Button>
 
                   <Button size="sm" variant="glow" asChild>
-                    <Link href={`/cv-studio?jobId=${job.id}`} className="gap-1.5">
+                    <Link href={`/cover-letters?jobId=${job.id}`} className="gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Tailor Application
+                      Tailor Cover Letter
                     </Link>
                   </Button>
                 </div>
@@ -315,8 +315,8 @@ export default function JobsPage() {
                 Dismiss
               </Button>
               <Button variant="glow" asChild>
-                <Link href={`/cv-studio?jobId=${activeAnalysis.jobId}`}>
-                  Proceed to Tailor CV
+                <Link href={`/cover-letters?jobId=${activeAnalysis.jobId}`}>
+                  Proceed to Tailor Cover Letter
                 </Link>
               </Button>
             </div>

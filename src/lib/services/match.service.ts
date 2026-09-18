@@ -87,7 +87,8 @@ Return a strict JSON object with:
       const aiResult = await AIGateway.complete({
         taskType: "match_scoring",
         prompt,
-        systemPrompt: "You are a principal talent evaluation engine. Produce factual, rigorous, non-flattering assessments.",
+        systemPrompt:
+          "You are a principal talent evaluation engine. Produce factual, rigorous, non-flattering assessments. Note: The candidate's Master CV is cryptographically immutable and strictly preserved as the master document. For recommendedAction, always recommend tailoring the cover letter rather than modifying the CV.",
       });
 
       // Record audit log
@@ -167,8 +168,12 @@ Return a strict JSON object with:
         criticalGaps: parsed?.criticalGaps ?? (missingSkills.length > 0 ? missingSkills : ["None identified."]),
         recommendedAction: !locationCheck.eligible
           ? locationCheck.reason
-          : parsed?.recommendedAction ??
-            "High priority opportunity. Proceed to CV tailoring highlighting enterprise AI Gateway and distributed telemetry architectures.",
+          : parsed?.recommendedAction
+          ? parsed.recommendedAction
+              .replace(/cv tailoring/gi, "cover letter tailoring")
+              .replace(/tailor cv/gi, "tailor cover letter")
+              .replace(/tailoring cv/gi, "tailoring cover letter")
+          : "High priority opportunity. Proceed to cover letter tailoring highlighting enterprise AI Gateway and distributed telemetry architectures with immutable Master CV.",
         modelUsed: aiResult.modelUsed,
         createdAt: new Date().toISOString(),
       };

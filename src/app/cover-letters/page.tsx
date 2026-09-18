@@ -16,28 +16,44 @@ import {
 } from "lucide-react";
 import { SEED_JOBS, SEED_PROFILE } from "@/lib/db/seed-data";
 
-export default function CoverLettersPage() {
-  const [selectedJobId, setSelectedJobId] = React.useState(SEED_JOBS[0].id);
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
+function buildDefaultLetter(job: typeof SEED_JOBS[0]): string {
+  return `Dear Hiring Team at ${job.company},
 
-  const selectedJob = SEED_JOBS.find((j) => j.id === selectedJobId) || SEED_JOBS[0];
-
-  const [letterContent, setLetterContent] = React.useState(
-    `Dear Hiring Team at ${selectedJob.company},
-
-I am writing to express my strong interest in the ${selectedJob.title} position. With over 14 years of engineering leadership architecting enterprise digital platforms, modern cloud infrastructure, and governed AI systems, I have followed ${selectedJob.company}'s trajectory with great admiration.
+I am writing to express my strong interest in the ${job.title} position. With over 14 years of engineering leadership architecting enterprise digital platforms, modern cloud infrastructure, and governed AI systems, I have followed ${job.company}'s trajectory with great admiration.
 
 In my recent work, I have focused on architecting resilient full-stack systems and high-availability AI gateways. For example, I delivered EarCodeX from prototype to production as an AWS cloud-native InsurTech platform, engineering automated document intelligence, reconciliation services, and immutable audit trails for regulated data. Furthermore, I integrated enterprise AI gateways utilizing LiteLLM and Cloudflare AI Gateway across 300+ cities with edge caching and multi-model failover.
 
 Your requirement for a leader who can bridge deep architectural rigor with practical execution in Next.js, TypeScript, and AI orchestration directly mirrors my daily practice. Whether designing multi-engine database tiers or deploying human-supervised agentic automation, my focus is always on delivering measurable business impact and bulletproof reliability.
 
-I welcome the opportunity to discuss how my background and architectural vision can accelerate ${selectedJob.company}'s product engineering goals.
+I welcome the opportunity to discuss how my background and architectural vision can accelerate ${job.company}'s product engineering goals.
 
 Sincerely,
 ${SEED_PROFILE.fullName}
-Principal Technology Architect & AI Systems Engineer`
-  );
+Principal Technology Architect & AI Systems Engineer`;
+}
+
+export default function CoverLettersPage() {
+  const [selectedJobId, setSelectedJobId] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const jId = params.get("jobId");
+        if (jId && SEED_JOBS.some((j) => j.id === jId)) {
+          return jId;
+        }
+      } catch {
+        // Safe SSR fallback
+      }
+    }
+    return SEED_JOBS[0].id;
+  });
+
+  const [customLetters, setCustomLetters] = React.useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+
+  const selectedJob = SEED_JOBS.find((j) => j.id === selectedJobId) || SEED_JOBS[0];
+  const letterContent = customLetters[selectedJob.id] ?? buildDefaultLetter(selectedJob);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -52,7 +68,10 @@ Principal Technology Architect & AI Systems Engineer`
       });
       const data = await res.json();
       if (data.success && data.result?.coverLetterText) {
-        setLetterContent(data.result.coverLetterText);
+        setCustomLetters((prev) => ({
+          ...prev,
+          [selectedJob.id]: data.result.coverLetterText,
+        }));
       }
     } catch (err) {
       console.error("Cover letter error:", err);
@@ -145,9 +164,23 @@ Principal Technology Architect & AI Systems Engineer`
         <textarea
           rows={16}
           value={letterContent}
-          onChange={(e) => setLetterContent(e.target.value)}
-          className="w-full rounded-xl border border-border/60 bg-secondary/20 p-5 font-mono text-xs md:text-sm text-foreground leading-relaxed focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          onChange={(e) =>
+            setCustomLetters((prev) => ({
+              ...prev,
+              [selectedJob.id]: e.target.value,
+            }))
+          }
+          className="w-full rounded-xl border border-border/80 bg-secondary/30 p-4 font-mono text-xs leading-relaxed text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40 resize-y"
+          placeholder="Executive cover letter content will appear here..."
         />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-foreground-subtle border-t border-border/60 pt-3">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span>Master CV remains cryptographically immutable (SHA-256: 3994a09c...).</span>
+          </div>
+          <span>Word Count: {letterContent.trim().split(/\s+/).filter(Boolean).length} words</span>
+        </div>
       </Card>
     </AppShell>
   );
