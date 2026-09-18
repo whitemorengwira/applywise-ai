@@ -592,25 +592,27 @@ export default function ControlCentrePage() {
                           {isUser ? "Candidate / Operator" : "ApplyWise Control Plane"}
                         </span>
                         <div className="flex items-center gap-2">
-                          {msg.intent && msg.intent !== "CONVERSATION" && (
+                          {!isUser && msg.intent && msg.intent !== "CONVERSATION" && (
                             <Badge variant="outline" className="text-[9px] py-0 font-mono">
                               {msg.intent.replace(/_/g, " ")}
                             </Badge>
                           )}
-                          <span
-                            className={`text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1 ${
-                              msg.runtimeStatus === "REAL_AI"
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                : "bg-purple-500/10 text-purple-300 border border-purple-500/30"
-                            }`}
-                          >
+                          {!isUser && msg.runtimeStatus && (
                             <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                msg.runtimeStatus === "REAL_AI" ? "bg-emerald-400 animate-pulse" : "bg-purple-400"
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1 ${
+                                msg.runtimeStatus === "REAL_AI"
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                  : "bg-purple-500/10 text-purple-300 border border-purple-500/30"
                               }`}
-                            />
-                            {msg.runtimeStatus === "REAL_AI" ? "Real AI • Live" : "OpenCode Zen • Free Grounded"}
-                          </span>
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  msg.runtimeStatus === "REAL_AI" ? "bg-emerald-400 animate-pulse" : "bg-purple-400"
+                                }`}
+                              />
+                              {msg.runtimeStatus === "REAL_AI" ? "Real AI • Live" : "OpenCode Zen • Free Grounded"}
+                            </span>
+                          )}
                           <button
                             onClick={() => handleCopyMessage(msg.id, msg.content)}
                             title="Copy message content"
