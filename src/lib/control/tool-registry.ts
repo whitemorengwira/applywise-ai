@@ -32,6 +32,7 @@ export class ToolRegistry {
       postedDaysAgo: 2,
       applicationRoute: "DIRECT_PORTAL",
       mandatorySkills: ["AWS", "Bedrock", "Generative AI", "Agentic AI", "Solutions Architecture"],
+      applyUrl: "https://iqbusiness.net/careers",
       description: "Leading enterprise AI architectures, agentic pipelines, and cloud governance in Johannesburg."
     };
     return [verifiedIQBusinessJob, ...SEED_JOBS];

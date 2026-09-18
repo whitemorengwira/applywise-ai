@@ -60,7 +60,7 @@ export interface EducationItem {
 // Job Listings & Search
 // -----------------------------------------------------------------------------
 
-export type JobSource = "adzuna" | "arbeitnow" | "manual" | "scraped";
+export type JobSource = "adzuna" | "arbeitnow" | "manual" | "scraped" | "remotive" | "direct_portal";
 
 export type ApplicationStatus =
   | "saved"

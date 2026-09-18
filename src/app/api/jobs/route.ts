@@ -1,14 +1,51 @@
 import { NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
+import { JobDiscoveryService } from "@/lib/services/job-discovery.service";
 import { withObservability } from "@/lib/observability/http";
 
 async function handleGet(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") || undefined;
   const remoteOnly = searchParams.get("remote") === "true";
+  const forceRefresh = searchParams.get("refresh") === "true";
 
-  const jobs = repository.getJobs(query, remoteOnly);
-  return NextResponse.json({ jobs, total: jobs.length });
+  try {
+    const liveJobs = await JobDiscoveryService.getLiveJobs({
+      query,
+      remoteOnly,
+      forceRefresh,
+    });
+
+    // Include any custom manual jobs ingested into repository
+    const customJobs = repository
+      .getJobs(query, remoteOnly)
+      .filter((j) => j.source === "manual");
+    const merged = [...customJobs, ...liveJobs];
+
+    // Canonical deduplication
+    const seen = new Set<string>();
+    const deduplicated = merged.filter((j) => {
+      const key = `${j.company.toLowerCase()}|${j.title.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return NextResponse.json({
+      success: true,
+      jobs: deduplicated,
+      total: deduplicated.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    const fallbackJobs = repository.getJobs(query, remoteOnly);
+    return NextResponse.json({
+      success: true,
+      jobs: fallbackJobs,
+      total: fallbackJobs.length,
+      fallback: true,
+    });
+  }
 }
 
 async function handlePost(request: Request) {

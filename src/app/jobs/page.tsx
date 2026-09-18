@@ -16,9 +16,19 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { JobListing, MatchAnalysis } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
+
+function getCleanDomain(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.replace(/^www\./, "");
+  } catch {
+    return "Direct Portal";
+  }
+}
 
 export default function JobsPage() {
   const [jobs, setJobs] = React.useState<JobListing[]>(SEED_JOBS);
@@ -27,13 +37,48 @@ export default function JobsPage() {
   const [evaluatingJobId, setEvaluatingJobId] = React.useState<string | null>(null);
   const [activeAnalysis, setActiveAnalysis] = React.useState<MatchAnalysis | null>(null);
   const [showIngestModal, setShowIngestModal] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
 
   // New role form state
   const [newTitle, setNewTitle] = React.useState("");
   const [newCompany, setNewCompany] = React.useState("");
   const [newLocation, setNewLocation] = React.useState("Remote (Global)");
   const [newSkills, setNewSkills] = React.useState("Next.js 15, TypeScript, Supabase, pgvector");
+  const [newApplyUrl, setNewApplyUrl] = React.useState("");
   const [newDescription, setNewDescription] = React.useState("");
+
+  const handleSyncLiveJobs = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/jobs?refresh=true");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
+        setJobs(data.jobs);
+      }
+    } catch (err) {
+      console.error("Failed to sync live jobs:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    let active = true;
+    fetch("/api/jobs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (active && data.success && Array.isArray(data.jobs) && data.jobs.length > 0) {
+          setJobs(data.jobs);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load live jobs:", err);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredJobs = jobs.filter((job) => {
     if (remoteOnly && job.remoteType !== "Remote") return false;
@@ -42,6 +87,7 @@ export default function JobsPage() {
     return (
       job.title.toLowerCase().includes(q) ||
       job.company.toLowerCase().includes(q) ||
+      job.location.toLowerCase().includes(q) ||
       job.skills.some((s) => s.toLowerCase().includes(q))
     );
   });
@@ -69,6 +115,10 @@ export default function JobsPage() {
     e.preventDefault();
     if (!newTitle || !newCompany) return;
 
+    const finalApplyUrl = newApplyUrl.trim().startsWith("http")
+      ? newApplyUrl.trim()
+      : "https://www.offerzen.com/";
+
     const newJob: JobListing = {
       id: `job-custom-${Date.now()}`,
       source: "manual",
@@ -83,7 +133,7 @@ export default function JobsPage() {
       requirements: ["Senior architecture leadership", "Proven production systems"],
       responsibilities: ["Lead engineering roadmap", "Deliver scalable platforms"],
       skills: newSkills.split(",").map((s) => s.trim()),
-      applyUrl: "https://example.com/apply",
+      applyUrl: finalApplyUrl,
       postedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
@@ -93,6 +143,7 @@ export default function JobsPage() {
     // Reset form
     setNewTitle("");
     setNewCompany("");
+    setNewApplyUrl("");
     setNewDescription("");
   };
 
@@ -122,18 +173,42 @@ export default function JobsPage() {
           >
             Remote Only
           </button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncLiveJobs}
+            disabled={isSyncing}
+            className="h-10 px-3 rounded-xl border-border bg-card/60 text-foreground hover:bg-secondary gap-1.5 text-xs shrink-0 cursor-pointer"
+            title="Sync latest live opportunities from public APIs and verified corporate portals"
+          >
+            {isSyncing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5 text-primary" />
+            )}
+            <span className="hidden md:inline">{isSyncing ? "Syncing..." : "Sync Live Jobs"}</span>
+          </Button>
         </div>
 
-        <Button variant="glow" onClick={() => setShowIngestModal(true)} className="gap-2 shrink-0">
-          <PlusCircle className="h-4 w-4" />
-          Ingest Custom Role
-        </Button>
+        <div className="flex items-center gap-3 shrink-0">
+          <Badge variant="outline" className="text-[11px] font-mono border-border/80 text-foreground-muted hidden sm:inline-flex gap-1.5 py-1.5 px-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            {filteredJobs.length} Real Vacancies
+          </Badge>
+
+          <Button variant="glow" onClick={() => setShowIngestModal(true)} className="gap-2 shrink-0">
+            <PlusCircle className="h-4 w-4" />
+            Ingest Custom Role
+          </Button>
+        </div>
       </div>
 
       {/* Main Grid: Job Cards List */}
       <div className="grid grid-cols-1 gap-4">
         {filteredJobs.map((job) => {
           const isEvaluating = evaluatingJobId === job.id;
+          const cleanDomain = getCleanDomain(job.applyUrl);
 
           return (
             <Card
@@ -146,8 +221,25 @@ export default function JobsPage() {
                     <h3 className="font-bold text-base md:text-lg text-foreground hover:text-primary transition-colors">
                       {job.title}
                     </h3>
-                    <Badge variant="default" className="text-[10px] font-mono uppercase">
-                      {job.source}
+                    <Badge
+                      variant="default"
+                      className={`text-[10px] font-mono uppercase ${
+                        job.source === "remotive"
+                          ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
+                          : job.source === "arbeitnow"
+                          ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                          : job.source === "direct_portal"
+                          ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                          : "bg-secondary text-foreground-muted"
+                      }`}
+                    >
+                      {job.source === "remotive"
+                        ? "Remotive Live"
+                        : job.source === "arbeitnow"
+                        ? "Arbeitnow Live"
+                        : job.source === "direct_portal"
+                        ? "Verified Portal"
+                        : job.source}
                     </Badge>
                     <Badge variant={job.remoteType === "Remote" ? "success" : "secondary"} className="text-[10px]">
                       {job.remoteType}
@@ -210,10 +302,12 @@ export default function JobsPage() {
                 <a
                   href={job.applyUrl}
                   target="_blank"
-                  rel="noreferrer"
-                  className="ml-auto text-[11px] text-primary hover:underline flex items-center gap-1 font-mono"
+                  rel="noopener noreferrer"
+                  className="ml-auto text-[11px] text-primary hover:underline flex items-center gap-1 font-mono group"
                 >
-                  Direct Apply Link <ExternalLink className="h-3 w-3" />
+                  <span className="text-foreground-subtle group-hover:text-primary">Apply on</span>
+                  <span className="font-semibold text-primary">{cleanDomain}</span>
+                  <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             </Card>
@@ -249,60 +343,67 @@ export default function JobsPage() {
                   {activeAnalysis.overallScore}% MATCH
                 </h4>
               </div>
-              <Badge variant="highMatch" className="text-xs font-mono uppercase px-3 py-1">
+              <Badge variant="highMatch" className="text-xs uppercase px-3 py-1 font-mono">
                 {activeAnalysis.tier.replace("_", " ")}
               </Badge>
             </div>
 
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-foreground-subtle uppercase tracking-wider">
+            {/* Category Breakdown */}
+            <div className="space-y-3">
+              <h5 className="text-xs font-semibold text-foreground-subtle uppercase tracking-wider">
                 Scoring Breakdown
-              </span>
+              </h5>
               <div className="space-y-2">
-                {activeAnalysis.breakdown.map((b) => (
-                  <div key={b.category} className="p-3 rounded-lg bg-secondary/40 border border-border/60 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-medium">
-                      <span className="text-foreground">{b.category}</span>
-                      <span className="font-mono text-primary font-bold">{b.score}%</span>
+                {activeAnalysis.breakdown.map((cat, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl border border-border/60 bg-secondary/20 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">{cat.category}</span>
+                      <span className="font-mono text-xs text-primary font-bold">{cat.score}%</span>
                     </div>
-                    <p className="text-[11px] text-foreground-muted">{b.notes}</p>
+                    <p className="text-[11px] text-foreground-muted">{cat.notes}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Key Demonstrated Strengths
-              </span>
-              <ul className="space-y-1">
-                {activeAnalysis.keyStrengths.map((s, i) => (
-                  <li key={i} className="text-xs text-foreground flex items-start gap-2">
-                    <span className="text-emerald-400">•</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Key Strengths */}
+            {activeAnalysis.keyStrengths.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Key Demonstrated Strengths
+                </h5>
+                <ul className="space-y-1 text-xs text-foreground-muted list-disc list-inside">
+                  {activeAnalysis.keyStrengths.map((strength, idx) => (
+                    <li key={idx} className="leading-relaxed">
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5" />
-                Actionable Gap Refinements
-              </span>
-              <ul className="space-y-1">
-                {activeAnalysis.criticalGaps.map((g, i) => (
-                  <li key={i} className="text-xs text-foreground-muted flex items-start gap-2">
-                    <span className="text-amber-400">•</span>
-                    <span>{g}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Critical Gaps */}
+            {activeAnalysis.criticalGaps.length > 0 && (
+              <div className="space-y-2">
+                <h5 className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" /> Actionable Gap Refinements
+                </h5>
+                <ul className="space-y-1 text-xs text-foreground-muted list-disc list-inside">
+                  {activeAnalysis.criticalGaps.map((gap, idx) => (
+                    <li key={idx} className="leading-relaxed">
+                      {gap}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            <div className="p-3 rounded-lg bg-secondary/30 border border-border/60">
-              <span className="text-[11px] font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+            {/* Recommended Action */}
+            <div className="p-3.5 rounded-xl border border-border bg-secondary/30 space-y-1">
+              <span className="text-[10px] font-mono font-semibold text-foreground-subtle uppercase">
                 AI Strategic Recommendation
               </span>
               <p className="text-xs text-foreground leading-relaxed">
@@ -310,7 +411,7 @@ export default function JobsPage() {
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
               <Button variant="outline" onClick={() => setActiveAnalysis(null)}>
                 Dismiss
               </Button>
@@ -324,7 +425,7 @@ export default function JobsPage() {
         </div>
       )}
 
-      {/* Ingest New Role Modal */}
+      {/* Ingest Custom Job Modal */}
       {showIngestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-in fade-in">
           <form
@@ -332,10 +433,10 @@ export default function JobsPage() {
             className="w-full max-w-lg rounded-2xl border border-border bg-[#0a0f1d] p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <PlusCircle className="h-4 w-4 text-primary" />
-                Ingest Target Job Opportunity
-              </h3>
+              <div className="flex items-center gap-2">
+                <PlusCircle className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Ingest Custom Target Vacancy</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowIngestModal(false)}
@@ -368,7 +469,7 @@ export default function JobsPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. DeepMind Ecosystem"
+                    placeholder="e.g. Entelect / Standard Bank"
                     value={newCompany}
                     onChange={(e) => setNewCompany(e.target.value)}
                     className="h-9 w-full rounded-lg border border-border bg-secondary/30 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
@@ -385,6 +486,19 @@ export default function JobsPage() {
                     className="h-9 w-full rounded-lg border border-border bg-secondary/30 px-3 text-xs text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-foreground-subtle block mb-1">
+                  Application URL (Direct Careers Link)
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://company.com/careers/role-id"
+                  value={newApplyUrl}
+                  onChange={(e) => setNewApplyUrl(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-border bg-secondary/30 px-3 text-xs text-foreground focus:border-primary focus:outline-none font-mono"
+                />
               </div>
 
               <div>
