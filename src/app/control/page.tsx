@@ -33,11 +33,17 @@ import {
   Globe,
   Search as SearchIcon,
   ArrowUp,
+  Image as ImageIcon,
+  Mic,
+  Video as VideoIcon,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { ControlChatMessage, ControlRuntimeStatus, PendingApprovalAction } from "@/lib/control/types";
 import { ChatMarkdownRenderer } from "@/components/control/chat-markdown";
 import { VoiceRecorder } from "@/components/voice/voice-recorder";
 import { VoiceSpeaker } from "@/components/voice/voice-speaker";
+import { VoiceDeliberationModal } from "@/components/voice/voice-deliberation-modal";
 import { SYSTEM_GEMS, GemPersona } from "@/lib/control/gems-config";
 import { KnowledgeService, CustomKnowledgeDoc } from "@/lib/services/knowledge.service";
 import { CodexActionMenu } from "@/components/control/codex-action-menu";
@@ -74,7 +80,7 @@ export interface OpenCodeZenModel {
   name: string;
   subtitle: string;
   badge: string;
-  iconName: "sparkles" | "zap" | "trending-up" | "layers" | "pen-tool";
+  iconName: "sparkles" | "zap" | "trending-up" | "layers" | "pen-tool" | "image" | "mic" | "video";
   color: string;
   bgColor: string;
   borderColor: string;
@@ -143,6 +149,78 @@ export const OPENCODE_ZEN_FREE_SUITE: OpenCodeZenModel[] = [
     contextLimit: "256,000",
     category: "OpenCode Zen",
   },
+  {
+    id: "flux-1-schnell-free",
+    name: "Flux.1 Schnell Free",
+    subtitle: "Architecture Blueprint Image Gen",
+    badge: "Free",
+    iconName: "image",
+    color: "text-sky-400",
+    bgColor: "bg-sky-500/10",
+    borderColor: "border-sky-500/40",
+    contextLimit: "4 steps",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "sdxl-turbo-free",
+    name: "SDXL Turbo Free",
+    subtitle: "Real-Time Blueprint Diffusion",
+    badge: "Free",
+    iconName: "image",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/40",
+    contextLimit: "1 step",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "whisper-large-v3-turbo-free",
+    name: "Whisper Large v3 Free",
+    subtitle: "Audio Speech-to-Text & Commands",
+    badge: "Free",
+    iconName: "mic",
+    color: "text-teal-400",
+    bgColor: "bg-teal-500/10",
+    borderColor: "border-teal-500/40",
+    contextLimit: "30s chunks",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "kokoro-82m-free",
+    name: "Kokoro 82M Free TTS",
+    subtitle: "Notification Voice Reader Agent",
+    badge: "Free",
+    iconName: "mic",
+    color: "text-purple-300",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/40",
+    contextLimit: "Streaming",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "wan-2.1-t2v-free",
+    name: "Wan 2.1 Video Free",
+    subtitle: "System Walkthrough Video Gen",
+    badge: "Free",
+    iconName: "video",
+    color: "text-rose-400",
+    bgColor: "bg-rose-500/10",
+    borderColor: "border-rose-500/40",
+    contextLimit: "5s 720p",
+    category: "OpenCode Zen",
+  },
+  {
+    id: "cogvideox-2b-free",
+    name: "CogVideoX 2B Free",
+    subtitle: "Visual Presentation Video Gen",
+    badge: "Free",
+    iconName: "video",
+    color: "text-orange-400",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/40",
+    contextLimit: "6s 720p",
+    category: "OpenCode Zen",
+  },
 ];
 
 function renderModelIcon(iconName: string, colorClass: string) {
@@ -157,6 +235,12 @@ function renderModelIcon(iconName: string, colorClass: string) {
       return <Layers className={`h-3.5 w-3.5 ${colorClass}`} />;
     case "pen-tool":
       return <PenTool className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "image":
+      return <ImageIcon className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "mic":
+      return <Mic className={`h-3.5 w-3.5 ${colorClass}`} />;
+    case "video":
+      return <VideoIcon className={`h-3.5 w-3.5 ${colorClass}`} />;
     default:
       return <Sparkles className={`h-3.5 w-3.5 ${colorClass}`} />;
   }
@@ -196,6 +280,8 @@ export default function ControlCentrePage() {
   const [isLibraryModalOpen, setIsLibraryModalOpen] = React.useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = React.useState(false);
   const [isGithubModalOpen, setIsGithubModalOpen] = React.useState(false);
+  const [isVoiceDeliberationOpen, setIsVoiceDeliberationOpen] = React.useState(false);
+  const [isExpandedContext, setIsExpandedContext] = React.useState(false);
 
   // Modes & Attachments
   const [isThinkModeActive, setIsThinkModeActive] = React.useState(false);
@@ -327,6 +413,20 @@ export default function ControlCentrePage() {
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize prompt textarea dynamically as content grows or contracts
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      if (isExpandedContext) {
+        textareaRef.current.style.height = "320px";
+      } else {
+        textareaRef.current.style.height = "auto";
+        const scrollHeight = textareaRef.current.scrollHeight;
+        const targetHeight = Math.min(Math.max(scrollHeight, 72), 360);
+        textareaRef.current.style.height = `${targetHeight}px`;
+      }
+    }
+  }, [inputValue, isExpandedContext]);
 
   // Sync active model from localStorage and listen to changes
   React.useEffect(() => {
@@ -492,9 +592,6 @@ export default function ControlCentrePage() {
     setAttachedLibraryDocs([]);
     setAttachedSketch(null);
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
     setIsLoading(true);
 
     const userText = enrichedPayload;
@@ -579,6 +676,7 @@ export default function ControlCentrePage() {
           pendingAction: data.pendingAction,
         };
         setMessages((prev) => [...prev, assistantMsg]);
+        return data.message as string;
       } else {
         const errorMsg: ControlChatMessage = {
           id: createMessageId("err"),
@@ -588,6 +686,7 @@ export default function ControlCentrePage() {
           runtimeStatus: "DEGRADED",
         };
         setMessages((prev) => [...prev, errorMsg]);
+        return undefined;
       }
     } catch (err) {
       const errorMsg: ControlChatMessage = {
@@ -598,6 +697,7 @@ export default function ControlCentrePage() {
         runtimeStatus: "DEGRADED",
       };
       setMessages((prev) => [...prev, errorMsg]);
+      return undefined;
     } finally {
       setIsLoading(false);
     }
@@ -722,7 +822,7 @@ export default function ControlCentrePage() {
                   className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/50 text-foreground-muted hover:text-foreground hover:bg-secondary/90 border border-border/60 transition-colors cursor-pointer"
                 >
                   <BookOpen className="h-3 w-3 text-cyan-400" />
-                  <span>Knowledge ({knowledgeDocs.length})</span>
+                  <span suppressHydrationWarning>Knowledge ({knowledgeDocs.length})</span>
                 </button>
 
                 <button
@@ -1200,52 +1300,88 @@ export default function ControlCentrePage() {
                 }}
                 className="flex flex-col gap-1.5"
               >
-                <div className="relative rounded-3xl border border-border/80 bg-[#1e1e1e]/90 shadow-2xl p-2 sm:p-2.5 backdrop-blur-xl transition-all focus-within:border-primary/60">
-                  <div className="flex items-end gap-2">
-                    {/* Plus Action Button */}
-                    <button
-                      ref={plusButtonRef}
-                      type="button"
-                      onClick={() => setIsActionMenuOpen((prev) => !prev)}
-                      title="Add photos & files, library docs, sketch, web search, or calendar"
-                      className={`h-9 w-9 rounded-full flex items-center justify-center transition-all shrink-0 cursor-pointer ${
-                        isActionMenuOpen
-                          ? "bg-primary text-primary-foreground rotate-45"
-                          : "bg-[#2f2f2f] hover:bg-[#3d3d3d] text-foreground-muted hover:text-foreground"
-                      }`}
-                    >
-                      <Plus className="h-5 w-5 transition-transform duration-200" />
-                    </button>
-
-                    {/* Auto-expanding prompt input */}
+                <div className="relative rounded-2xl sm:rounded-3xl border border-border/80 bg-[#1e1e1e]/95 shadow-2xl p-2.5 sm:p-3 backdrop-blur-xl transition-all focus-within:border-primary/60 flex flex-col gap-2">
+                  {/* Prompt Textarea: Full width, spacious default height, auto-expanding, expandable */}
+                  <div className="relative w-full">
                     <textarea
                       ref={textareaRef}
-                      rows={1}
+                      rows={isExpandedContext ? 10 : 2}
                       value={inputValue}
-                      onChange={(e) => {
-                        setInputValue(e.target.value);
-                        e.target.style.height = "auto";
-                        e.target.style.height = `${Math.min(e.target.scrollHeight, 180)}px`;
-                      }}
+                      onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           handleSendMessage(inputValue);
                         }
                       }}
-                      placeholder="Ask anything"
+                      placeholder="Ask anything, paste job specifications, or dictate voice directives..."
                       disabled={isLoading}
-                      className="flex-1 max-h-44 min-h-[36px] resize-none bg-transparent border-none px-2 py-1.5 text-sm text-foreground placeholder:text-neutral-400 focus:outline-none leading-relaxed"
+                      style={{
+                        resize: "vertical",
+                        minHeight: isExpandedContext ? "300px" : "72px",
+                        maxHeight: isExpandedContext ? "520px" : "360px",
+                      }}
+                      className="w-full bg-transparent border-none px-2 py-1 text-sm text-foreground placeholder:text-neutral-400 focus:outline-none leading-relaxed scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent transition-[height] duration-150"
                     />
+                  </div>
 
-                    {/* Right action controls: Think, VoiceRecorder, Send */}
-                    <div className="flex items-center gap-1.5 shrink-0 pb-0.5">
+                  {/* Bottom Action Controls Bar */}
+                  <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-white/5">
+                    {/* Left Controls: Plus Action Menu & Context stats */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        ref={plusButtonRef}
+                        type="button"
+                        onClick={() => setIsActionMenuOpen((prev) => !prev)}
+                        title="Add photos & files, library docs, sketch, web search, or calendar"
+                        className={`h-8 w-8 rounded-full flex items-center justify-center transition-all shrink-0 cursor-pointer ${
+                          isActionMenuOpen
+                            ? "bg-primary text-primary-foreground rotate-45"
+                            : "bg-[#2f2f2f] hover:bg-[#3d3d3d] text-foreground-muted hover:text-foreground"
+                        }`}
+                      >
+                        <Plus className="h-4 w-4 transition-transform duration-200" />
+                      </button>
+
+                      {inputValue.length > 0 && (
+                        <span className="text-[11px] font-mono text-foreground-subtle hidden sm:inline">
+                          {inputValue.length} chars (~{Math.round(inputValue.length / 4)} tokens)
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Right Controls: Expand Context, Think Mode, Voice Deliberation, Send */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Expand / Minimize Context Window Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => setIsExpandedContext((prev) => !prev)}
+                        title={isExpandedContext ? "Compact context window" : "Expand context window for large prompts"}
+                        className={`h-8 px-2.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 text-xs font-medium ${
+                          isExpandedContext
+                            ? "bg-primary/20 text-primary border-primary/40 shadow-sm"
+                            : "border-transparent text-foreground-muted hover:text-foreground hover:bg-[#2f2f2f]"
+                        }`}
+                      >
+                        {isExpandedContext ? (
+                          <>
+                            <Minimize2 className="h-3.5 w-3.5" />
+                            <span className="text-[11px] hidden sm:inline">Compact</span>
+                          </>
+                        ) : (
+                          <>
+                            <Maximize2 className="h-3.5 w-3.5" />
+                            <span className="text-[11px] hidden sm:inline">Expand</span>
+                          </>
+                        )}
+                      </button>
+
                       {/* Think mode toggle */}
                       <button
                         type="button"
                         onClick={() => setIsThinkModeActive((prev) => !prev)}
                         title="Extended Reasoning Chain (Deep Reasoning)"
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                        className={`flex items-center gap-1 px-2.5 h-8 rounded-full text-xs font-medium transition-all cursor-pointer ${
                           isThinkModeActive
                             ? "bg-purple-600/30 text-purple-300 border border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.35)]"
                             : "text-foreground-muted hover:text-foreground hover:bg-[#2f2f2f]"
@@ -1255,11 +1391,12 @@ export default function ControlCentrePage() {
                         <span>Think</span>
                       </button>
 
-                      {/* Voice Recorder microphone */}
+                      {/* Voice Deliberation (Dual mode: Dictate & Interact) */}
                       <VoiceRecorder
                         onTranscript={(text) =>
                           setInputValue((prev) => (prev ? `${prev} ${text}` : text))
                         }
+                        onStartInteract={() => setIsVoiceDeliberationOpen(true)}
                         disabled={isLoading}
                       />
 
@@ -1273,7 +1410,7 @@ export default function ControlCentrePage() {
                             attachedLibraryDocs.length === 0 &&
                             !attachedSketch)
                         }
-                        className="h-8 w-8 rounded-full bg-white text-black hover:bg-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                        className="h-8 w-8 rounded-full bg-white text-black hover:bg-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0 ml-0.5"
                         title="Send prompt"
                       >
                         {isLoading ? (
@@ -1698,6 +1835,18 @@ export default function ControlCentrePage() {
           setInputValue((prev) => (prev ? `${prev} [${ctx}]` : `Review repository status: ${ctx}`));
           setIsGithubModalOpen(false);
         }}
+      />
+
+      {/* Voice Deliberation Interactive Modal */}
+      <VoiceDeliberationModal
+        isOpen={isVoiceDeliberationOpen}
+        onClose={() => setIsVoiceDeliberationOpen(false)}
+        onSendMessage={async (text) => {
+          const res = await handleSendMessage(text);
+          return res || "";
+        }}
+        activeModelName={currentModel.name}
+        activeGemName={activeGem.name}
       />
     </AppShell>
   );

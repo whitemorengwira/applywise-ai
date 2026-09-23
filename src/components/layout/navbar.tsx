@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Search, UserCheck, ShieldCheck } from "lucide-react";
+import { Search, UserCheck, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { NotificationPopover } from "@/components/layout/notification-popover";
 
 interface NavbarProps {
   title?: string;
@@ -36,11 +37,8 @@ export function Navbar({ title }: NavbarProps) {
           <span className="font-mono text-[11px]">ALL SYSTEMS NOMINAL</span>
         </Badge>
 
-        {/* Notifications */}
-        <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground-muted hover:bg-secondary hover:text-foreground transition-colors relative">
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
-        </button>
+        {/* Notifications & 24/7 Job Alert Agent */}
+        <NotificationPopover />
 
         {/* User Pill */}
         <div className="flex items-center gap-2.5 pl-2 border-l border-border">

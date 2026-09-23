@@ -46,10 +46,10 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Fallback response if external API is unconfigured
+      // If Whisper API is unconfigured or failed, return empty text so browser WebSpeech handles transcription
       return NextResponse.json({
         success: true,
-        text: "Voice audio received. For real-time in-browser transcription, Web Speech recognition is active.",
+        text: "",
         provider: "local-speech-fallback",
       });
     }

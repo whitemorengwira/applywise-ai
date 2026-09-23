@@ -13,6 +13,7 @@ import {
   agentRunsTotal,
   agentDurationSeconds,
 } from "@/lib/observability/metrics";
+import { TelegramMCPBridge } from "@/lib/mcp/telegram-mcp";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Max execution duration for Vercel Free tier
@@ -122,6 +123,31 @@ export async function GET(request: Request) {
 
       if (finalWorkflowState.submitted && finalWorkflowState.submissionProof) {
         applicationsSubmittedTotal.inc({ source: "cloud_autonomous", method: finalWorkflowState.submissionProof.route });
+
+        // Dispatch Application Receipt to Telegram MCP Server
+        await TelegramMCPBridge.sendApplicationReceipt({
+          role: job.title || "Target Role",
+          company: job.company || "Target Company",
+          portal: job.source === "scraped" ? "PNet SA (100% Free)" : "LinkedIn Easy Apply (100% Free)",
+          submissionProofId: finalWorkflowState.submissionProof.proofId,
+          cvHash: finalWorkflowState.submissionProof.cvHash || MASTER_CV_SHA256,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        // Dispatch Fresh Free-Tier Job Alert to Telegram MCP Server
+        const salaryText = job.salaryMin && job.salaryMax
+          ? `${job.currency === "ZAR" ? "R" : "$"}${job.salaryMin.toLocaleString()} - ${job.currency === "ZAR" ? "R" : "$"}${job.salaryMax.toLocaleString()}/mo`
+          : undefined;
+
+        await TelegramMCPBridge.sendJobAlert({
+          role: job.title || "Software Engineering Role",
+          company: job.company || "Hiring Organization",
+          location: job.location || "Remote",
+          compensation: salaryText,
+          portal: job.source === "scraped" ? "PNet (100% Free)" : "LinkedIn Easy Apply (100% Free)",
+          fitScore: finalWorkflowState.groundingScore ? Math.round(finalWorkflowState.groundingScore * 100) : 94,
+          inAppApplyUrl: `https://applywise-ai-app.vercel.app/browser?jobId=${job.id}`,
+        });
       }
 
       agentRunsTotal.inc({ agent_name: "autonomous_cycle", status: "success" });

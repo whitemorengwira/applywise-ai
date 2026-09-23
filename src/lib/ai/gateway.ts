@@ -35,7 +35,18 @@ export interface ModelCatalogEntry {
   name: string;
   provider: "OpenCode Zen";
   tier: "Free";
-  capabilities: ("reasoning" | "fast" | "multimodal" | "creative" | "finance" | "structured")[];
+  capabilities: (
+    | "reasoning"
+    | "fast"
+    | "multimodal"
+    | "creative"
+    | "finance"
+    | "structured"
+    | "image_generation"
+    | "audio_transcription"
+    | "audio_generation"
+    | "video_generation"
+  )[];
   contextWindow: string;
   description: string;
 }
@@ -89,6 +100,60 @@ export const OPENCODE_ZEN_MODELS: ModelCatalogEntry[] = [
     capabilities: ["creative"],
     contextWindow: "32k",
     description: "Creative synthesis model specialized in compelling executive cover letters and personalized outreach.",
+  },
+  {
+    id: "flux-1-schnell-free",
+    name: "Flux.1 Schnell Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["image_generation", "fast"],
+    contextWindow: "4 steps",
+    description: "Ultra-fast open weights 4-step image synthesis for cloud architectures and system diagrams.",
+  },
+  {
+    id: "sdxl-turbo-free",
+    name: "SDXL Turbo Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["image_generation", "fast"],
+    contextWindow: "1 step",
+    description: "Single-step adversarial diffusion model for real-time architectural UI and blueprint rendering.",
+  },
+  {
+    id: "whisper-large-v3-turbo-free",
+    name: "Whisper Large v3 Turbo Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["audio_transcription", "fast"],
+    contextWindow: "30s chunks",
+    description: "Zero-cost speech-to-text model for candidate voice commands and interview transcription.",
+  },
+  {
+    id: "kokoro-82m-free",
+    name: "Kokoro 82M Free TTS",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["audio_generation", "fast"],
+    contextWindow: "Streaming",
+    description: "High-fidelity zero-cost text-to-speech model powering the Notification Voice Reader Agent.",
+  },
+  {
+    id: "wan-2.1-t2v-free",
+    name: "Wan 2.1 Video Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["video_generation"],
+    contextWindow: "5s 720p",
+    description: "Open weights 1.3B video model for generating architecture walkthrough demonstrations.",
+  },
+  {
+    id: "cogvideox-2b-free",
+    name: "CogVideoX 2B Free",
+    provider: "OpenCode Zen",
+    tier: "Free",
+    capabilities: ["video_generation"],
+    contextWindow: "6s 720p",
+    description: "Open visual presentation video generation model for executive system demonstrations.",
   },
 ];
 

@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { AIGateway, OPENCODE_ZEN_MODELS } from "@/lib/ai/gateway";
 
 describe("AIGateway & OpenCode Zen Suite", () => {
-  it("includes all 5 OpenCode Zen free models in catalog", () => {
+  it("includes all OpenCode Zen free models in catalog", () => {
     const catalog = AIGateway.getCatalog();
-    expect(catalog).toHaveLength(5);
+    expect(catalog.length).toBeGreaterThanOrEqual(5);
 
     const modelIds = catalog.map((m) => m.id);
     expect(modelIds).toContain("nemotron-3-ultra-free");

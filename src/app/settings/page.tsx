@@ -22,6 +22,11 @@ import {
   Key,
   AlertCircle,
   ExternalLink,
+  Send,
+  MessageSquare,
+  ImageIcon,
+  Mic,
+  Video,
 } from "lucide-react";
 
 interface ModelStatus {
@@ -90,6 +95,72 @@ const OPENCODE_ZEN_DISPLAY = [
     bg: "bg-pink-500/10 border-pink-500/30",
     desc: "Creative synthesis model specialized in compelling executive cover letters and personalized outreach messaging.",
   },
+  {
+    id: "opencode/flux-1-schnell:free",
+    name: "FLUX.1 Schnell Free",
+    role: "Visual Generation & Evidence Diagrams",
+    context: "4 steps",
+    type: "image",
+    icon: ImageIcon,
+    color: "text-fuchsia-400",
+    bg: "bg-fuchsia-500/10 border-fuchsia-500/30",
+    desc: "Sub-second latent diffusion engine for architectural schematics, recruiter infographics, and portfolio assets.",
+  },
+  {
+    id: "opencode/sdxl-turbo:free",
+    name: "SDXL Turbo Free",
+    role: "Real-time High-Speed Image Gen",
+    context: "1 step",
+    type: "image",
+    icon: ImageIcon,
+    color: "text-violet-400",
+    bg: "bg-violet-500/10 border-violet-500/30",
+    desc: "Adversarial diffusion distillation for instant visual generation supporting application proofs.",
+  },
+  {
+    id: "opencode/whisper-large-v3-turbo:free",
+    name: "Whisper Large v3 Turbo Free",
+    role: "Audio Transcription & Voice Query",
+    context: "Audio",
+    type: "audio",
+    icon: Mic,
+    color: "text-sky-400",
+    bg: "bg-sky-500/10 border-sky-500/30",
+    desc: "Zero-cost speech-to-text transcription engine for user audio directives and voice commands.",
+  },
+  {
+    id: "opencode/kokoro-82m:free",
+    name: "Kokoro 82M Free",
+    role: "Audio Voice Reader TTS",
+    context: "Audio",
+    type: "audio",
+    icon: Mic,
+    color: "text-teal-400",
+    bg: "bg-teal-500/10 border-teal-500/30",
+    desc: "Ultra-compact neural text-to-speech engine delivering lifelike British English notification narration.",
+  },
+  {
+    id: "opencode/wan-2.1-t2v:free",
+    name: "Wan 2.1 T2V Free",
+    role: "Video Generation & Walkthroughs",
+    context: "Video",
+    type: "video",
+    icon: Video,
+    color: "text-amber-300",
+    bg: "bg-amber-500/10 border-amber-500/30",
+    desc: "Text-to-video diffusion transformer generating 14B motion walkthroughs for autonomous application demos.",
+  },
+  {
+    id: "opencode/cogvideox-2b:free",
+    name: "CogVideoX 2B Free",
+    role: "Lightweight Video Synthesis",
+    context: "Video",
+    type: "video",
+    icon: Video,
+    color: "text-orange-400",
+    bg: "bg-orange-500/10 border-orange-500/30",
+    desc: "3D VAE video synthesis generating recruiter application proof animations at zero compute cost.",
+  },
 ];
 
 export default function SettingsPage() {
@@ -146,6 +217,24 @@ export default function SettingsPage() {
   const [testingModelId, setTestingModelId] = React.useState<string | null>(null);
   const [testResults, setTestResults] = React.useState<Record<string, ModelStatus>>({});
 
+  const [telegramBotToken, setTelegramBotToken] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("applywise_telegram_bot_token") || "";
+    }
+    return "";
+  });
+  const [telegramChatId, setTelegramChatId] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("applywise_telegram_chat_id") || "";
+    }
+    return "";
+  });
+  const [testingTelegram, setTestingTelegram] = React.useState(false);
+  const [telegramResult, setTelegramResult] = React.useState<{
+    success?: boolean;
+    message?: string;
+  } | null>(null);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof window !== "undefined") {
@@ -157,9 +246,46 @@ export default function SettingsPage() {
       if (customBaseUrl) {
         localStorage.setItem("applywise_custom_base_url", customBaseUrl);
       }
+      localStorage.setItem("applywise_telegram_bot_token", telegramBotToken);
+      localStorage.setItem("applywise_telegram_chat_id", telegramChatId);
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleTestTelegram = async () => {
+    setTestingTelegram(true);
+    setTelegramResult(null);
+    try {
+      const res = await fetch("/api/notifications/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "test",
+          botToken: telegramBotToken || undefined,
+          chatId: telegramChatId || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTelegramResult({
+          success: true,
+          message: data.message || "Test notification dispatched to Telegram successfully!",
+        });
+      } else {
+        setTelegramResult({
+          success: false,
+          message: data.error || data.message || "Telegram test failed.",
+        });
+      }
+    } catch (err) {
+      setTelegramResult({
+        success: false,
+        message: err instanceof Error ? err.message : "Network error testing Telegram bridge.",
+      });
+    } finally {
+      setTestingTelegram(false);
+    }
   };
 
   const handleTestProviderConnection = async () => {
@@ -680,6 +806,122 @@ export default function SettingsPage() {
               <label htmlFor="mockToggle" className="text-xs text-foreground font-medium cursor-pointer">
                 Enable automatic high-fidelity offline simulation fallback if upstream API is unreachable
               </label>
+            </div>
+          </div>
+        </Card>
+
+        {/* Telegram 24/7 Real-Time Alert Engine & MCP Bridge */}
+        <Card className="border-border/80 bg-card/85 p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <Send className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-foreground">
+                    Telegram 24/7 Real-Time Alert Engine
+                  </h3>
+                  <Badge variant="outline" className="text-[10px] font-mono gap-1 border-sky-500/40 text-sky-400 bg-sky-500/10">
+                    <MessageSquare className="h-3 w-3" />
+                    MCP SERVER
+                  </Badge>
+                </div>
+                <p className="text-xs text-foreground-muted">
+                  Autonomous 24/7 push notifications dispatched to your mobile Telegram the moment fresh 100% free-tier jobs are posted.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTestTelegram}
+              disabled={testingTelegram}
+              className="gap-2 text-xs border-sky-500/40 text-sky-300 hover:bg-sky-500/10 shrink-0"
+            >
+              {testingTelegram ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-400" />
+              ) : (
+                <Send className="h-3.5 w-3.5 text-sky-400" />
+              )}
+              {testingTelegram ? "Dispatching..." : "Send Test Telegram Alert"}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+                Telegram Bot Token
+              </label>
+              <input
+                type="password"
+                value={telegramBotToken}
+                onChange={(e) => setTelegramBotToken(e.target.value)}
+                placeholder="123456789:ABCdefGHIjklMNOpqrs..."
+                className="h-10 w-full rounded-xl border border-border bg-secondary/30 px-3 font-mono text-xs text-foreground placeholder:text-foreground-subtle/50 focus:border-sky-500 focus:outline-none"
+              />
+              <span className="text-[11px] text-foreground-subtle mt-1 block">
+                Acquired from{" "}
+                <a
+                  href="https://t.me/BotFather"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 underline hover:text-sky-300 inline-flex items-center gap-0.5"
+                >
+                  @BotFather <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              </span>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-foreground-subtle uppercase tracking-wider block mb-1">
+                Telegram Chat ID or @Channel
+              </label>
+              <input
+                type="text"
+                value={telegramChatId}
+                onChange={(e) => setTelegramChatId(e.target.value)}
+                placeholder="e.g. 987654321 or @applywise_alerts"
+                className="h-10 w-full rounded-xl border border-border bg-secondary/30 px-3 font-mono text-xs text-foreground placeholder:text-foreground-subtle/50 focus:border-sky-500 focus:outline-none"
+              />
+              <span className="text-[11px] text-foreground-subtle mt-1 block">
+                Obtain your numeric ID from{" "}
+                <a
+                  href="https://t.me/userinfobot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 underline hover:text-sky-300 inline-flex items-center gap-0.5"
+                >
+                  @userinfobot <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              </span>
+            </div>
+          </div>
+
+          {telegramResult && (
+            <div
+              className={`p-3 rounded-xl border text-xs flex items-center gap-2.5 ${
+                telegramResult.success
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+              }`}
+            >
+              {telegramResult.success ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              ) : (
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              )}
+              <span>{telegramResult.message}</span>
+            </div>
+          )}
+
+          <div className="p-3 rounded-lg bg-sky-500/5 border border-sky-500/20 text-[11px] text-foreground-subtle flex items-start gap-2">
+            <ShieldCheck className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold text-foreground">Zero-Fail MCP Safeguard: </span>
+              If tokens are not yet configured, the Telegram MCP bridge logs structured alerts into the audit trail without disrupting autonomous background cycles or the UI notification bell.
             </div>
           </div>
         </Card>
