@@ -184,5 +184,31 @@ describe("EligibilityService - Authoritative Geographic & Role Rules", () => {
       expect(full.eligible).toBe(false);
       expect(full.reason).toContain("REJECTED: Vacancy requires paid application fee");
     });
+
+    it("rejects unpaid internships and volunteer positions strictly", () => {
+      const unpaidJob: Partial<JobListing> = {
+        ...baseJob,
+        location: "Johannesburg, South Africa",
+        title: "Unpaid AI Engineering Intern",
+        description: "This is an unpaid internship position for university graduates.",
+      };
+      const full = EligibilityService.evaluateFullEligibility(unpaidJob);
+      expect(full.decision).toBe("DO_NOT_APPLY");
+      expect(full.eligible).toBe(false);
+      expect(full.reason).toContain("strictly disqualified");
+    });
+
+    it("rejects commission-only sales or consulting roles", () => {
+      const commissionJob: Partial<JobListing> = {
+        ...baseJob,
+        location: "Remote, South Africa",
+        description: "High earning potential with 100% commission only compensation structure.",
+      };
+      const full = EligibilityService.evaluateFullEligibility(commissionJob);
+      expect(full.decision).toBe("DO_NOT_APPLY");
+      expect(full.eligible).toBe(false);
+      expect(full.reason).toContain("strictly disqualified");
+    });
   });
 });
+

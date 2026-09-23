@@ -5,6 +5,7 @@
  * Zero hallucinated or broken example.com links.
  */
 
+import { createHash } from "crypto";
 import { JobListing } from "@/types";
 import { SEED_JOBS } from "@/lib/db/seed-data";
 import { logger } from "@/lib/observability/logger";
@@ -33,6 +34,17 @@ function stripHtml(html: string): string {
 }
 
 export class JobDiscoveryService {
+  /**
+   * Computes a canonical SHA-256 content fingerprint for deduplication.
+   */
+  public static computeJobFingerprint(job: Partial<JobListing>): string {
+    const url = (job.applyUrl || job.applicationUrl || "").toLowerCase().trim();
+    const title = (job.title || "").toLowerCase().trim();
+    const company = (job.company || "").toLowerCase().trim();
+    const raw = `${url}|${title}|${company}`;
+    return createHash("sha256").update(raw).digest("hex");
+  }
+
   /**
    * Fetches live remote software and AI engineering positions from Remotive API.
    * All returned jobs contain verified, live working applyUrl links.

@@ -14,6 +14,7 @@ import {
   agentDurationSeconds,
 } from "@/lib/observability/metrics";
 import { TelegramMCPBridge } from "@/lib/mcp/telegram-mcp";
+import { CampaignService } from "@/lib/services/campaign.service";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Max execution duration for Vercel Free tier
@@ -189,7 +190,32 @@ export async function GET(request: Request) {
 
   const cycleDurationSec = (Date.now() - startTime) / 1000;
   const submittedCount = processedResults.filter((r) => r.submitted).length;
-  const remainingTargetCounter = Math.max(0, 200 - submittedCount);
+
+  // Sync with persistent CampaignService
+  const activeCampaign = await CampaignService.getActiveCampaign();
+  const newSubmittedTotal = activeCampaign.submittedCount + (dryRun ? 0 : submittedCount);
+  if (!dryRun && submittedCount > 0) {
+    await CampaignService.updateCampaign(activeCampaign.id, {
+      submittedCount: newSubmittedTotal,
+    });
+  }
+
+  await CampaignService.createCheckpoint({
+    campaignId: activeCampaign.id,
+    batchNumber: bucket + 1,
+    completedCount: newSubmittedTotal,
+    remainingCount: Math.max(0, activeCampaign.targetApplications - newSubmittedTotal),
+    lastProcessedJobId: targetJobs[targetJobs.length - 1]?.id,
+    stateSnapshot: {
+      cycleIdempotencyKey,
+      runId,
+      processedCount: processedResults.length,
+      submittedCount,
+      dryRun,
+    },
+  });
+
+  const remainingTargetCounter = Math.max(0, activeCampaign.targetApplications - newSubmittedTotal);
 
   logger.info("autonomous_cycle_completed", "Autonomous cycle completed successfully", {
     durationMs: Date.now() - startTime,
@@ -199,7 +225,7 @@ export async function GET(request: Request) {
       processedCount: processedResults.length,
       submittedCount,
       duplicatesPrevented,
-      remainingTargetCounter
+      remainingTargetCounter,
     },
   });
 
@@ -224,7 +250,7 @@ export async function GET(request: Request) {
     batchVolume: processedResults.length,
     submittedCount,
     remainingTargetCounter,
-    weeklyTarget: 200,
+    weeklyTarget: activeCampaign.targetApplications,
     summary: {
       discovered: SEED_JOBS.length,
       processed: processedResults.length,

@@ -370,6 +370,34 @@ export const controlChatApprovalsTotal = new Counter({
 });
 
 // -----------------------------------------------------------------------------
+// Campaign Orchestration Gauges
+// -----------------------------------------------------------------------------
+export const campaignTargetTotal = new Gauge({
+  name: 'applywise_campaign_target_total',
+  help: 'Total configured application goal for active campaign',
+  registers: [registry],
+});
+
+export const campaignSubmittedTotal = new Gauge({
+  name: 'applywise_campaign_submitted_total',
+  help: 'Total verified applications submitted under active campaign',
+  registers: [registry],
+});
+
+export const campaignRemainingTotal = new Gauge({
+  name: 'applywise_campaign_remaining_total',
+  help: 'Remaining applications needed to reach campaign goal',
+  registers: [registry],
+});
+
+export const campaignBatchSize = new Gauge({
+  name: 'applywise_campaign_batch_size',
+  help: 'Configured batch size for application processing',
+  registers: [registry],
+});
+
+
+// -----------------------------------------------------------------------------
 // Initialize Default Process & Node.js Metrics Once
 // -----------------------------------------------------------------------------
 if (!globalForMetrics.metricsInitialized) {

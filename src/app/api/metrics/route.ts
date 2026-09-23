@@ -3,13 +3,26 @@
 // Exposes standard Prometheus text-based telemetry format
 // =============================================================================
 
-import { registry } from '@/lib/observability/metrics';
+import {
+  registry,
+  campaignTargetTotal,
+  campaignSubmittedTotal,
+  campaignRemainingTotal,
+  campaignBatchSize,
+} from '@/lib/observability/metrics';
+import { CampaignService } from '@/lib/services/campaign.service';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const summary = await CampaignService.getActiveCampaignSummary();
+    campaignTargetTotal.set(summary.targetApplications);
+    campaignSubmittedTotal.set(summary.submittedCount);
+    campaignRemainingTotal.set(summary.remainingCount);
+    campaignBatchSize.set(summary.batchSize);
+
     const metricsData = await registry.metrics();
     return new NextResponse(metricsData, {
       status: 200,

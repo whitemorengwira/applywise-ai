@@ -369,6 +369,7 @@ export class EligibilityService {
 
     // Reject paid application gates immediately
     const desc = (job.description || "").toLowerCase();
+    const title = (job.title || "").toLowerCase();
     const url = (job.applicationUrl || "").toLowerCase();
     if (desc.includes("application fee") || desc.includes("paid subscription required to apply") || url.includes("paywall")) {
       return {
@@ -377,6 +378,30 @@ export class EligibilityService {
         score: 0,
         status: "ineligible",
         reason: "REJECTED: Vacancy requires paid application fee or paywall subscription.",
+        roleTier: rolePriority.tier,
+        rolePriorityScore: 0,
+        applicationRoute: route,
+        locationDetails: locResult.locationDetails,
+      };
+    }
+
+    // Reject unpaid internships, volunteer work, or commission-only compensation
+    const isUnpaidOrCommission =
+      desc.includes("unpaid internship") ||
+      desc.includes("unpaid role") ||
+      desc.includes("volunteer position") ||
+      desc.includes("commission only") ||
+      desc.includes("100% commission") ||
+      title.includes("unpaid") ||
+      title.includes("volunteer");
+
+    if (isUnpaidOrCommission) {
+      return {
+        decision: "DO_NOT_APPLY",
+        eligible: false,
+        score: 0,
+        status: "ineligible",
+        reason: "REJECTED: Unpaid internships, volunteer work, or commission-only roles are strictly disqualified.",
         roleTier: rolePriority.tier,
         rolePriorityScore: 0,
         applicationRoute: route,

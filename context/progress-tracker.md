@@ -1,11 +1,20 @@
 # ApplyWise AI — Progress Tracker
 
 ## Last Updated
-2026-09-23T11:45:00+02:00
+2026-09-23T12:25:00+02:00
 
 ## Current Phase
-**PHASE 34 COMPLETE & PRODUCTION READY: EXPANDABLE CONTEXT WINDOW & TWO-MODE VOICE DELIBERATION (DICTATE & INTERACT)**
-Engineered the Control Centre (`/control`) prompt context window overhaul: decoupled prompt textarea from horizontal button crowding into a modern stacked architecture with full horizontal width, generous default height (`min-h-[72px]`), dynamic auto-expansion up to 360px via `scrollHeight` tracking `inputValue` changes, an "Expand/Compact" toggle button opening an expansive `340px` view, and vertical drag-to-resize capability. Upgraded the Voice Deliberation control with a sleek popover providing two clear operational modes: **Dictate** (speech-to-text directly streaming into prompt box) and **Interact** (live two-way conversational Voice Deliberation session with dynamic soundwave visualizer, British English TTS response readback, and hands-free loop). Fixed Whisper API fallback in `/api/ai/transcribe` to eliminate mock diagnostic text from user prompt box. 30/30 test suites passing (178/178 tests, 100%), 0 lint errors, 0 type errors, visual verification recorded in browser subagent.
+**PHASE 35 COMPLETE & PRODUCTION READY: GOOGLE ANTIGRAVITY IMPLEMENTATION BRIEF & DURABLE CAMPAIGN ORCHESTRATION (PHASES A-I)**
+Engineered the complete 9-phase Google Antigravity Implementation Brief converting ApplyWise AI into a durable, resumable job search and application orchestration system targeting a configurable goal of 200 legitimate, eligible, evidence-grounded paid applications in batches of 5:
+- **Phase A (Reality Audit)**: Forensic audit across all 9 domains published in `phase_a_reality_audit.md`.
+- **Phase B (Data Model)**: Created Supabase migration `20260924_campaign_orchestration.sql`, `src/types/orchestration.ts`, Zod validators, and `CampaignService` supporting dual persistence (Supabase + resilient in-memory fallback), distributed leases, events, and checkpoints.
+- **Phase C (State Machine)**: Implemented 11-step `OrchestrationStateMachine` (`DISCOVERED` through `COMPLETED` / terminal failure states) with lease renewal, batch processing of 5, manual review gates, and proof generation. Wired into `/api/cron/autonomous-cycle`.
+- **Phase D (Discovery & Verification)**: Upgraded `EligibilityService` to strictly disqualify unpaid internships, volunteer positions, and commission-only schemes; added SHA-256 canonical deduplication (`sha256(url|title|company)`).
+- **Phase E (Grounded Document Engine)**: Cryptographic SHA-256 byte lock (`3994a09c2a71f0088aebe523a677bb0b213fd8b5ae5dd06fe0df8fa2707246ec`) enforced on every state transition and submission; British English evidence dossier grounded cover letters.
+- **Phase F (Controlled Portal Execution)**: Added protected gate detection (`InternalBrowserMCP.detectProtectedGate`) pausing for CAPTCHA/MFA/custom employer queries with `BLOCKED_USER_ACTION_REQUIRED`.
+- **Phase G (OpenCode Zen Model Registry & Privacy Routing)**: Implemented `OpenCodeModelRegistryService` including new models (`MiMo-V2.6-Flash Free`, `Big Pickle Free`, `Jev 1.13 Free`), privacy tiers, and automatic candidate PII redaction for non-zero-retention endpoints.
+- **Phase H (Observability & Real Dashboards)**: Created 4 Prometheus gauges (`applywise_campaign_target_total`, `applywise_campaign_submitted_total`, `applywise_campaign_remaining_total`, `applywise_campaign_batch_size`), exposed via `/api/metrics`, created `/api/campaign`, and dynamic summary KPIs on `/automations`.
+- **Phase I (Production Rollout & Quality Gates)**: 34 test files, 202/202 tests passed (100%), 0 TypeScript errors (`tsc --noEmit`), 0 ESLint errors, 37 Next.js production routes compiled cleanly.
 
 ---
 
@@ -13,6 +22,7 @@ Engineered the Control Centre (`/control`) prompt context window overhaul: decou
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
+| **Phase 35** | Google Antigravity Implementation Brief & Durable Campaign Orchestration (Phases A-I) | Completed | 200 Paid Job Campaign Ledger; 11-step state machine; paid work filter; Master CV SHA-256 lock; protected gate detection; OpenCode Zen dynamic model registry & PII redaction; Prometheus campaign gauges; `/api/campaign`; dynamic `/automations` KPI cards; 202/202 tests passed; clean Next.js build |
 | **Phase 34** | Expandable Context Window & Two-Mode Voice Deliberation (Dictate & Interact) | Completed | Spacious auto-expanding textarea, 340px Expand/Compact toggle, dual Voice popover (Dictate vs Interact), live Voice Deliberation modal with soundwave visualizer & British TTS; 178/178 tests passed; browser subagent verified with video |
 | **Phase 33** | Codex / ChatGPT Classic Desktop UI, Plus (+) 9-Tool Action Menu, Sketchpad, Library & Calendar | Completed | Left Codex sidebar (9 pinned threads, 3 projects, profile); "What's on the agenda today?" hero greeting; "+" popover menu with 9 tools; HTML5 sketch whiteboard canvas; candidate library modal with Master CV SHA-256 verification; calendar modal; Think reasoning mode; 162/162 tests passed; live production verified |
 | **Phase 32** | In-App Apply Value Chain, Internal Browser, Portal MCPs & Permanent Ledger | Completed | Zero downloads; 5-stage value chain; Codex-style /browser; 4 permanent sessions (LinkedIn, PNet, Indeed, Zoho); 4 portal MCP connectors; permanent applied ledger on /applications; 162/162 tests passed; live production verified |

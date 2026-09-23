@@ -48,6 +48,8 @@ export interface BrowserSubmissionResult {
   proofHash: string;
   cvHashLocked: string;
   confirmationText: string;
+  gateStatus?: "CLEAR" | "BLOCKED_USER_ACTION_REQUIRED";
+  blockedReason?: string;
 }
 
 export class InternalBrowserMCP {
@@ -113,16 +115,68 @@ export class InternalBrowserMCP {
   }
 
   /**
+   * Detects protected verification challenges (CAPTCHA, MFA, custom security questions).
+   */
+  public static detectProtectedGate(
+    domContent?: string
+  ): { isBlocked: boolean; gateType?: "CAPTCHA" | "MFA" | "CUSTOM_QUESTION"; description?: string } {
+    const text = (domContent || "").toLowerCase();
+    if (
+      text.includes("captcha") ||
+      text.includes("cloudflare turnstile") ||
+      text.includes("recaptcha") ||
+      text.includes("hcaptcha")
+    ) {
+      return {
+        isBlocked: true,
+        gateType: "CAPTCHA",
+        description: "Protected anti-bot challenge (CAPTCHA / Turnstile) detected. User intervention required.",
+      };
+    }
+    if (
+      text.includes("two-factor") ||
+      text.includes("security code sent to your phone") ||
+      text.includes("enter the 6-digit code")
+    ) {
+      return {
+        isBlocked: true,
+        gateType: "MFA",
+        description: "Multi-Factor Authentication (MFA) challenge encountered. User verification required.",
+      };
+    }
+    return { isBlocked: false };
+  }
+
+  /**
    * Submits the application inside the internal browser harness.
+   * If protected challenge is present in page DOM, enters BLOCKED_USER_ACTION_REQUIRED.
    */
   public static async executeSubmission(
     url: string,
     jobTitle: string,
     company: string,
-    coverLetterText: string
+    coverLetterText: string,
+    pageContent?: string
   ): Promise<BrowserSubmissionResult> {
-    const autofill = this.autofillForm(coverLetterText);
+    const gateCheck = this.detectProtectedGate(pageContent);
     const timestamp = new Date().toISOString();
+
+    if (gateCheck.isBlocked) {
+      return {
+        success: false,
+        portalUrl: url,
+        pageTitle: `${jobTitle} at ${company}`,
+        timestamp,
+        fieldsSubmitted: 0,
+        proofHash: `GATE-BLOCKED-${Date.now()}`,
+        cvHashLocked: MASTER_CV_SHA256,
+        confirmationText: gateCheck.description || "Protected gate encountered. User intervention required.",
+        gateStatus: "BLOCKED_USER_ACTION_REQUIRED",
+        blockedReason: gateCheck.description,
+      };
+    }
+
+    const autofill = this.autofillForm(coverLetterText);
 
     const rawProof = `INTERNAL_BROWSER|${url}|${company}|${jobTitle}|${SEED_PROFILE.email}|${autofill.cvHashLocked}|${timestamp}`;
     const proofHash = generateProofHash("PROOF-IB", rawProof);
@@ -136,6 +190,7 @@ export class InternalBrowserMCP {
       proofHash,
       cvHashLocked: autofill.cvHashLocked,
       confirmationText: `Your application for ${jobTitle} at ${company} was successfully submitted directly via the internal browser automation harness.`,
+      gateStatus: "CLEAR",
     };
   }
 }

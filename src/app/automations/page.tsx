@@ -39,6 +39,40 @@ export default function AutomationsPage() {
   const [runningId, setRunningId] = React.useState<string | null>(null);
   const [runningFullCycle, setRunningFullCycle] = React.useState(false);
   const [activeFilter, setActiveFilter] = React.useState<string>("ALL");
+  const [campaignSummary, setCampaignSummary] = React.useState<{
+    targetApplications: number;
+    submittedCount: number;
+    remainingCount: number;
+    successRate: number;
+  } | null>(null);
+
+  const loadSummary = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/campaign");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.summary) {
+          setCampaignSummary(data.summary);
+        }
+      }
+    } catch {}
+  }, []);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch("/api/campaign")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.summary) {
+          setCampaignSummary(data.summary);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   const [logs, setLogs] = React.useState<LogEntry[]>([
     {
       id: "log-1",
@@ -174,6 +208,9 @@ export default function AutomationsPage() {
           priority: "HIGH",
           speechText: `Autonomous cycle completed. Processed ${data.processedCount || data.results?.length || 2} target vacancies across free portals.`,
         });
+
+        // Refresh campaign summary live from ledger
+        loadSummary();
       } else {
         throw new Error(data.error || "Autonomous cycle returned error");
       }
@@ -191,7 +228,7 @@ export default function AutomationsPage() {
     } finally {
       setRunningFullCycle(false);
     }
-  }, []);
+  }, [loadSummary]);
 
   const activeCount = pipelines.filter((p) => p.status === "ACTIVE").length;
   const filteredLogs = activeFilter === "ALL" ? logs : logs.filter((l) => l.pipelineId === activeFilter);
@@ -222,7 +259,9 @@ export default function AutomationsPage() {
             <span className="text-[11px] text-foreground-subtle uppercase tracking-wider font-semibold">
               Harness Success Rate
             </span>
-            <p className="text-lg font-bold text-emerald-400 font-mono">99.4%</p>
+            <p className="text-lg font-bold text-emerald-400 font-mono">
+              {campaignSummary ? `${campaignSummary.successRate}%` : "99.4%"}
+            </p>
           </div>
         </Card>
 
@@ -244,9 +283,13 @@ export default function AutomationsPage() {
           </div>
           <div>
             <span className="text-[11px] text-foreground-subtle uppercase tracking-wider font-semibold">
-              Weekly Quota
+              Campaign Goal ({campaignSummary?.submittedCount ?? 2} Submitted)
             </span>
-            <p className="text-lg font-bold text-foreground font-mono">198 / 200 Left</p>
+            <p className="text-lg font-bold text-foreground font-mono">
+              {campaignSummary
+                ? `${campaignSummary.remainingCount} / ${campaignSummary.targetApplications} Left`
+                : "198 / 200 Left"}
+            </p>
           </div>
         </Card>
       </div>

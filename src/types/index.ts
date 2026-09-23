@@ -188,3 +188,9 @@ export interface AIOperationLog {
   errorMessage?: string;
   createdAt: string;
 }
+
+// -----------------------------------------------------------------------------
+// Campaign Orchestration & Durable Ledger
+// -----------------------------------------------------------------------------
+export * from "./orchestration";
+
