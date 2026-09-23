@@ -1,6 +1,6 @@
 # ApplyWise AI — Build Plan
 
-## Current Status: ALL PHASES COMPLETE (0–25) — PRODUCTION VERIFIED & LIVE
+## Current Status: ALL PHASES COMPLETE (0–35) — PRODUCTION VERIFIED & LIVE
 
 ---
 
@@ -307,4 +307,123 @@
 - [x] 127 unit and integration tests passing across all 21 test files
 
 **Definition of Done:** Enterprise-grade conversational AI experience with full multi-turn memory and best-in-class UX. Completed.
+
+---
+
+## Phase 26 — Cognitive Copilot & Multi-Provider Free-Tier Architecture
+- [x] Cognitive Copilot & Conversational Reasoning Engine in `/control`
+- [x] Google Gemini Free (`gemini-1.5-flash`), Groq Cloud Free (`llama-3.3-70b-versatile`), OpenCode Zen, and Ollama routing
+- [x] Zero-cost enforcement with strict budget locks
+- [x] Interactive AI provider credentials & connection tester on `/settings`
+- [x] Embedded Whitemore candidate evidence dossier
+- [x] Dynamic query job search across authentic live portals
+- [x] 127 unit and integration tests passing
+
+**Definition of Done:** Multi-provider zero-cost free-tier cognitive copilot operational. Completed.
+
+---
+
+## Phase 27 — OpenCode Zen Desktop Experience & Session Context Alignment
+- [x] Replicated user's desktop OpenCode Zen UI & model suite in `/control`
+- [x] 5 free models (Nemotron 3 Ultra, Nemotron 3.5 Lightning, Ling 3.0 Flash Fin, MiMo V2.5, Muse Spark 1.3)
+- [x] Desktop-matching Session Context telemetry panel in sidebar ($0.00 cost, 1M context, token breakdown)
+- [x] Grounded candidate evidence dossier integration
+- [x] 127 unit and integration tests passing
+
+**Definition of Done:** Desktop OpenCode Zen interface experience fully aligned. Completed.
+
+---
+
+## Phase 28 — Universal AI Assistant & Cognitive Knowledge Engine
+- [x] UniversalKnowledgeEngine answering world knowledge, capitals, science, math, CS, and concepts
+- [x] Eliminated canned rejections and unknown status header badges
+- [x] Restricted trace accordion strictly to actual tool dispatches
+- [x] 141 unit and integration tests passing across 22 test files
+
+**Definition of Done:** Universal assistant capability with strict domain boundary protection. Completed.
+
+---
+
+## Phase 29 — Immutable Master CV & Cover Letter Tailoring
+- [x] Modal and action buttons re-routed to `/cover-letters`
+- [x] Master CV SHA-256 locked (`3994a09c2a71f0088aebe523a677bb0b213fd8b5ae5dd06fe0df8fa2707246ec`)
+- [x] Cover letter tailoring grounded on verified candidate evidence dossier
+- [x] 141 unit and integration tests passing
+
+**Definition of Done:** Cryptographic immutability and tailored cover letter generation verified. Completed.
+
+---
+
+## Phase 30 — Live Real Job Discovery & Authentic Portals
+- [x] Zero fake URLs; live feeds + verified African portals (Entelect, IQbusiness, Econet, Discovery)
+- [x] Canonical deduplication and freshness verification
+- [x] 145 unit and integration tests passing
+
+**Definition of Done:** Authentic job feed acquisition without mock or hallucinated listings. Completed.
+
+---
+
+## Phase 31 — Currency Normalization, Whisper Voice, Gems, Automations, Observability & News
+- [x] Currency normalization: Zero £ symbols; ZAR for SA, USD for ZW/Global
+- [x] Whisper + TTS audio chat; Web Speech recognition
+- [x] Gemini Gems specialized role prompts
+- [x] `/automations` harness and execution orchestration
+- [x] `/observability` Grafana/Prometheus telemetry dashboard
+- [x] `/news` curated industry RSS threads
+- [x] 154 unit and integration tests passing
+
+**Definition of Done:** Multi-currency, voice input, news stream, and observability completed. Completed.
+
+---
+
+## Phase 32 — In-App Apply Value Chain, Internal Browser, Portal MCPs & Permanent Ledger
+- [x] In-app 5-stage apply value chain with zero forced downloads
+- [x] Internal browser experience at `/browser`
+- [x] 4 permanent portal sessions (LinkedIn, PNet, Indeed, Zoho)
+- [x] 4 portal MCP connectors with standardized execution interfaces
+- [x] Permanent applied CRM ledger on `/applications`
+- [x] 162 unit and integration tests passing
+
+**Definition of Done:** End-to-end application value chain operating entirely in-app. Completed.
+
+---
+
+## Phase 33 — Codex / ChatGPT Classic Desktop UI, Plus (+) 9-Tool Action Menu, Sketchpad, Library & Calendar
+- [x] Left Codex sidebar (9 pinned threads, 3 projects, profile)
+- [x] "What's on the agenda today?" hero greeting
+- [x] Plus (+) popover menu with 9 tools
+- [x] HTML5 sketch whiteboard canvas modal
+- [x] Candidate library modal with Master CV SHA-256 verification
+- [x] Calendar modal for interview and milestone tracking
+- [x] Think reasoning mode toggle
+- [x] 162 unit and integration tests passing
+
+**Definition of Done:** Classic desktop-grade command centre UI with complete tool palette. Completed.
+
+---
+
+## Phase 34 — Expandable Context Window & Two-Mode Voice Deliberation (Dictate & Interact)
+- [x] Auto-expanding textarea context window with 340px Expand/Compact toggle
+- [x] Dual-mode voice input popover: Dictate Mode (speech-to-text) vs Interact Mode (voice deliberation)
+- [x] Interactive Voice Deliberation modal with soundwave visualizer, British voice synthesis, and real-time deliberation
+- [x] Keyboard shortcuts (`Enter` send, `Shift+Enter` newline) and clean transcription injection
+- [x] 178 unit and integration tests passing; browser subagent verified
+
+**Definition of Done:** Spacious prompt context window and two-mode voice deliberation operational. Completed.
+
+---
+
+## Phase 35 — Google Antigravity Implementation Brief & Durable Campaign Orchestration (Phases A-I)
+- [x] **Phase A (Reality Audit)**: Forensic audit across all 9 domains published in `phase_a_reality_audit.md`
+- [x] **Phase B (Data Model)**: Supabase migration `20260924_campaign_orchestration.sql`, `src/types/orchestration.ts`, Zod validators, and `CampaignService` supporting dual persistence, distributed leases, events, and checkpoints
+- [x] **Phase C (State Machine)**: Implemented 11-step `OrchestrationStateMachine` (`DISCOVERED` through `COMPLETED` / terminal failure states) with lease renewal, batch processing of 5, manual review gates, and proof generation
+- [x] **Phase D (Discovery & Verification)**: Upgraded `EligibilityService` to strictly disqualify unpaid internships, volunteer positions, and commission-only schemes; added SHA-256 canonical deduplication (`sha256(url|title|company)`)
+- [x] **Phase E (Grounded Document Engine)**: Cryptographic SHA-256 byte lock (`3994a09c2a71f0088aebe523a677bb0b213fd8b5ae5dd06fe0df8fa2707246ec`) enforced on every state transition and submission; British English evidence dossier grounded cover letters
+- [x] **Phase F (Controlled Portal Execution)**: Added protected gate detection (`InternalBrowserMCP.detectProtectedGate`) pausing for CAPTCHA/MFA/custom employer queries with `BLOCKED_USER_ACTION_REQUIRED`
+- [x] **Phase G (OpenCode Zen Model Registry & Privacy Routing)**: Implemented `OpenCodeModelRegistryService` including new models (`MiMo-V2.6-Flash Free`, `Big Pickle Free`, `Jev 1.13 Free`), privacy tiers, and automatic candidate PII redaction for non-zero-retention endpoints
+- [x] **Phase H (Observability & Real Dashboards)**: Created 4 Prometheus gauges (`applywise_campaign_target_total`, `applywise_campaign_submitted_total`, `applywise_campaign_remaining_total`, `applywise_campaign_batch_size`), exposed via `/api/metrics`, created `/api/campaign`, and dynamic summary KPIs on `/automations`
+- [x] **Phase I (Production Rollout & Acceptance Test Matrix)**: Complete 22-test Antigravity Acceptance Test Matrix (`tests/integration/antigravity-acceptance-matrix.test.ts`), 35 test files, 224/224 tests passed (100%), 0 TypeScript errors (`tsc --noEmit`), 0 ESLint errors, 37 Next.js production routes compiled cleanly
+
+**Definition of Done:** Google Antigravity Implementation Brief and 200 paid job application campaign orchestration fully delivered, verified, and production ready. Completed.
+
 

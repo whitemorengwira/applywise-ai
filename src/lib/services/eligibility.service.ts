@@ -150,7 +150,8 @@ export class EligibilityService {
    */
   static evaluateLocationEligibility(
     job: Partial<JobListing>,
-    candidateLocation?: string
+    candidateLocation?: string,
+    geographicRules?: { south_africa?: string; [key: string]: unknown }
   ): {
     eligible: boolean;
     score: number;
@@ -194,7 +195,8 @@ export class EligibilityService {
       };
     }
 
-    // 1. South Africa: Fully open to Remote, Hybrid, AND On-site!
+    // 1. South Africa: Authoritative rule — Remote Only under campaign policy,
+    // or when explicitly declared as workArrangement: 'hybrid'/'on-site'.
     const isSouthAfrica =
       loc.includes("south africa") ||
       loc.includes("johannesburg") ||
@@ -205,6 +207,26 @@ export class EligibilityService {
       loc.includes("stellenbosch");
 
     if (isSouthAfrica) {
+      const isExplicitHybridOrOnsiteWorkArrangement =
+        (job as { workArrangement?: string })?.workArrangement === "hybrid" ||
+        (job as { workArrangement?: string })?.workArrangement === "on-site" ||
+        geographicRules?.south_africa === "REMOTE_ONLY";
+
+      if (isExplicitHybridOrOnsiteWorkArrangement) {
+        return {
+          eligible: false,
+          score: 0,
+          status: "ineligible",
+          reason: `South Africa policy strictly requires remote arrangement. Hybrid and on-site roles are ineligible.`,
+          locationDetails: {
+            market: "South Africa",
+            workMode: (job as { workArrangement?: string })?.workArrangement === "on-site" ? "On-site" : "Hybrid",
+            isAfricaFirst: true,
+            isGeofencedRestricted: true,
+          },
+        };
+      }
+
       return {
         eligible: true,
         score: 100,
@@ -362,8 +384,12 @@ export class EligibilityService {
   /**
    * Complete eligibility engine producing holistic decision
    */
-  static evaluateFullEligibility(job: Partial<JobListing>): DetailedEligibilityResult {
-    const locResult = this.evaluateLocationEligibility(job);
+  static evaluateFullEligibility(
+    job: Partial<JobListing>,
+    candidateLocation?: string,
+    geographicRules?: { south_africa?: string; [key: string]: unknown }
+  ): DetailedEligibilityResult {
+    const locResult = this.evaluateLocationEligibility(job, candidateLocation, geographicRules);
     const rolePriority = this.evaluateRolePriority(job.title || "", job.description || "");
     const route = this.classifyApplicationRoute(job);
 

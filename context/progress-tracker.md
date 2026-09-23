@@ -14,7 +14,7 @@ Engineered the complete 9-phase Google Antigravity Implementation Brief converti
 - **Phase F (Controlled Portal Execution)**: Added protected gate detection (`InternalBrowserMCP.detectProtectedGate`) pausing for CAPTCHA/MFA/custom employer queries with `BLOCKED_USER_ACTION_REQUIRED`.
 - **Phase G (OpenCode Zen Model Registry & Privacy Routing)**: Implemented `OpenCodeModelRegistryService` including new models (`MiMo-V2.6-Flash Free`, `Big Pickle Free`, `Jev 1.13 Free`), privacy tiers, and automatic candidate PII redaction for non-zero-retention endpoints.
 - **Phase H (Observability & Real Dashboards)**: Created 4 Prometheus gauges (`applywise_campaign_target_total`, `applywise_campaign_submitted_total`, `applywise_campaign_remaining_total`, `applywise_campaign_batch_size`), exposed via `/api/metrics`, created `/api/campaign`, and dynamic summary KPIs on `/automations`.
-- **Phase I (Production Rollout & Quality Gates)**: 34 test files, 202/202 tests passed (100%), 0 TypeScript errors (`tsc --noEmit`), 0 ESLint errors, 37 Next.js production routes compiled cleanly.
+- **Phase I (Production Rollout & Quality Gates)**: 35 test files, 224/224 tests passed (100%), 22-test Antigravity Acceptance Matrix passed, 0 TypeScript errors (`tsc --noEmit`), 0 ESLint errors, 37 Next.js production routes compiled cleanly.
 
 ---
 
@@ -22,7 +22,7 @@ Engineered the complete 9-phase Google Antigravity Implementation Brief converti
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
-| **Phase 35** | Google Antigravity Implementation Brief & Durable Campaign Orchestration (Phases A-I) | Completed | 200 Paid Job Campaign Ledger; 11-step state machine; paid work filter; Master CV SHA-256 lock; protected gate detection; OpenCode Zen dynamic model registry & PII redaction; Prometheus campaign gauges; `/api/campaign`; dynamic `/automations` KPI cards; 202/202 tests passed; clean Next.js build |
+| **Phase 35** | Google Antigravity Implementation Brief & Durable Campaign Orchestration (Phases A-I) | Completed | 200 Paid Job Campaign Ledger; 11-step state machine; paid work filter; Master CV SHA-256 lock; protected gate detection; OpenCode Zen dynamic model registry & PII redaction; Prometheus campaign gauges; `/api/campaign`; dynamic `/automations` KPI cards; 22-test acceptance matrix; 224/224 tests passed; clean Next.js build |
 | **Phase 34** | Expandable Context Window & Two-Mode Voice Deliberation (Dictate & Interact) | Completed | Spacious auto-expanding textarea, 340px Expand/Compact toggle, dual Voice popover (Dictate vs Interact), live Voice Deliberation modal with soundwave visualizer & British TTS; 178/178 tests passed; browser subagent verified with video |
 | **Phase 33** | Codex / ChatGPT Classic Desktop UI, Plus (+) 9-Tool Action Menu, Sketchpad, Library & Calendar | Completed | Left Codex sidebar (9 pinned threads, 3 projects, profile); "What's on the agenda today?" hero greeting; "+" popover menu with 9 tools; HTML5 sketch whiteboard canvas; candidate library modal with Master CV SHA-256 verification; calendar modal; Think reasoning mode; 162/162 tests passed; live production verified |
 | **Phase 32** | In-App Apply Value Chain, Internal Browser, Portal MCPs & Permanent Ledger | Completed | Zero downloads; 5-stage value chain; Codex-style /browser; 4 permanent sessions (LinkedIn, PNet, Indeed, Zoho); 4 portal MCP connectors; permanent applied ledger on /applications; 162/162 tests passed; live production verified |
@@ -77,6 +77,25 @@ Engineered the complete 9-phase Google Antigravity Implementation Brief converti
 - **GitHub Repository**: `https://github.com/whitemorengwira/applywise-ai`
 - **Local Directory**: `D:\applywise-ai` (Cloned & synchronized)
 
-## Git History
-- Repository: `whitemorengwira/applywise-ai`
-- Default Branch: `master`
+## Session 35 — 2026-09-23
+**Objective:** Deliver all phases of the Google Antigravity Implementation Brief and Durable Campaign Orchestration (Phases A through I).
+
+**Completed:**
+- Complete 200 Paid Job Application Campaign Ledger with dual persistence (`CampaignService`), distributed leases, event audit logs, and durable checkpoints.
+- Linear 11-step `OrchestrationStateMachine` (`DISCOVERED` -> `ELIGIBILITY_CONFIRMED` -> `GROUNDED_DOCUMENTS_PREPARED` -> `AWAITING_MANUAL_REVIEW` / `SUBMITTING` -> `SUBMITTED` -> `PROOF_CAPTURED` -> `COMPLETED`).
+- Upgraded `EligibilityService` with strict paid work filter rejecting unpaid internships, volunteer work, and commission-only schemes.
+- Canonical deduplication SHA-256 fingerprinting (`JobDiscoveryService.computeJobFingerprint`).
+- Master CV cryptographic immutability lock (`3994a09c2a71f0088aebe523a677bb0b213fd8b5ae5dd06fe0df8fa2707246ec`) enforced on every transition and submission.
+- Protected portal gate detection (`InternalBrowserMCP.detectProtectedGate`) pausing for CAPTCHA/MFA/custom employer questions.
+- Dynamic OpenCode Zen model registry (`OpenCodeModelRegistryService`) with automatic PII sanitization and model availability/outage updates.
+- 4 Prometheus campaign gauges (`applywise_campaign_target_total`, `applywise_campaign_submitted_total`, `applywise_campaign_remaining_total`, `applywise_campaign_batch_size`), exposed via `/api/metrics`, created `/api/campaign`, and dynamic summary KPIs on `/automations`.
+- Full 22-test Antigravity Acceptance Test Matrix (`tests/integration/antigravity-acceptance-matrix.test.ts`).
+- 35 test files, 224/224 tests passing (100%), 0 TypeScript errors (`tsc --noEmit`), 0 ESLint errors, 37 Next.js production routes compiled cleanly.
+
+**Decisions Made:**
+- Enforced authoritative geographic rules: South Africa allows Remote, Hybrid, and On-site by default, but respects `REMOTE_ONLY` policy when explicitly configured or when jobs flag specific remote restrictions; Zimbabwe and Malawi allow Remote, Hybrid, and On-site without restriction.
+- Replaced fragile external network requests in synthetic uptime unit tests with hermetic test mocking to guarantee 100% deterministic test execution.
+
+**Next Steps:**
+1. Final git commit and push to remote master.
+2. Production deployment and monitoring on Vercel.

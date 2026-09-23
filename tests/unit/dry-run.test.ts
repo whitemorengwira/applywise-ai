@@ -10,7 +10,7 @@ describe("Directive Section 11: End-to-End Dry Run on High-Fit Vacancy", () => {
     title: "Principal Agentic AI Systems Architect",
     company: "Synthesia Africa Enterprise",
     location: "Johannesburg, South Africa",
-    remoteType: "Hybrid",
+    remoteType: "Remote",
     postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days old (PREFERRED)
     applyUrl: "https://careers.synthesia-africa.com/jobs/principal-agentic-architect",
     source: "manual",

@@ -262,4 +262,52 @@ Principal Technology Architect & AI Systems Engineer`;
       cvHashUsed: cvMeta.actualHash,
     };
   }
+
+  /**
+   * Validates a generated cover letter for unsupported claims, wrong employer or title,
+   * leaked content from another vacancy, false qualification status, and incorrect work-rights.
+   * Section 7 & Acceptance Test 11.
+   */
+  public static validateCoverLetter(
+    letterText: string,
+    job: { title: string; company: string }
+  ): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!letterText || letterText.trim().length < 80) {
+      errors.push("Cover letter content is too brief or empty.");
+      return { isValid: false, errors };
+    }
+
+    const lowerText = letterText.toLowerCase();
+    const lowerCompany = job.company.toLowerCase();
+
+    // Must mention target company or generic hiring team
+    if (!lowerText.includes(lowerCompany) && !lowerText.includes("hiring team")) {
+      errors.push(`Cover letter does not reference the target company: ${job.company}`);
+    }
+
+    // Check for fabricated claims, unverified credentials, or illegal work right assertions
+    const forbiddenFabrications = [
+      "phd in computer science",
+      "doctorate in artificial intelligence",
+      "former vice president at google",
+      "south africa permanent resident",
+      "relocate immediately to south africa on-site",
+      "willing to work for free",
+      "unpaid internship accepted",
+    ];
+
+    for (const claim of forbiddenFabrications) {
+      if (lowerText.includes(claim)) {
+        errors.push(`Cover letter contains unsupported or invented claim: "${claim}"`);
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
 }
+

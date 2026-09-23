@@ -20,6 +20,8 @@ import { OrchestrationStep } from "@/types/orchestration";
 import { CampaignService } from "./campaign.service";
 import { CVIntegrityService, MASTER_CV_SHA256 } from "./cv-integrity.service";
 import { EligibilityService } from "./eligibility.service";
+import { TailorService } from "./tailor.service";
+import { InternalBrowserMCP } from "@/lib/mcp/internal-browser-mcp";
 import { applicationGraph } from "@/lib/agents/application-graph";
 import { TelegramMCPBridge } from "@/lib/mcp/telegram-mcp";
 import { logger } from "@/lib/observability/logger";
@@ -84,6 +86,24 @@ export class OrchestrationStateMachine {
         source: job.source,
       });
 
+      // Stale / Closed Vacancy Check (Section 5 & Acceptance Test 12)
+      const isStale =
+        (job as { isStale?: boolean }).isStale ||
+        (job as { status?: string }).status === "CLOSED" ||
+        (job as { isExpired?: boolean }).isExpired;
+      if (isStale) {
+        await recordStep("REJECTED_STALE", "DISCOVERED", {
+          reason: "Vacancy expired or closed upon re-verification",
+        });
+        return {
+          jobId,
+          finalStep: "REJECTED_STALE",
+          success: false,
+          reason: "Vacancy expired or closed upon re-verification",
+          history,
+        };
+      }
+
       // Step 2: ELIGIBILITY_CHECKED
       const eligibility = EligibilityService.evaluateFullEligibility(job);
       if (!eligibility.eligible) {
@@ -121,9 +141,31 @@ export class OrchestrationStateMachine {
         claimsVerified: true,
       });
 
+      // Cover letter validation (Section 7 & Acceptance Test 11)
+      const coverLetter = workflowState.generatedCoverLetter || "";
+      const validation = TailorService.validateCoverLetter(coverLetter, {
+        title: job.title || "",
+        company: job.company || "",
+      });
+
+      if (!validation.isValid) {
+        await recordStep("DISQUALIFIED", "EVIDENCE_GROUNDED", {
+          errors: validation.errors,
+          reason: "Cover letter failed validation checks",
+        });
+        return {
+          jobId,
+          finalStep: "DISQUALIFIED",
+          success: false,
+          reason: validation.errors.join("; "),
+          history,
+        };
+      }
+
       await recordStep("COVER_LETTER_COMPOSED", "EVIDENCE_GROUNDED", {
-        letterLength: workflowState.generatedCoverLetter?.length || 0,
+        letterLength: coverLetter.length,
         language: "en-GB",
+        validated: true,
       });
 
       await recordStep("CV_ATTACHED", "COVER_LETTER_COMPOSED", {
@@ -131,11 +173,28 @@ export class OrchestrationStateMachine {
         fileName: "whitemore_ngwira_cv_n.white.pdf",
       });
 
-      // Step 6: PORTAL_STAGED
+      // Step 6: PORTAL_STAGED & Protected Gate Detection (Section 8 & Acceptance Test 15)
+      const targetUrl = job.applyUrl || job.applicationUrl || "";
+      const gateCheck = InternalBrowserMCP.detectProtectedGate(targetUrl, "");
+      if (gateCheck.isGate) {
+        await recordStep("BLOCKED_USER_ACTION_REQUIRED", "CV_ATTACHED", {
+          gateType: gateCheck.gateType,
+          details: gateCheck.details,
+          applyUrl: targetUrl,
+        });
+        return {
+          jobId,
+          finalStep: "BLOCKED_USER_ACTION_REQUIRED",
+          success: false,
+          reason: `Protected gate detected (${gateCheck.gateType}): ${gateCheck.details}`,
+          history,
+        };
+      }
+
       const route = eligibility.applicationRoute || "DIRECT_PORTAL";
       await recordStep("PORTAL_STAGED", "CV_ATTACHED", {
         route,
-        applyUrl: job.applyUrl || job.applicationUrl,
+        applyUrl: targetUrl,
       });
 
       // Step 7: MANUAL_REVIEW_GATED (Autonomous pass-through if high fit, else gate)
@@ -199,12 +258,22 @@ export class OrchestrationStateMachine {
       };
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      await recordStep("FAILED_PORTAL", history[history.length - 1] || "UNKNOWN", {
+      const isTimeout =
+        errMsg.toLowerCase().includes("timeout") ||
+        errMsg.toLowerCase().includes("timed out") ||
+        errMsg.toLowerCase().includes("timedout") ||
+        errMsg.toLowerCase().includes("etimedout") ||
+        errMsg.toLowerCase().includes("econnrefused") ||
+        errMsg.toLowerCase().includes("network");
+
+      const failStep: OrchestrationStep = isTimeout ? "FAILED_RETRYABLE" : "FAILED_PORTAL";
+      await recordStep(failStep, history[history.length - 1] || "UNKNOWN", {
         error: errMsg,
+        retryable: isTimeout,
       });
       return {
         jobId,
-        finalStep: "FAILED_PORTAL",
+        finalStep: failStep,
         success: false,
         reason: errMsg,
         history,
@@ -270,12 +339,16 @@ export class OrchestrationStateMachine {
       }
     }
 
-    // Update campaign totals
+    // Update campaign totals and automatically complete when goal is reached (Acceptance Test 20)
     const campaign = await CampaignService.getCampaignById(campaignId);
     if (campaign) {
+      const newSubmittedCount = campaign.submittedCount + submittedCount;
+      const isGoalReached = newSubmittedCount >= campaign.targetApplications;
+
       await CampaignService.updateCampaign(campaignId, {
-        submittedCount: campaign.submittedCount + submittedCount,
+        submittedCount: newSubmittedCount,
         failedCount: campaign.failedCount + failedCount,
+        status: isGoalReached ? "COMPLETED" : campaign.status,
       });
     }
 

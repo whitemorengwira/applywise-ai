@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { GET, SYNTHETIC_ROUTES } from "@/app/api/health/synthetic/route";
 import { NextRequest } from "next/server";
 
@@ -26,19 +26,30 @@ describe("Synthetic Uptime Monitoring Endpoint", () => {
   });
 
   it("executes synthetic health checks and computes overall health score and SLA metrics", async () => {
-    const req = new NextRequest("http://localhost:3000/api/health/synthetic");
-    const response = await GET(req);
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(async () => {
+      return new Response(JSON.stringify({ status: "healthy" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
 
-    expect(response.status).toBe(200);
+    try {
+      const req = new NextRequest("http://localhost:3000/api/health/synthetic");
+      const response = await GET(req);
 
-    const data = await response.json();
-    expect(data.status).toBeDefined();
-    expect(["HEALTHY", "DEGRADED"]).toContain(data.status);
-    expect(data.overallHealthScore).toBeGreaterThanOrEqual(95);
-    expect(data.totalProbes).toBe(SYNTHETIC_ROUTES.length);
-    expect(data.passedProbes).toBeGreaterThanOrEqual(data.totalProbes * 0.95);
-    expect(data.failedProbes).toBeLessThanOrEqual(data.totalProbes * 0.05);
-    expect(data.probes.length).toBe(SYNTHETIC_ROUTES.length);
-    expect(data.sla).toContain(">= 95% route availability");
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.status).toBeDefined();
+      expect(["HEALTHY", "DEGRADED"]).toContain(data.status);
+      expect(data.overallHealthScore).toBeGreaterThanOrEqual(95);
+      expect(data.totalProbes).toBe(SYNTHETIC_ROUTES.length);
+      expect(data.passedProbes).toBeGreaterThanOrEqual(data.totalProbes * 0.95);
+      expect(data.failedProbes).toBeLessThanOrEqual(data.totalProbes * 0.05);
+      expect(data.probes.length).toBe(SYNTHETIC_ROUTES.length);
+      expect(data.sla).toContain(">= 95% route availability");
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });

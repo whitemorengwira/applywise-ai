@@ -37,11 +37,29 @@ export class JobDiscoveryService {
   /**
    * Computes a canonical SHA-256 content fingerprint for deduplication.
    */
-  public static computeJobFingerprint(job: Partial<JobListing>): string {
-    const url = (job.applyUrl || job.applicationUrl || "").toLowerCase().trim();
-    const title = (job.title || "").toLowerCase().trim();
-    const company = (job.company || "").toLowerCase().trim();
-    const raw = `${url}|${title}|${company}`;
+  public static computeJobFingerprint(
+    jobOrUrl: Partial<JobListing> | string,
+    title?: string,
+    company?: string
+  ): string {
+    let url = "";
+    let rawTitle = "";
+    let rawCompany = "";
+
+    if (typeof jobOrUrl === "string") {
+      url = jobOrUrl;
+      rawTitle = title || "";
+      rawCompany = company || "";
+    } else {
+      url = jobOrUrl.applyUrl || jobOrUrl.applicationUrl || "";
+      rawTitle = jobOrUrl.title || "";
+      rawCompany = jobOrUrl.company || "";
+    }
+
+    const cleanUrl = url.toLowerCase().trim();
+    const cleanTitle = rawTitle.toLowerCase().trim();
+    const cleanCompany = rawCompany.toLowerCase().trim();
+    const raw = `${cleanUrl}|${cleanTitle}|${cleanCompany}`;
     return createHash("sha256").update(raw).digest("hex");
   }
 

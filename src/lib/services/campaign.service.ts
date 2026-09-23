@@ -465,6 +465,118 @@ export class CampaignService {
   }
 
   /**
+   * Reclaims expired leases whose TTL has lapsed.
+   * Section 9 & Acceptance Test 14.
+   */
+  public static async reclaimExpiredLeases(
+    gracePeriodSeconds: number = 0
+  ): Promise<JobLease[]> {
+    const threshold = new Date(Date.now() - gracePeriodSeconds * 1000);
+    const reclaimed: JobLease[] = [];
+
+    for (const [jobId, lease] of memoryJobLeases.entries()) {
+      if (lease.status === "ACTIVE" && new Date(lease.expiresAt) <= threshold) {
+        lease.status = "EXPIRED";
+        memoryJobLeases.set(jobId, lease);
+        reclaimed.push(lease);
+      }
+    }
+
+    return reclaimed;
+  }
+
+  /**
+   * Alias for recordOrchestrationEvent.
+   */
+  public static async recordEvent(
+    eventData: Omit<OrchestrationEvent, "id" | "createdAt">
+  ): Promise<OrchestrationEvent> {
+    return this.recordOrchestrationEvent(eventData);
+  }
+
+  /**
+   * Alias for getOrchestrationEvents.
+   */
+  public static async getEvents(
+    campaignId: string,
+    jobId?: string
+  ): Promise<OrchestrationEvent[]> {
+    return this.getOrchestrationEvents(campaignId, jobId);
+  }
+
+  /**
+   * Reconciles the campaign counts against the append-only event log.
+   * Section 9 & Acceptance Test 19.
+   */
+  public static async reconcileCampaignLedger(campaignId: string): Promise<{
+    campaignId: string;
+    submittedCount: number;
+    verifiedEventsCount: number;
+    isBalanced: boolean;
+    reconciledAt: string;
+  }> {
+    const campaign = await this.getCampaignById(campaignId);
+    if (!campaign) {
+      throw new Error(`Campaign ${campaignId} not found`);
+    }
+
+    const events = await this.getEvents(campaignId);
+    const verifiedJobIds = new Set<string>();
+    for (const event of events) {
+      if (event.step === "COMPLETED" || event.step === "DISPATCHED") {
+        verifiedJobIds.add(event.jobId);
+      }
+    }
+
+    const verifiedEventsCount = verifiedJobIds.size;
+    const isBalanced = campaign.submittedCount >= verifiedEventsCount;
+
+    return {
+      campaignId,
+      submittedCount: campaign.submittedCount,
+      verifiedEventsCount,
+      isBalanced,
+      reconciledAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Resumes a paused, crashed, or interrupted campaign from the last committed checkpoint.
+   * Section 9 & Acceptance Test 4 & 22.
+   */
+  public static async resumeCampaign(campaignId: string): Promise<{
+    campaign: Campaign;
+    latestCheckpoint: CampaignCheckpoint | null;
+    reclaimedLeasesCount: number;
+    remainingJobsCount: number;
+    resumedAt: string;
+  }> {
+    const campaign = await this.getCampaignById(campaignId);
+    if (!campaign) {
+      throw new Error(`Campaign ${campaignId} not found`);
+    }
+
+    // Reclaim any expired leases from dead workers
+    const reclaimedLeases = await this.reclaimExpiredLeases(10);
+    const latestCheckpoint = await this.getLatestCheckpoint(campaignId);
+
+    // If campaign was paused, set to ACTIVE
+    if (campaign.status === "PAUSED") {
+      await this.updateCampaign(campaignId, { status: "ACTIVE" });
+    }
+
+    const remainingJobsCount = Math.max(0, campaign.targetApplications - campaign.submittedCount);
+
+    return {
+      campaign,
+      latestCheckpoint,
+      reclaimedLeasesCount: reclaimedLeases.length,
+      remainingJobsCount,
+      resumedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
    * Reset store (primarily for unit testing isolation).
    */
   public static resetMemoryStore(): void {

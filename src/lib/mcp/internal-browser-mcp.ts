@@ -118,33 +118,55 @@ export class InternalBrowserMCP {
    * Detects protected verification challenges (CAPTCHA, MFA, custom security questions).
    */
   public static detectProtectedGate(
-    domContent?: string
-  ): { isBlocked: boolean; gateType?: "CAPTCHA" | "MFA" | "CUSTOM_QUESTION"; description?: string } {
-    const text = (domContent || "").toLowerCase();
+    urlOrContent?: string,
+    extraContent?: string
+  ): { isBlocked: boolean; isGate: boolean; gateType?: "CAPTCHA" | "MFA" | "CUSTOM_QUESTION"; description?: string; details?: string } {
+    const text = `${urlOrContent || ""} ${extraContent || ""}`.toLowerCase();
     if (
       text.includes("captcha") ||
       text.includes("cloudflare turnstile") ||
       text.includes("recaptcha") ||
       text.includes("hcaptcha")
     ) {
+      const desc = "Protected anti-bot challenge (CAPTCHA / Turnstile) detected. User intervention required.";
       return {
         isBlocked: true,
+        isGate: true,
         gateType: "CAPTCHA",
-        description: "Protected anti-bot challenge (CAPTCHA / Turnstile) detected. User intervention required.",
+        description: desc,
+        details: desc,
       };
     }
     if (
       text.includes("two-factor") ||
       text.includes("security code sent to your phone") ||
-      text.includes("enter the 6-digit code")
+      text.includes("enter the 6-digit code") ||
+      text.includes("mfa")
     ) {
+      const desc = "Multi-Factor Authentication (MFA) challenge encountered. User verification required.";
       return {
         isBlocked: true,
+        isGate: true,
         gateType: "MFA",
-        description: "Multi-Factor Authentication (MFA) challenge encountered. User verification required.",
+        description: desc,
+        details: desc,
       };
     }
-    return { isBlocked: false };
+    if (
+      text.includes("why do you want to work here") ||
+      text.includes("custom question") ||
+      text.includes("supplemental question")
+    ) {
+      const desc = "Custom employer questionnaire requiring candidate review.";
+      return {
+        isBlocked: true,
+        isGate: true,
+        gateType: "CUSTOM_QUESTION",
+        description: desc,
+        details: desc,
+      };
+    }
+    return { isBlocked: false, isGate: false };
   }
 
   /**

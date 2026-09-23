@@ -33,6 +33,7 @@ export interface DynamicModelCatalogItem {
   privacyTier: PrivacyTier;
   description: string;
   lastSyncedAt: string;
+  healthStatus?: "HEALTHY" | "DEGRADED" | "OFFLINE";
 }
 
 export const CANONICAL_OPENCODE_ZEN_CATALOG: DynamicModelCatalogItem[] = [
@@ -237,6 +238,47 @@ export class OpenCodeModelRegistryService {
       piiScrubbed,
       privacyTier: model.privacyTier,
     };
+  }
+
+  /**
+   * Prepares payload for model, applying PII sanitisation if model is not ZERO_RETENTION.
+   * Section 10 & Acceptance Test 17.
+   */
+  public static prepareModelPayload(
+    modelId: string,
+    payload: { prompt: string; [key: string]: unknown }
+  ): {
+    sanitizedPrompt: string;
+    piiScrubbed: boolean;
+    privacyTier: PrivacyTier;
+  } {
+    return this.preparePromptForModel(payload.prompt, modelId);
+  }
+
+  /**
+   * Records a model outage and flags its status as DEGRADED.
+   * Section 10 & Acceptance Test 16.
+   */
+  public static recordOutage(modelId: string): void {
+    const model = this.getModel(modelId);
+    if (model) {
+      model.healthStatus = "DEGRADED";
+      this.registry.set(modelId, model);
+      logger.warn("model_outage_recorded", `Model ${modelId} marked DEGRADED in dynamic registry`);
+    }
+  }
+
+  /**
+   * Updates availability and free status of a registered model.
+   * Section 10 & Acceptance Test 18.
+   */
+  public static updateAvailability(modelId: string, isFree: boolean): void {
+    const model = this.getModel(modelId);
+    if (model) {
+      model.isFree = isFree;
+      this.registry.set(modelId, model);
+      logger.info("model_availability_updated", `Model ${modelId} isFree set to ${isFree}`);
+    }
   }
 
   /**
